@@ -1,0 +1,196 @@
+{
+  "$schema": "pragmatic-design-system/v1",
+  "name": "Apple Human Interface Guidelines (Cupertino)",
+  "source": "developer.apple.com/design/human-interface-guidelines",
+
+  "grid": {
+    "base": 4,
+    "columns": { "compact": 4, "regular": 12 },
+    "margins": { "compact": 16, "regular": 20 },
+    "gutters": { "compact": 8, "regular": 16 },
+    "unit": "pt",
+    "comment": "Apple uses points, not pixels. 1pt = 1px at 1x, 2px at 2x, 3px at 3x"
+  },
+
+  "spacing": {
+    "tokens": [0, 4, 8, 12, 16, 20, 24, 32, 40],
+    "rule": "multiple-of-4",
+    "comment": "Apple's spacing is less rigid than M3/Fluent — follows optical alignment"
+  },
+
+  "typography": {
+    "scale": {
+      "largeTitle":  { "size": 34, "lineHeight": 41, "weight": 700, "tracking": 0.37 },
+      "title1":      { "size": 28, "lineHeight": 34, "weight": 700, "tracking": 0.36 },
+      "title2":      { "size": 22, "lineHeight": 28, "weight": 700, "tracking": 0.35 },
+      "title3":      { "size": 20, "lineHeight": 25, "weight": 600, "tracking": 0.38 },
+      "headline":    { "size": 17, "lineHeight": 22, "weight": 600, "tracking": -0.41 },
+      "body":        { "size": 17, "lineHeight": 22, "weight": 400, "tracking": -0.41 },
+      "callout":     { "size": 16, "lineHeight": 21, "weight": 400, "tracking": -0.32 },
+      "subheadline": { "size": 15, "lineHeight": 20, "weight": 400, "tracking": -0.24 },
+      "footnote":    { "size": 13, "lineHeight": 18, "weight": 400, "tracking": -0.08 },
+      "caption1":    { "size": 12, "lineHeight": 16, "weight": 400, "tracking": 0 },
+      "caption2":    { "size": 11, "lineHeight": 13, "weight": 400, "tracking": 0.07 }
+    },
+    "fonts": {
+      "default": "SF Pro",
+      "display": "SF Pro Display",
+      "rounded": "SF Pro Rounded",
+      "mono": "SF Mono"
+    },
+    "dynamicType": {
+      "supported": true,
+      "comment": "All sizes scale proportionally with user's accessibility text size preference"
+    }
+  },
+
+  "shape": {
+    "none":   { "radius": 0 },
+    "small":  { "radius": 6 },
+    "medium": { "radius": 10 },
+    "large":  { "radius": 14 },
+    "xLarge": { "radius": 20 },
+    "full":   { "radius": 9999 },
+    "continuous": true,
+    "comment": "Apple uses CONTINUOUS corner radius (squircle), not circular arcs. CSS: border-radius with -webkit-mask-image or SVG path for true continuous corners"
+  },
+
+  "elevation": {
+    "comment": "Apple avoids traditional shadow elevation. Uses materials/vibrancy instead",
+    "shadows": {
+      "small": "0 0.5px 1px rgba(0,0,0,0.1), 0 0 0.5px rgba(0,0,0,0.1)",
+      "medium": "0 2px 8px rgba(0,0,0,0.12), 0 0 1px rgba(0,0,0,0.08)",
+      "large": "0 10px 40px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.1)"
+    },
+    "materials": {
+      "ultraThin":  { "blur": 30, "opacity": 0.4 },
+      "thin":       { "blur": 30, "opacity": 0.55 },
+      "regular":    { "blur": 30, "opacity": 0.7 },
+      "thick":      { "blur": 30, "opacity": 0.85 },
+      "ultraThick": { "blur": 30, "opacity": 0.95 },
+      "comment": "backdrop-filter: blur(30px) saturate(1.8) with varying opacity"
+    }
+  },
+
+  "color": {
+    "scheme": "system-semantic",
+    "systemColors": [
+      "systemRed", "systemOrange", "systemYellow", "systemGreen",
+      "systemMint", "systemTeal", "systemCyan", "systemBlue",
+      "systemIndigo", "systemPurple", "systemPink", "systemBrown"
+    ],
+    "adaptiveColors": {
+      "comment": "Every color has light AND dark variant, automatically applied"
+    },
+    "contrast": { "level": "AA", "minRatio": 4.5, "largeTextRatio": 3.0 },
+    "vibrant": {
+      "comment": "Colors adjust saturation/brightness when on blurred materials"
+    }
+  },
+
+  "motion": {
+    "durations": {
+      "fast": 200,
+      "default": 350,
+      "slow": 500
+    },
+    "easings": {
+      "default": "cubic-bezier(0.25, 0.1, 0.25, 1)",
+      "spring": { "mass": 1, "stiffness": 100, "damping": 15 },
+      "comment": "Apple favors spring animations (physics-based) over cubic-bezier"
+    },
+    "prefersReducedMotion": {
+      "required": true,
+      "comment": "MUST respect prefers-reduced-motion. Cross-dissolve replaces motion"
+    }
+  },
+
+  "components": {
+    "button": {
+      "height": 44,
+      "minWidth": 44,
+      "paddingHorizontal": 16,
+      "shape": "large",
+      "labelStyle": "body",
+      "comment": "44pt is sacred in Apple — minimum touch target"
+    },
+    "card": {
+      "shape": "large",
+      "padding": 16,
+      "border": "none",
+      "comment": "Apple cards are borderless with subtle shadow, NOT bordered"
+    },
+    "input": {
+      "height": 44,
+      "shape": "medium",
+      "border": "none",
+      "background": "secondarySystemFill",
+      "comment": "Apple inputs are filled, no border. 44pt height matches buttons"
+    },
+    "modal": {
+      "shape": "large",
+      "material": "regular",
+      "comment": "Modals use vibrancy material, not opaque white"
+    }
+  },
+
+  "variants": {
+    "button": {
+      "filled":      { "background": "tintColor", "border": "none", "text": "white", "shape": "large" },
+      "gray":        { "background": "secondarySystemFill", "border": "none", "text": "tintColor" },
+      "tinted":      { "background": "tintColor/15%", "border": "none", "text": "tintColor" },
+      "plain":       { "background": "none", "border": "none", "text": "tintColor" },
+      "bordered":    { "background": "none", "border": "1px solid tintColor", "text": "tintColor" }
+    },
+    "input": {
+      "roundedRect": { "background": "tertiarySystemFill", "border": "none", "radius": "medium", "comment": "Default iOS text field" },
+      "plain":       { "background": "none", "border": "none", "borderBottom": "1px separator" }
+    },
+    "card": {
+      "insetGrouped": { "background": "secondarySystemGroupedBackground", "border": "none", "radius": "large", "margin": "horizontal-16" },
+      "grouped":      { "background": "systemGroupedBackground", "border": "none", "radius": 0, "fullWidth": true }
+    }
+  },
+
+  "stateLayer": {
+    "comment": "Apple uses highlight color overlay, not opacity-based state layers",
+    "hover":    { "effect": "none", "comment": "No hover on touch — only pointer devices get subtle highlight" },
+    "press":    { "effect": "highlight", "opacity": 0.3 },
+    "selected": { "effect": "tint-background" },
+    "disabled": { "opacity": 0.3 }
+  },
+
+  "composition": {
+    "nestedRadius": "continuous(parent.radius - parent.padding)",
+    "siblingCells": { "gap": 0, "separator": "1px inset from leading edge", "comment": "iOS list cells have inset separators, not gaps" },
+    "containerPadding": { "rule": "layoutMargins", "compact": 16, "regular": 20 },
+    "iconTextGap": 8,
+    "listInset": { "leading": 16, "trailing": 16, "comment": "Separator inset matches icon leading edge" }
+  },
+
+  "layoutPatterns": {
+    "navigation": ["tabBar-bottom", "sidebar-iPad", "navigationBar-top"],
+    "appBar": { "type": "navigationBar", "largeTitle": { "collapses": true, "threshold": 44 } },
+    "sheet": { "presentation": "pageSheet", "detents": ["medium", "large"], "grabber": true },
+    "contextMenu": { "blur": true, "preview": true }
+  },
+
+  "iconography": {
+    "library": "SF Symbols",
+    "defaultSize": "body-matched",
+    "rendering": ["monochrome", "hierarchical", "palette", "multicolor"],
+    "weight": "matches-adjacent-text",
+    "comment": "SF Symbols automatically match the weight of adjacent text"
+  },
+
+  "accessibility": {
+    "touchTarget": { "min": 44 },
+    "focusRing": { "style": "system", "width": 3, "offset": 2 },
+    "contrast": "AA",
+    "dynamicType": true,
+    "reduceMotion": true,
+    "reduceTransparency": true,
+    "increaseContrast": true,
+    "stateIndicators": "highlight + tint"
+  }
+}

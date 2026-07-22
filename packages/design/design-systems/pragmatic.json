@@ -1,0 +1,147 @@
+{
+  "$schema": "pragmatic-design-system/v1",
+  "name": "Pragmatic Design",
+  "source": "pragmatic-design-css/src/tokens.css",
+
+  "grid": {
+    "base": 4,
+    "columns": { "compact": 1, "medium": 6, "wide": 12 },
+    "margins": { "compact": 16, "medium": 24, "wide": 32 },
+    "gutters": { "compact": 16, "medium": 16, "wide": 24 }
+  },
+
+  "spacing": {
+    "tokens": [0, 4, 8, 12, 16, 24, 40, 64],
+    "names": ["2xs", "xs", "sm", "md", "lg", "xl", "2xl"],
+    "rule": "density-scaled",
+    "densityFactor": { "compact": 0.75, "normal": 1, "comfort": 1.25 }
+  },
+
+  "typography": {
+    "scale": {
+      "display":    { "size": "clamp(2rem, 1.7rem + 1.5vw, 2.5rem)", "lineHeight": 1.25, "weight": 700, "font": "heading" },
+      "title":      { "size": "clamp(1.6rem, 1.4rem + 1vw, 1.875rem)", "lineHeight": 1.25, "weight": 700, "font": "heading" },
+      "heading":    { "size": "clamp(1.35rem, 1.2rem + 0.75vw, 1.5rem)", "lineHeight": 1.25, "weight": 600, "font": "heading" },
+      "subheading": { "size": "clamp(1.15rem, 1.05rem + 0.5vw, 1.25rem)", "lineHeight": 1.25, "weight": 600, "font": "heading" },
+      "body":       { "size": "clamp(0.925rem, 0.875rem + 0.25vw, 1rem)", "lineHeight": 1.6, "weight": 400, "font": "sans" },
+      "small":      { "size": "clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem)", "lineHeight": 1.6, "weight": 400, "font": "sans" },
+      "caption":    { "size": "clamp(0.7rem, 0.65rem + 0.25vw, 0.75rem)", "lineHeight": 1.6, "weight": 400, "font": "sans" },
+      "label":      { "size": "0.75rem", "lineHeight": 1.25, "weight": 600, "font": "sans", "textTransform": "uppercase", "letterSpacing": "0.06em" },
+      "mono":       { "size": "0.875rem", "lineHeight": 1.6, "weight": 400, "font": "mono" }
+    },
+    "fonts": {
+      "sans": "Inter, system-ui, sans-serif",
+      "heading": "Manrope, system-ui, sans-serif",
+      "mono": "JetBrains Mono, Fira Code, Consolas, monospace"
+    },
+    "fluidType": true
+  },
+
+  "shape": {
+    "sm":   { "radius": 4 },
+    "md":   { "radius": 8 },
+    "lg":   { "radius": 12 },
+    "xl":   { "radius": 16 },
+    "full": { "radius": 9999 },
+    "continuous": false
+  },
+
+  "elevation": {
+    "sm":  "0 1px 2px var(--pdx-shadow-color)",
+    "md":  "0 4px 6px -1px var(--pdx-shadow-color), 0 2px 4px -2px var(--pdx-shadow-color)",
+    "lg":  "0 10px 15px -3px var(--pdx-shadow-color), 0 4px 6px -4px var(--pdx-shadow-color)",
+    "xl":  "0 20px 25px -5px var(--pdx-shadow-color), 0 8px 10px -6px var(--pdx-shadow-color)",
+    "shadowColor": {
+      "light": "oklch(0 0 0 / 0.08)",
+      "dark":  "oklch(0 0 0 / 0.4)"
+    }
+  },
+
+  "color": {
+    "scheme": "oklch-light-dark",
+    "hueAnchors": {
+      "primary": 250, "accent": 170, "danger": 25, "warning": 85, "success": 155
+    },
+    "neutralGray": { "hue": 75, "chroma": "0.002-0.015" },
+    "contrast": { "level": "AA", "minRatio": 4.5, "largeTextRatio": 3.0 },
+    "focusRing": "0 0 0 3px oklch(from primary l c h / 0.4)"
+  },
+
+  "motion": {
+    "durations": { "fast": 100, "base": 200, "slow": 350 },
+    "easings": {
+      "standard":   "cubic-bezier(0.2, 0, 0, 1)",
+      "decelerate": "cubic-bezier(0, 0, 0, 1)",
+      "accelerate": "cubic-bezier(0.3, 0, 1, 1)"
+    }
+  },
+
+  "variants": {
+    "button": {
+      "primary":   { "background": "primary", "border": "none", "text": "primaryText" },
+      "secondary": { "background": "none", "border": "1px solid border", "text": "text" },
+      "ghost":     { "background": "none", "border": "none", "text": "text" },
+      "danger":    { "background": "danger", "border": "none", "text": "white" },
+      "success":   { "background": "success", "border": "none", "text": "white" },
+      "warning":   { "background": "warning", "border": "none", "text": "text" }
+    },
+    "input": {
+      "default": { "background": "surface", "border": "1px solid border", "radius": "md", "focusBorder": "primary" }
+    },
+    "card": {
+      "default":     { "background": "surface", "border": "1px solid border", "radius": "lg", "shadow": "sm" },
+      "interactive":  { "background": "surface", "border": "1px solid border", "radius": "lg", "shadow": "sm", "hoverShadow": "md", "cursor": "pointer" },
+      "inset":       { "background": "inset", "border": "none", "radius": "md" }
+    },
+    "alert": {
+      "info":    { "borderLeft": "4px solid primary", "background": "primary/8%" },
+      "success": { "borderLeft": "4px solid success", "background": "success/8%" },
+      "warning": { "borderLeft": "4px solid warning", "background": "warning/8%" },
+      "error":   { "borderLeft": "4px solid danger", "background": "danger/8%" }
+    }
+  },
+
+  "stateLayer": {
+    "hover":    { "effect": "shadow-lift", "comment": "Cards lift shadow, buttons darken slightly" },
+    "focus":    { "effect": "focus-ring", "ring": "3px primary/40%" },
+    "press":    { "effect": "darken", "amount": "5%" },
+    "disabled": { "opacity": 0.5, "pointerEvents": "none" }
+  },
+
+  "composition": {
+    "nestedRadius": "parent.radius - parent.padding or 0",
+    "siblingCards": { "gap": "md", "borderCollapse": false },
+    "containerPadding": { "rule": "spacing-token", "default": "md" },
+    "iconTextGap": "xs",
+    "layoutPrimitives": ["pdx-stack", "pdx-row", "pdx-grid", "pdx-center", "pdx-split", "pdx-cluster"]
+  },
+
+  "layoutPatterns": {
+    "navigation": ["sidebar-left", "topbar", "breadcrumb"],
+    "density": { "compact": 0.75, "normal": 1.0, "comfort": 1.25 },
+    "maxWidths": { "xs": 320, "sm": 480, "md": 768, "lg": 1024, "xl": 1280, "2xl": 1536 }
+  },
+
+  "iconography": {
+    "library": "Lucide",
+    "defaultSize": 18,
+    "sizes": [14, 16, 18, 20, 24],
+    "strokeWidth": 2,
+    "style": "outline-only"
+  },
+
+  "themes": {
+    "available": ["default", "pragmatic", "corporate", "playful", "material", "fluent", "cupertino", "neumorphic", "glass", "cyberpunk", "editorial"],
+    "switching": "pdx-theme attribute on html",
+    "darkMode": "pdx-scheme attribute, uses light-dark() CSS function"
+  },
+
+  "accessibility": {
+    "touchTarget": { "min": 44 },
+    "focusRing": { "width": 3, "offset": 0, "style": "box-shadow", "color": "primary/40%" },
+    "contrast": "AA",
+    "prefersReducedMotion": true,
+    "prefersColorScheme": true,
+    "stateIndicators": "shadow-lift + focus-ring"
+  }
+}

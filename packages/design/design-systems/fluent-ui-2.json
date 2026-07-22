@@ -1,0 +1,179 @@
+{
+  "$schema": "pragmatic-design-system/v1",
+  "name": "Fluent UI 2",
+  "source": "fluent2.microsoft.design",
+
+  "grid": {
+    "base": 4,
+    "columns": { "small": 1, "medium": 12, "large": 12 },
+    "margins": { "small": 16, "medium": 24, "large": 48 },
+    "gutters": { "small": 16, "medium": 24, "large": 24 }
+  },
+
+  "spacing": {
+    "tokens": [0, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64],
+    "rule": "scale",
+    "comment": "Fluent uses a tighter scale than M3, with 2px and 6px steps"
+  },
+
+  "typography": {
+    "scale": {
+      "caption2":    { "size": 10, "lineHeight": 14, "weight": 400 },
+      "caption1":    { "size": 12, "lineHeight": 16, "weight": 400 },
+      "body1":       { "size": 14, "lineHeight": 20, "weight": 400 },
+      "body1Strong": { "size": 14, "lineHeight": 20, "weight": 600 },
+      "body2":       { "size": 16, "lineHeight": 22, "weight": 400 },
+      "subtitle2":   { "size": 16, "lineHeight": 22, "weight": 600 },
+      "subtitle1":   { "size": 20, "lineHeight": 28, "weight": 600 },
+      "title3":      { "size": 24, "lineHeight": 32, "weight": 600 },
+      "title2":      { "size": 28, "lineHeight": 36, "weight": 600 },
+      "title1":      { "size": 32, "lineHeight": 40, "weight": 600 },
+      "largeTitle":  { "size": 40, "lineHeight": 52, "weight": 600 },
+      "display":     { "size": 68, "lineHeight": 92, "weight": 600 }
+    },
+    "fonts": {
+      "default": "Segoe UI Variable",
+      "mono": "Cascadia Code"
+    }
+  },
+
+  "shape": {
+    "none":     { "radius": 0 },
+    "small":    { "radius": 2 },
+    "medium":   { "radius": 4 },
+    "large":    { "radius": 8 },
+    "xLarge":   { "radius": 12 },
+    "circular": { "radius": 9999 },
+    "comment": "Fluent is notably sharper than M3 — max standard radius is 12px"
+  },
+
+  "elevation": {
+    "comment": "Fluent uses branded shadow tokens, subtle and layered",
+    "shadow2":  "0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14)",
+    "shadow4":  "0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14)",
+    "shadow8":  "0 0 2px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.14)",
+    "shadow16": "0 0 2px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.14)",
+    "shadow28": "0 0 8px rgba(0,0,0,0.13), 0 14px 28px rgba(0,0,0,0.13)",
+    "shadow64": "0 0 8px rgba(0,0,0,0.13), 0 32px 64px rgba(0,0,0,0.18)"
+  },
+
+  "color": {
+    "scheme": "brand-neutral-status",
+    "neutralRamp": 16,
+    "contrast": { "level": "AA", "minRatio": 4.5, "largeTextRatio": 3.0 },
+    "surfaces": {
+      "rule": "layered",
+      "comment": "Fluent layers surfaces: background → card → popover, each slightly lighter"
+    }
+  },
+
+  "motion": {
+    "durations": {
+      "ultraFast": 50,
+      "faster": 100,
+      "fast": 150,
+      "normal": 200,
+      "gentle": 250,
+      "slow": 300,
+      "slower": 400,
+      "ultraSlow": 500
+    },
+    "easings": {
+      "accelerate":   "cubic-bezier(0.9, 0.1, 1, 0.2)",
+      "decelerate":   "cubic-bezier(0.1, 0.9, 0.2, 1)",
+      "linear":       "cubic-bezier(0, 0, 1, 1)",
+      "easeMax":      "cubic-bezier(0.8, 0, 0.1, 1)"
+    }
+  },
+
+  "components": {
+    "button": {
+      "height": 32,
+      "minWidth": 96,
+      "paddingHorizontal": 12,
+      "shape": "medium",
+      "labelStyle": "body1Strong",
+      "comment": "Fluent buttons are notably smaller than M3 (32 vs 40)"
+    },
+    "card": {
+      "shape": "large",
+      "padding": 16,
+      "border": "1px solid neutral"
+    },
+    "input": {
+      "height": 32,
+      "shape": "medium",
+      "border": "1px solid neutral",
+      "focusBorder": "2px solid brand",
+      "comment": "Fluent inputs match button height — very compact"
+    },
+    "dialog": {
+      "shape": "xLarge",
+      "minWidth": 320,
+      "maxWidth": 600,
+      "padding": 24
+    }
+  },
+
+  "variants": {
+    "button": {
+      "primary":     { "background": "brand", "border": "none", "text": "onBrand" },
+      "secondary":   { "background": "subtle", "border": "1px solid neutralStroke", "text": "neutralForeground1" },
+      "outline":     { "background": "none", "border": "1px solid neutralStroke", "text": "neutralForeground1" },
+      "subtle":      { "background": "none", "border": "none", "text": "neutralForeground1" },
+      "transparent": { "background": "none", "border": "none", "text": "brandForeground" }
+    },
+    "input": {
+      "outlined":    { "background": "none", "border": "1px solid neutralStroke", "focusBorder": "2px solid brand", "underline": false },
+      "underline":   { "background": "none", "border": "none", "borderBottom": "1px solid neutralStroke", "focusBorder": "2px solid brand" },
+      "filledDarker": { "background": "neutralBackground3", "border": "none", "borderBottom": "1px solid neutralStroke" }
+    },
+    "card": {
+      "filled":  { "background": "neutralBackground1", "border": "none", "shadow": "shadow4" },
+      "outline": { "background": "neutralBackground1", "border": "1px solid neutralStroke", "shadow": "none" },
+      "subtle":  { "background": "neutralBackground2", "border": "none", "shadow": "none" }
+    }
+  },
+
+  "stateLayer": {
+    "comment": "Fluent uses subtle background shifts, not opacity overlays like M3",
+    "hover":    { "backgroundShift": "+1 shade" },
+    "press":    { "backgroundShift": "+2 shades" },
+    "selected": { "backgroundShift": "brandBackground2" },
+    "disabled": { "opacity": 0.38 }
+  },
+
+  "composition": {
+    "nestedRadius": "parent.radius",
+    "siblingCards": { "gap": 16, "borderCollapse": true, "comment": "Fluent merges borders between siblings" },
+    "containerPadding": { "rule": "token-based", "horizontal": 16, "vertical": 12 },
+    "iconTextGap": 4,
+    "compoundButton": { "iconSize": 20, "gap": 8, "layout": "horizontal" }
+  },
+
+  "layoutPatterns": {
+    "navigation": ["navDrawer", "tabList", "breadcrumb"],
+    "appBar": { "type": "commandBar", "overflow": "menu" },
+    "panel": { "position": "right", "width": 340, "overlay": true },
+    "dialog": { "centered": true, "backdrop": "rgba(0,0,0,0.4)" }
+  },
+
+  "iconography": {
+    "defaultSize": 20,
+    "sizes": [16, 20, 24, 28, 32, 48],
+    "styles": ["regular", "filled"],
+    "library": "Fluent System Icons"
+  },
+
+  "accessibility": {
+    "touchTarget": { "min": 44 },
+    "focusRing": {
+      "style": "double-border",
+      "inner": { "width": 2, "color": "black" },
+      "outer": { "width": 2, "color": "white", "offset": 2 }
+    },
+    "contrast": "AA",
+    "highContrast": { "supported": true },
+    "stateIndicators": "background-shift + border"
+  }
+}

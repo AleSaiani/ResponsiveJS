@@ -1,0 +1,169 @@
+{
+  "$schema": "pragmatic-design-system/v1",
+  "name": "Material Design 3",
+  "source": "m3.material.io",
+
+  "grid": {
+    "base": 4,
+    "columns": { "compact": 4, "medium": 12, "expanded": 12 },
+    "margins": { "compact": 16, "medium": 24, "expanded": 24 },
+    "gutters": { "compact": 8, "medium": 16, "expanded": 24 }
+  },
+
+  "spacing": {
+    "tokens": [0, 4, 8, 12, 16, 24, 32, 48, 64],
+    "rule": "multiple-of-4"
+  },
+
+  "typography": {
+    "scale": {
+      "displayLarge":   { "size": 57, "lineHeight": 64, "weight": 400, "tracking": -0.25 },
+      "displayMedium":  { "size": 45, "lineHeight": 52, "weight": 400, "tracking": 0 },
+      "displaySmall":   { "size": 36, "lineHeight": 44, "weight": 400, "tracking": 0 },
+      "headlineLarge":  { "size": 32, "lineHeight": 40, "weight": 400, "tracking": 0 },
+      "headlineMedium": { "size": 28, "lineHeight": 36, "weight": 400, "tracking": 0 },
+      "headlineSmall":  { "size": 24, "lineHeight": 32, "weight": 400, "tracking": 0 },
+      "titleLarge":     { "size": 22, "lineHeight": 28, "weight": 400, "tracking": 0 },
+      "titleMedium":    { "size": 16, "lineHeight": 24, "weight": 500, "tracking": 0.15 },
+      "titleSmall":     { "size": 14, "lineHeight": 20, "weight": 500, "tracking": 0.1 },
+      "bodyLarge":      { "size": 16, "lineHeight": 24, "weight": 400, "tracking": 0.5 },
+      "bodyMedium":     { "size": 14, "lineHeight": 20, "weight": 400, "tracking": 0.25 },
+      "bodySmall":      { "size": 12, "lineHeight": 16, "weight": 400, "tracking": 0.4 },
+      "labelLarge":     { "size": 14, "lineHeight": 20, "weight": 500, "tracking": 0.1 },
+      "labelMedium":    { "size": 12, "lineHeight": 16, "weight": 500, "tracking": 0.5 },
+      "labelSmall":     { "size": 11, "lineHeight": 16, "weight": 500, "tracking": 0.5 }
+    },
+    "fonts": {
+      "default": "Roboto",
+      "brand": "Google Sans"
+    }
+  },
+
+  "shape": {
+    "none":       { "radius": 0 },
+    "extraSmall": { "radius": 4 },
+    "small":      { "radius": 8 },
+    "medium":     { "radius": 12 },
+    "large":      { "radius": 16 },
+    "extraLarge": { "radius": 28 },
+    "full":       { "radius": 9999 }
+  },
+
+  "elevation": {
+    "comment": "M3 uses tonal color elevation, not just shadows",
+    "level0": { "shadow": "none", "tint": 0 },
+    "level1": { "shadow": "0 1px 2px rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15)", "tint": 0.05 },
+    "level2": { "shadow": "0 1px 2px rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15)", "tint": 0.08 },
+    "level3": { "shadow": "0 4px 8px 3px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.3)", "tint": 0.11 },
+    "level4": { "shadow": "0 6px 10px 4px rgba(0,0,0,0.15), 0 2px 3px rgba(0,0,0,0.3)", "tint": 0.12 },
+    "level5": { "shadow": "0 8px 12px 6px rgba(0,0,0,0.15), 0 4px 4px rgba(0,0,0,0.3)", "tint": 0.14 }
+  },
+
+  "color": {
+    "scheme": "tonal-palette",
+    "keyColors": ["primary", "secondary", "tertiary", "error", "neutral", "neutralVariant"],
+    "contrast": { "level": "AA", "minRatio": 4.5, "largeTextRatio": 3.0 },
+    "surfaces": {
+      "rule": "tonal-elevation",
+      "comment": "Surface color shifts by elevation level, not just shadow"
+    }
+  },
+
+  "motion": {
+    "durations": {
+      "short1": 50, "short2": 100, "short3": 150, "short4": 200,
+      "medium1": 250, "medium2": 300, "medium3": 350, "medium4": 400,
+      "long1": 450, "long2": 500, "long3": 550, "long4": 600
+    },
+    "easings": {
+      "standard":      "cubic-bezier(0.2, 0, 0, 1)",
+      "standardDecel": "cubic-bezier(0, 0, 0, 1)",
+      "standardAccel": "cubic-bezier(0.3, 0, 1, 1)",
+      "emphasized":    "cubic-bezier(0.2, 0, 0, 1)",
+      "emphasizedDecel": "cubic-bezier(0.05, 0.7, 0.1, 1)",
+      "emphasizedAccel": "cubic-bezier(0.3, 0, 0.8, 0.15)"
+    }
+  },
+
+  "components": {
+    "button": {
+      "height": 40,
+      "minWidth": 48,
+      "paddingHorizontal": 24,
+      "shape": "full",
+      "labelStyle": "labelLarge"
+    },
+    "card": {
+      "shape": "medium",
+      "padding": 16
+    },
+    "input": {
+      "height": 56,
+      "shape": "extraSmall-top",
+      "labelStyle": "bodySmall"
+    },
+    "dialog": {
+      "shape": "extraLarge",
+      "minWidth": 280,
+      "maxWidth": 560,
+      "padding": 24
+    }
+  },
+
+  "variants": {
+    "button": {
+      "filled":   { "background": "primary", "border": "none", "text": "onPrimary" },
+      "tonal":    { "background": "secondaryContainer", "border": "none", "text": "onSecondaryContainer" },
+      "outlined": { "background": "none", "border": "1px solid outline", "text": "primary" },
+      "text":     { "background": "none", "border": "none", "text": "primary" },
+      "elevated": { "background": "surfaceContainerLow", "border": "none", "text": "primary", "elevation": "level1" }
+    },
+    "input": {
+      "filled":   { "background": "surfaceContainerHighest", "borderTop": "none", "borderSide": "none", "borderBottom": "1px solid onSurfaceVariant", "radiusTop": "extraSmall", "radiusBottom": 0 },
+      "outlined": { "background": "none", "border": "1px solid outline", "radius": "extraSmall", "labelFloat": true }
+    },
+    "card": {
+      "filled":   { "background": "surfaceContainerHighest", "border": "none", "elevation": "level0" },
+      "elevated": { "background": "surfaceContainerLow", "border": "none", "elevation": "level1" },
+      "outlined": { "background": "surface", "border": "1px solid outlineVariant", "elevation": "level0" }
+    }
+  },
+
+  "stateLayer": {
+    "comment": "Semi-transparent overlay on interactive elements, using primary color at given opacity",
+    "hover":    { "opacity": 0.08 },
+    "focus":    { "opacity": 0.12 },
+    "press":    { "opacity": 0.12 },
+    "drag":     { "opacity": 0.16 },
+    "disabled": { "contentOpacity": 0.38, "containerOpacity": 0.12 }
+  },
+
+  "composition": {
+    "nestedRadius": "parent.radius - parent.padding",
+    "siblingCards": { "gap": 8, "borderCollapse": false },
+    "containerPadding": { "rule": "consistent-inset", "value": 16 },
+    "iconTextGap": 8,
+    "chipGap": 8
+  },
+
+  "layoutPatterns": {
+    "navigation": ["navigationBar", "navigationRail", "navigationDrawer"],
+    "appBar": { "type": "topAppBar", "variants": ["centerAligned", "small", "medium", "large"] },
+    "fab": { "position": "bottomRight", "offset": 16 },
+    "bottomSheet": { "shape": "extraLarge-top", "dragHandle": true }
+  },
+
+  "iconography": {
+    "defaultSize": 24,
+    "sizes": [18, 20, 24, 36, 40, 48],
+    "styles": ["outlined", "rounded", "sharp", "filled", "twoTone"],
+    "opticalSize": true
+  },
+
+  "accessibility": {
+    "touchTarget": { "min": 48 },
+    "focusRing": { "width": 3, "offset": 2, "color": "secondary" },
+    "contrast": "AA",
+    "stateIndicators": "stateLayer + ripple"
+  }
+}

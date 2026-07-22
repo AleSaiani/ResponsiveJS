@@ -1,0 +1,68 @@
+{
+    "name": "@responsivejs/design",
+    "version": "0.0.0",
+    "description": "The layout & design oracle of r$ — measure, validate and score responsive design: constraints, aesthetic score, machine-readable reports with fix suggestions.",
+    "license": "MPL-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20.19"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./browser": {
+            "types": "./dist/browser/index.d.ts",
+            "default": "./dist/browser/index.js"
+        },
+        "./design-systems/*.json": "./design-systems/*.json",
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist",
+        "design-systems"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "@responsivejs/core": "workspace:^"
+    },
+    "peerDependencies": {
+        "@playwright/test": ">=1.40.0"
+    },
+    "peerDependenciesMeta": {
+        "@playwright/test": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.50.0",
+        "typescript": "^5.7.0"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AleSaiani/ResponsiveJS.git",
+        "directory": "packages/design"
+    },
+    "homepage": "https://github.com/AleSaiani/ResponsiveJS#readme",
+    "bugs": {
+        "url": "https://github.com/AleSaiani/ResponsiveJS/issues"
+    },
+    "keywords": [
+        "responsive",
+        "validation",
+        "accessibility",
+        "wcag",
+        "aesthetics",
+        "playwright",
+        "design-system",
+        "layout"
+    ]
+}
