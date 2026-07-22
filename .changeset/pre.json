@@ -1,0 +1,9 @@
+{
+    "mode": "pre",
+    "tag": "alpha",
+    "initialVersions": {
+        "@responsivejs/core": "0.0.0",
+        "@responsivejs/design": "0.0.0"
+    },
+    "changesets": []
+}
