@@ -1,0 +1,34 @@
+name: Bug report
+description: Something behaves incorrectly
+labels: [bug]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package and version
+      placeholder: '@responsivejs/design 0.1.0-alpha.0'
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Code + the page/DOM being measured. The smaller, the faster we can fix it.
+    validations:
+      required: true
+  - type: input
+    id: widths
+    attributes:
+      label: Widths involved
+      placeholder: '320, 768, 1280'
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: 'Node 22 / Playwright 1.50 / Chrome 130 / Windows 11'
