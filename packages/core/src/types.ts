@@ -1,0 +1,141 @@
+/**
+ * Core types for r$ — ResponsiveJS
+ */
+
+import type { Rect } from './rect.js';
+
+/** Measured state of one element at one viewport width */
+export interface ElementSnapshot {
+    selector: string;
+    index: number;
+    rect: Rect;
+    styles: {
+        fontSize: number;
+        lineHeight: number;
+        /** Numeric font-weight (normal=400, bold=700). Used for WCAG large-text bold rule. */
+        fontWeight: number;
+        gap: number;
+        paddingTop: number;
+        paddingRight: number;
+        paddingBottom: number;
+        paddingLeft: number;
+        marginTop: number;
+        marginRight: number;
+        marginBottom: number;
+        marginLeft: number;
+        borderRadiusTL: number;
+        borderRadiusTR: number;
+        borderRadiusBR: number;
+        borderRadiusBL: number;
+        minWidth: number;
+        maxWidth: number;
+        minHeight: number;
+        maxHeight: number;
+        zIndex: number;
+        opacity: number;
+        outlineWidth: number;
+        outlineOffset: number;
+    };
+    computed: {
+        display: string;
+        overflow: string;
+        position: string;
+        visibility: string;
+        pointerEvents: string;
+        backgroundColor: string;
+        color: string;
+        boxSizing: string;
+        textAlign: string;
+        whiteSpace: string;
+        cursor: string;
+    };
+}
+
+/** Parent with its direct children rects */
+export interface ChildRelation {
+    parentSelector: string;
+    parentRect: Rect;
+    childRects: Rect[];
+}
+
+/** All measurements at one viewport width */
+export interface ViewportSnapshot {
+    width: number;
+    height: number;
+    elements: Map<string, ElementSnapshot[]>;
+    childRelations: Map<string, ChildRelation[]>;
+    timestamp: number;
+    scrollY?: number;
+}
+
+/** All measurements across all viewport widths */
+export interface SnapshotStore {
+    snapshots: Map<number, ViewportSnapshot>;
+    widths: number[];
+    selectors: string[];
+}
+
+/** Machine-readable fix suggestion for agentic consumers. */
+export interface FixSuggestion {
+    selector: string;
+    property: string;
+    value: string;
+    reason: string;
+}
+
+/** A constraint violation */
+export interface Violation {
+    rule: string;
+    element?: string;
+    elements?: string[];
+    width: number;
+    detail: string;
+    expected?: number;
+    actual?: number;
+    severity?: 'error' | 'warning' | 'info';
+    suggestion?: string;
+    fix?: FixSuggestion;
+}
+
+/** Report from constraint validation */
+export interface Report {
+    pass: boolean;
+    total: number;
+    passed: number;
+    failed: number;
+    violations: Violation[];
+}
+
+/** Sweep configuration */
+export interface SweepOptions {
+    url: string;
+    widths?: number[];
+    from?: number;
+    to?: number;
+    step?: number;
+    selectors: string[];
+    height?: number;
+    scroll?: boolean;
+    scrollSteps?: number;
+}
+
+/** Measured element in normal, hover, and focus states */
+export interface InteractionSnapshot {
+    selector: string;
+    normal: ElementSnapshot;
+    hover?: ElementSnapshot;
+    focus?: ElementSnapshot;
+}
+
+/** Default viewport widths for sweeping */
+export const DEFAULT_WIDTHS = [
+    320,   // iPhone SE
+    375,   // iPhone 12/13
+    390,   // iPhone 14/15
+    768,   // iPad portrait
+    1024,  // iPad landscape
+    1280,  // laptop
+    1440,  // desktop
+    1920,  // full HD
+    2560,  // QHD
+];

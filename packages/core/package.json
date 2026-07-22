@@ -1,0 +1,80 @@
+{
+    "name": "@responsivejs/core",
+    "version": "0.0.0",
+    "description": "The shared math of r$ — geometry, curves, stats, color, typography, aesthetics. value = f(width).",
+    "license": "MPL-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20.19"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./rect": {
+            "types": "./dist/rect.d.ts",
+            "default": "./dist/rect.js"
+        },
+        "./curve": {
+            "types": "./dist/curve.d.ts",
+            "default": "./dist/curve.js"
+        },
+        "./stats": {
+            "types": "./dist/stats.d.ts",
+            "default": "./dist/stats.js"
+        },
+        "./color": {
+            "types": "./dist/color.d.ts",
+            "default": "./dist/color.js"
+        },
+        "./typography": {
+            "types": "./dist/typography.d.ts",
+            "default": "./dist/typography.js"
+        },
+        "./aesthetics": {
+            "types": "./dist/aesthetics.d.ts",
+            "default": "./dist/aesthetics.js"
+        },
+        "./types": {
+            "types": "./dist/types.d.ts",
+            "default": "./dist/types.js"
+        },
+        "./snapshot": {
+            "types": "./dist/snapshot.d.ts",
+            "default": "./dist/snapshot.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json"
+    },
+    "devDependencies": {
+        "typescript": "^5.7.0"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AleSaiani/ResponsiveJS.git",
+        "directory": "packages/core"
+    },
+    "homepage": "https://github.com/AleSaiani/ResponsiveJS#readme",
+    "bugs": {
+        "url": "https://github.com/AleSaiani/ResponsiveJS/issues"
+    },
+    "keywords": [
+        "responsive",
+        "layout",
+        "geometry",
+        "aesthetics",
+        "design",
+        "curve"
+    ]
+}
