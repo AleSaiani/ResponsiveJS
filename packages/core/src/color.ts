@@ -165,18 +165,45 @@ function hslToRgba(h: number, s: number, l: number, a: number): RGBA {
     return { r: r + m, g: g + m, b: b + m, a };
 }
 
-// ─── OKLCH → RGB (via OKLab → linear sRGB → sRGB) ──────────────────────
+// ─── OKLab ↔ sRGB (Björn Ottosson's matrices) ──────────────────────────
 
-function oklchToRgba(L: number, C: number, H: number, a: number): RGBA {
-    // OKLCH → OKLab
-    const hRad = (H * Math.PI) / 180;
-    const labA = C * Math.cos(hRad);
-    const labB = C * Math.sin(hRad);
+/** A color in OKLab space (perceptually uniform, hue-path-unambiguous). */
+export interface OKLab {
+    L: number;
+    a: number;
+    b: number;
+    alpha: number;
+}
 
+/** sRGB → OKLab. */
+export function rgbaToOklab(c: RGBA): OKLab {
+    const linearize = (v: number) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+    const lr = linearize(c.r);
+    const lg = linearize(c.g);
+    const lb = linearize(c.b);
+
+    const l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb;
+    const m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb;
+    const s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb;
+
+    const l_ = Math.cbrt(l);
+    const m_ = Math.cbrt(m);
+    const s_ = Math.cbrt(s);
+
+    return {
+        L: 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_,
+        a: 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_,
+        b: 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_,
+        alpha: c.a,
+    };
+}
+
+/** OKLab → sRGB. Out-of-gamut channels are clamped per-channel. */
+export function oklabToRgba(c: OKLab): RGBA {
     // OKLab → linear sRGB (via LMS intermediate)
-    const l_ = L + 0.3963377774 * labA + 0.2158037573 * labB;
-    const m_ = L - 0.1055613458 * labA - 0.0638541728 * labB;
-    const s_ = L - 0.0894841775 * labA - 1.2914855480 * labB;
+    const l_ = c.L + 0.3963377774 * c.a + 0.2158037573 * c.b;
+    const m_ = c.L - 0.1055613458 * c.a - 0.0638541728 * c.b;
+    const s_ = c.L - 0.0894841775 * c.a - 1.291485548 * c.b;
 
     const l = l_ * l_ * l_;
     const m = m_ * m_ * m_;
@@ -184,18 +211,42 @@ function oklchToRgba(L: number, C: number, H: number, a: number): RGBA {
 
     const lr = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
     const lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
-    const lb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+    const lb = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
 
     // Linear sRGB → sRGB (gamma compression)
-    const gammaCompress = (c: number) =>
-        c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+    const gammaCompress = (v: number) =>
+        v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
 
     return {
         r: clamp01(gammaCompress(lr)),
         g: clamp01(gammaCompress(lg)),
         b: clamp01(gammaCompress(lb)),
-        a,
+        a: c.alpha,
     };
+}
+
+/** Perceptual mix of two colors in OKLab space (t: 0 → a, 1 → b). */
+export function mixOklab(a: RGBA, b: RGBA, t: number): RGBA {
+    const la = rgbaToOklab(a);
+    const lb = rgbaToOklab(b);
+    return oklabToRgba({
+        L: la.L + (lb.L - la.L) * t,
+        a: la.a + (lb.a - la.a) * t,
+        b: la.b + (lb.b - la.b) * t,
+        alpha: la.alpha + (lb.alpha - la.alpha) * t,
+    });
+}
+
+/** Emit a CSS color string in modern `rgb(r g b / a)` syntax. */
+export function formatRgb(c: RGBA): string {
+    const to255 = (v: number) => Math.round(clamp01(v) * 255);
+    const rgb = `${to255(c.r)} ${to255(c.g)} ${to255(c.b)}`;
+    return c.a >= 1 ? `rgb(${rgb})` : `rgb(${rgb} / ${Math.round(c.a * 1000) / 1000})`;
+}
+
+function oklchToRgba(L: number, C: number, H: number, a: number): RGBA {
+    const hRad = (H * Math.PI) / 180;
+    return oklabToRgba({ L, a: C * Math.cos(hRad), b: C * Math.sin(hRad), alpha: a });
 }
 
 function clamp01(v: number): number {

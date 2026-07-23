@@ -11,6 +11,7 @@ export * from './snapshot.js';
 
 export * as rect from './rect.js';
 export * as curve from './curve.js';
+export * as interpolate from './interpolate.js';
 export * as stats from './stats.js';
 export * as color from './color.js';
 export * as typography from './typography.js';
@@ -18,4 +19,6 @@ export * as aesthetics from './aesthetics.js';
 
 export type { Rect } from './rect.js';
 export type { Curve } from './curve.js';
+export type { WidthFn, Domain, Bezier, EasingName } from './interpolate.js';
+export type { OKLab } from './color.js';
 export type { Viewport, AestheticScore, ScoreInput } from './aesthetics.js';

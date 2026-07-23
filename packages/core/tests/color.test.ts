@@ -171,3 +171,72 @@ describe('WCAG levels', () => {
         expect(meetsAAA(4.4, true)).toBe(false);
     });
 });
+
+describe('OKLab', () => {
+    it('round-trips sRGB → OKLab → sRGB within 1/255', async () => {
+        const { rgbaToOklab, oklabToRgba, parseColor } = await import('../src/color.js');
+        for (const css of ['#ff0000', '#00ff00', '#0000ff', '#808080', '#123456', '#ffffff', '#000000']) {
+            const original = parseColor(css);
+            const back = oklabToRgba(rgbaToOklab(original));
+            expect(Math.abs(back.r - original.r)).toBeLessThan(1 / 255);
+            expect(Math.abs(back.g - original.g)).toBeLessThan(1 / 255);
+            expect(Math.abs(back.b - original.b)).toBeLessThan(1 / 255);
+        }
+    });
+
+    it('preserves alpha through the round-trip', async () => {
+        const { rgbaToOklab, oklabToRgba } = await import('../src/color.js');
+        const c = { r: 0.5, g: 0.2, b: 0.8, a: 0.35 };
+        expect(oklabToRgba(rgbaToOklab(c)).a).toBeCloseTo(0.35, 10);
+    });
+
+    it('mixOklab is exact at the endpoints', async () => {
+        const { mixOklab, parseColor } = await import('../src/color.js');
+        const red = parseColor('#ff0000');
+        const blue = parseColor('#0000ff');
+        const at0 = mixOklab(red, blue, 0);
+        const at1 = mixOklab(red, blue, 1);
+        expect(Math.abs(at0.r - 1)).toBeLessThan(1 / 255);
+        expect(Math.abs(at1.b - 1)).toBeLessThan(1 / 255);
+    });
+
+    it('mixOklab midpoint of red/blue keeps perceptual lightness (not muddy)', async () => {
+        const { mixOklab, rgbaToOklab, parseColor } = await import('../src/color.js');
+        const red = parseColor('#ff0000');
+        const blue = parseColor('#0000ff');
+        const mid = mixOklab(red, blue, 0.5);
+        const midL = rgbaToOklab(mid).L;
+        const redL = rgbaToOklab(red).L;
+        const blueL = rgbaToOklab(blue).L;
+        // OKLab lerp keeps L at the average of the endpoints; sRGB lerp would sink well below it.
+        expect(midL).toBeCloseTo((redL + blueL) / 2, 1);
+        const srgbMid = { r: 0.5, g: 0, b: 0.5, a: 1 };
+        expect(midL).toBeGreaterThanOrEqual(rgbaToOklab(srgbMid).L - 0.01);
+    });
+
+    it('mixOklab interpolates alpha linearly', async () => {
+        const { mixOklab } = await import('../src/color.js');
+        const a = { r: 1, g: 0, b: 0, a: 0 };
+        const b = { r: 1, g: 0, b: 0, a: 1 };
+        expect(mixOklab(a, b, 0.25).a).toBeCloseTo(0.25, 10);
+    });
+
+    it('formatRgb emits modern syntax', async () => {
+        const { formatRgb } = await import('../src/color.js');
+        expect(formatRgb({ r: 1, g: 0, b: 0, a: 1 })).toBe('rgb(255 0 0)');
+        expect(formatRgb({ r: 0, g: 0.5, b: 1, a: 0.5 })).toBe('rgb(0 128 255 / 0.5)');
+    });
+
+    it('formatRgb clamps out-of-range channels', async () => {
+        const { formatRgb } = await import('../src/color.js');
+        expect(formatRgb({ r: 1.2, g: -0.1, b: 0, a: 1 })).toBe('rgb(255 0 0)');
+    });
+
+    it('oklch() parsing still works after the refactor', async () => {
+        const { parseColor } = await import('../src/color.js');
+        const white = parseColor('oklch(1 0 0)');
+        expect(white.r).toBeCloseTo(1, 2);
+        expect(white.g).toBeCloseTo(1, 2);
+        expect(white.b).toBeCloseTo(1, 2);
+    });
+});

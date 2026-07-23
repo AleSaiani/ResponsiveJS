@@ -21,6 +21,10 @@
             "types": "./dist/curve.d.ts",
             "default": "./dist/curve.js"
         },
+        "./interpolate": {
+            "types": "./dist/interpolate.d.ts",
+            "default": "./dist/interpolate.js"
+        },
         "./stats": {
             "types": "./dist/stats.d.ts",
             "default": "./dist/stats.js"
