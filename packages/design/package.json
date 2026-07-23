@@ -17,18 +17,18 @@
             "types": "./dist/browser/index.d.ts",
             "default": "./dist/browser/index.js"
         },
-        "./design-systems/*.json": "./design-systems/*.json",
+        "./design-systems/*.json": "./dist/design-systems/*.json",
         "./package.json": "./package.json"
     },
     "files": [
-        "dist",
-        "design-systems"
+        "dist"
     ],
     "scripts": {
         "build": "tsc -p tsconfig.json"
     },
     "dependencies": {
-        "@responsivejs/core": "workspace:^"
+        "@responsivejs/core": "workspace:^",
+        "@responsivejs/contract": "workspace:^"
     },
     "peerDependencies": {
         "@playwright/test": ">=1.40.0",

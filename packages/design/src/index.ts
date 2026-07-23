@@ -179,5 +179,32 @@ export { CdpSource, type CdpClient, type CdpSourceOptions } from './source/cdp.j
 export { sweepSource, resweepSource, resolveWidths } from './source/sweep.js';
 export { runAxe, normalizeAxeResults, type A11yOptions } from './a11y/axe.js';
 export { storeToJSON, storeFromJSON, type SerializedStore, type ViewportSnapshotWire } from './browser/wire.js';
-export { formatConsole, formatJSON, formatCompact, formatSARIF, toSerializable } from './report/reporter.js';
+export {
+    formatConsole,
+    formatJSON,
+    formatCompact,
+    formatSARIF,
+    toSerializable,
+    formatContractConsole,
+    formatContractCompact,
+} from './report/reporter.js';
 export { Asserter } from './constraints/index.js';
+
+// ─── F5: design-contract execution ──────────────────────────────────────
+export { verifyContract, recordBaseline } from './contract/verify.js';
+export { designSystemRules } from './contract/design-system-rules.js';
+export { compileRule } from './contract/dispatch.js';
+export {
+    contract,
+    ContractBuilder,
+    parseContract,
+    validateContract,
+    resolveAliases,
+    CONSTRAINT_REGISTRY,
+    CONSTRAINT_NAMES,
+    type DesignContract,
+    type ContractRule,
+    type ContractReport,
+    type ContractViolation,
+    type ConstraintName,
+} from '@responsivejs/contract';

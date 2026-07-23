@@ -6,7 +6,9 @@
             "@responsivejs/core": ["./packages/core/src/index.ts"],
             "@responsivejs/core/*": ["./packages/core/src/*.ts"],
             "@responsivejs/runtime": ["./packages/runtime/src/index.ts"],
-            "@responsivejs/runtime/*": ["./packages/runtime/src/*.ts"]
+            "@responsivejs/runtime/*": ["./packages/runtime/src/*.ts"],
+            "@responsivejs/contract": ["./packages/contract/src/index.ts"],
+            "@responsivejs/contract/*": ["./packages/contract/src/*.ts"]
         }
     },
     "include": [

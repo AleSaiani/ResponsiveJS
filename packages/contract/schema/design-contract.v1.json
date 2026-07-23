@@ -1,0 +1,1746 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/AleSaiani/ResponsiveJS/master/packages/contract/schema/design-contract.v1.json",
+  "title": "ResponsiveJS Design Contract v1",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "viewport": {
+      "type": "object",
+      "properties": {
+        "widths": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "from": {
+          "type": "number"
+        },
+        "to": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "selectors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "designSystem": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        },
+        "selectors": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "profile"
+      ],
+      "additionalProperties": false
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "No element exceeds the viewport width at any measured width.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "noOverflow"
+              },
+              "args": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Child rects stay inside the parent rect.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "contains"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "parent": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "child": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "parent",
+                  "child"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Two elements keep equal heights.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "sameHeight"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "a": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "b": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "tolerance": {
+                    "type": "number",
+                    "description": "px, default 2"
+                  }
+                },
+                "required": [
+                  "a",
+                  "b"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Two elements share the same visual row.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "sameLine"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "a": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "b": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "a",
+                  "b"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Elements meet minimum dimensions.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "minSize"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "min": {
+                    "type": "object",
+                    "properties": {
+                      "width": {
+                        "type": "number"
+                      },
+                      "height": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "selector",
+                  "min"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Spacing between children is uniform.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "gapUniform"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "threshold": {
+                    "type": "number",
+                    "description": "cv threshold, default 0.15"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "A property never moves against the direction as width grows.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "monotonic"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "prop": {
+                    "enum": [
+                      "fontSize",
+                      "width",
+                      "height"
+                    ]
+                  },
+                  "direction": {
+                    "enum": [
+                      "up",
+                      "down"
+                    ]
+                  }
+                },
+                "required": [
+                  "selector",
+                  "prop"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "No sudden jumps in a property across widths.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "continuous"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "prop": {
+                    "enum": [
+                      "width",
+                      "height",
+                      "fontSize"
+                    ]
+                  },
+                  "maxJump": {
+                    "type": "number",
+                    "description": "max px jump between adjacent widths"
+                  }
+                },
+                "required": [
+                  "selector",
+                  "prop",
+                  "maxJump"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Width ratio a/b stays within bounds.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "proportion"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "a": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "b": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "bounds": {
+                    "type": "object",
+                    "properties": {
+                      "min": {
+                        "type": "number"
+                      },
+                      "max": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "min",
+                      "max"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "a",
+                  "b",
+                  "bounds"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Direct children stay inside their container.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "childrenContained"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "tolerance": {
+                    "type": "number",
+                    "description": "px, default 1"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Direct children keep equal widths.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "childrenEqualWidth"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "tolerance": {
+                    "type": "number",
+                    "description": "ratio, default 0.2"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Elements never collapse to zero height while having width.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "noZeroHeight"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "WCAG touch target ≥ 44×44px at mobile widths.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "touchTarget"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Font size and line-height stay readable.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "textReadable"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "WCAG contrast between text and background.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "contrastRatio"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "level": {
+                    "enum": [
+                      "AA",
+                      "AAA"
+                    ]
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Border radii stay consistent with element size.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "borderRadiusValid"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "z-index ordering matches the given selector order.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "zStackOrder"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selectors": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "selectors"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Font sizes fit a modular scale.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "typographyScale"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Spacing values come from the token set.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "spacingTokens"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "tokens": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "selector",
+                  "tokens"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Elements keep the given aspect ratio.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "aspectRatio"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "ratio": {
+                    "type": "number"
+                  },
+                  "tolerance": {
+                    "type": "number",
+                    "description": "default 0.1"
+                  }
+                },
+                "required": [
+                  "selector",
+                  "ratio"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Focusable elements have a visible focus affordance.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "focusVisible"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Content is not silently clipped by overflow:hidden.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "noHiddenOverflow"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Element positions align to a px grid.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "alignedToGrid"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "gridSize": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "selector",
+                  "gridSize"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Layout holds just below and above each breakpoint.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "breakpointSafe"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "breakpoints": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "breakpoints"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Interactive elements keep a minimum gap between them.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "interactiveSpacing"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  },
+                  "minGap": {
+                    "type": "number",
+                    "description": "px, default 8"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "The element is present and rendered (display/visibility/area).",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "visible"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "The element is absent or not rendered.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assert": {
+                "const": "hidden"
+              },
+              "args": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector (or $alias)"
+                  }
+                },
+                "required": [
+                  "selector"
+                ],
+                "additionalProperties": false
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "severity": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assert",
+              "args"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "score": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string"
+          },
+          "min": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "metrics": {
+            "type": "object",
+            "propertyNames": {
+              "enum": [
+                "balance",
+                "equilibrium",
+                "symmetry",
+                "proportion",
+                "rhythm",
+                "density",
+                "regularity",
+                "simplicity",
+                "unity",
+                "homogeneity",
+                "sequence",
+                "cohesion",
+                "economy",
+                "colorHarmony",
+                "typographyHarmony",
+                "birkhoff",
+                "overall"
+              ]
+            },
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "when": {
+            "type": "object",
+            "properties": {
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "baselines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "selector": {
+            "type": "string"
+          },
+          "prop": {
+            "enum": [
+              "width",
+              "height",
+              "x",
+              "y",
+              "fontSize"
+            ]
+          },
+          "curve": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "tolerance": {
+            "type": "object",
+            "properties": {
+              "px": {
+                "type": "number"
+              },
+              "percent": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "selector",
+          "prop"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "rules"
+  ],
+  "additionalProperties": false
+}

@@ -7,6 +7,7 @@
  */
 
 import type { Asserter } from './index.js';
+import { applyDesignSystemRules } from '../contract/design-system-rules.js';
 
 /** Minimal DS JSON shape — matches our design-systems/*.json schema. */
 export interface DesignSystemConfig {
@@ -42,7 +43,7 @@ export interface ValidationSelectors {
     extra?: string[];
 }
 
-const DEFAULT_SELECTORS: ValidationSelectors = {
+export const DEFAULT_SELECTORS: ValidationSelectors = {
     interactive: ['button', '.pdx-primary', '.pdx-secondary', '.pdx-ghost', '.pdx-danger'],
     text: ['h1', 'h2', 'h3', 'p'],
     inputs: ['.pdx-input', 'input', 'select', 'textarea'],
@@ -60,81 +61,5 @@ export function applyDesignSystem(
     ds: DesignSystemConfig,
     selectors: ValidationSelectors = {}
 ): Asserter {
-    const sel = { ...DEFAULT_SELECTORS, ...selectors };
-
-    // ── Accessibility ──
-    // TODO: ds.accessibility.touchTarget.min is not applied — Asserter.touchTarget()
-    // has no min parameter and always checks the WCAG 44px default.
-    const contrastLevel = (ds.accessibility?.contrast as 'AA' | 'AAA') || 'AA';
-
-    for (const s of sel.interactive || []) {
-        asserter.touchTarget(s);
-    }
-    for (const s of sel.inputs || []) {
-        asserter.touchTarget(s);
-    }
-
-    for (const s of [...(sel.interactive || []), ...(sel.text || [])]) {
-        asserter.contrastRatio(s, contrastLevel);
-    }
-
-    for (const s of sel.interactive || []) {
-        asserter.focusVisible(s);
-    }
-
-    for (const s of sel.text || []) {
-        asserter.textReadable(s);
-    }
-
-    // ── Spacing ──
-    if (ds.spacing?.tokens) {
-        for (const s of sel.containers || []) {
-            asserter.spacingTokens(s, ds.spacing.tokens);
-        }
-    }
-
-    for (const s of sel.containers || []) {
-        asserter.gapUniform(s);
-    }
-
-    // ── Shape ──
-    for (const s of [...(sel.interactive || []), ...(sel.surfaces || []), ...(sel.inputs || [])]) {
-        asserter.borderRadiusValid(s);
-    }
-
-    // ── Layout ──
-    asserter.noOverflow();
-
-    if (sel.containers?.includes('main')) {
-        asserter.childrenContained('main');
-    }
-
-    for (const s of sel.containers || []) {
-        asserter.noZeroHeight(s);
-    }
-
-    // ── Component sizing ──
-    if (ds.components?.button?.height) {
-        for (const s of sel.interactive || []) {
-            asserter.minSize(s, { height: ds.components.button.height });
-        }
-    }
-
-    if (ds.components?.input?.height) {
-        for (const s of sel.inputs || []) {
-            asserter.minSize(s, { height: ds.components.input.height });
-        }
-    }
-
-    // ── Interactive spacing ──
-    for (const s of sel.interactive || []) {
-        asserter.interactiveSpacing(s);
-    }
-
-    // ── Typography scale ──
-    if (sel.text && sel.text.length > 0) {
-        asserter.typographyScale(sel.text.join(', '));
-    }
-
-    return asserter;
+    return applyDesignSystemRules(asserter, ds, selectors);
 }

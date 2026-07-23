@@ -782,6 +782,58 @@ export class Asserter {
         return this;
     }
 
+    /** The element is present AND rendered (display/visibility/area) at every width. */
+    visible(selector: string): this {
+        for (const [w, snapshot] of this.store.snapshots) {
+            this.totalChecks++;
+            const elements = snapshot.elements.get(selector) || [];
+            const rendered = elements.some(
+                (el) =>
+                    el.computed.display !== 'none' &&
+                    el.computed.visibility !== 'hidden' &&
+                    el.rect.area > 0,
+            );
+            if (!rendered) {
+                this.violations.push({
+                    rule: 'visible',
+                    element: selector,
+                    width: w,
+                    detail:
+                        elements.length === 0
+                            ? 'element not found'
+                            : `present but not rendered (display=${elements[0].computed.display}, visibility=${elements[0].computed.visibility}, area=${Math.round(elements[0].rect.area)})`,
+                    severity: 'error',
+                });
+            }
+        }
+        return this;
+    }
+
+    /** The element is absent OR not rendered at every width (inverse of visible). */
+    hidden(selector: string): this {
+        for (const [w, snapshot] of this.store.snapshots) {
+            this.totalChecks++;
+            const elements = snapshot.elements.get(selector) || [];
+            const rendered = elements.filter(
+                (el) =>
+                    el.computed.display !== 'none' &&
+                    el.computed.visibility !== 'hidden' &&
+                    el.rect.area > 0,
+            );
+            if (rendered.length > 0) {
+                this.violations.push({
+                    rule: 'hidden',
+                    element: `${selector}[${rendered[0].index}]`,
+                    width: w,
+                    detail: `expected hidden but rendered (${Math.round(rendered[0].rect.width)}×${Math.round(rendered[0].rect.height)})`,
+                    severity: 'error',
+                    fix: { selector, property: 'display', value: 'none', reason: 'contract requires this element hidden at this width' },
+                });
+            }
+        }
+        return this;
+    }
+
     /** Generate the validation report */
     report(): Report {
         return {

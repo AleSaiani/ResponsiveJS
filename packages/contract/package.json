@@ -1,0 +1,53 @@
+{
+    "name": "@responsivejs/contract",
+    "version": "0.0.0",
+    "description": "The design-contract DSL of r$ — declarative, serializable responsive/layout/a11y/aesthetic expectations for authoring, CI regression, and AI agents.",
+    "license": "MPL-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20.19"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./schema/design-contract.v1.json": "./schema/design-contract.v1.json",
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist",
+        "schema"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "schema": "node ./scripts/generate-schema.mjs"
+    },
+    "dependencies": {
+        "@responsivejs/core": "workspace:^"
+    },
+    "devDependencies": {
+        "typescript": "^5.7.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AleSaiani/ResponsiveJS.git",
+        "directory": "packages/contract"
+    },
+    "homepage": "https://github.com/AleSaiani/ResponsiveJS#readme",
+    "bugs": {
+        "url": "https://github.com/AleSaiani/ResponsiveJS/issues"
+    },
+    "keywords": [
+        "responsive",
+        "contract",
+        "dsl",
+        "design-system",
+        "regression",
+        "json-schema"
+    ]
+}

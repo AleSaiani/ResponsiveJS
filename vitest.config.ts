@@ -22,6 +22,14 @@ export default defineConfig({
                 find: /^@responsivejs\/runtime\/(.*)$/,
                 replacement: resolve(import.meta.dirname, 'packages/runtime/src/$1.ts'),
             },
+            {
+                find: /^@responsivejs\/contract$/,
+                replacement: resolve(import.meta.dirname, 'packages/contract/src/index.ts'),
+            },
+            {
+                find: /^@responsivejs\/contract\/(.*)$/,
+                replacement: resolve(import.meta.dirname, 'packages/contract/src/$1.ts'),
+            },
         ],
     },
     test: {

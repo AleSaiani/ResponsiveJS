@@ -22,6 +22,7 @@ and AI agents. One lineage (`r$`), one model, three uses:
 | [`@responsivejs/design`](packages/design)  | The validation oracle: constraints, 17-metric aesthetic score, reports with fix suggestions, Playwright driver + zero-driver browser core. | **alpha**   |
 | [`@responsivejs/runtime`](packages/runtime) | Authoring: reactive `value = f(width)`, container-aware, `clamp()` where CSS suffices.                                | **alpha**   |
 | `@responsivejs/devtool`                    | The in-page visual overlay: width-sweep, problem overlay, curve inspector, score HUD.                                  | planned     |
+| [`@responsivejs/contract`](packages/contract) | The design-contract DSL: declarative, serializable expectations for CI regression and AI agents.                     | **alpha**   |
 | Adapters (`react`, `vue`, …)               | Thin framework bindings.                                                                                               | planned     |
 
 ## Quick start — validate a layout (Playwright)
@@ -80,7 +81,7 @@ See [docs/DIRECTION.md](docs/DIRECTION.md) for the full picture and
 - **F2 — Runtime** ✅ reactive values, container-aware, `clamp()` generation where CSS suffices.
 - **F3 — Design complete**: unified `analyze()` — geometry + responsive + a11y (WCAG/axe) + aesthetics.
 - **F4 — Devtool**: the in-page overlay.
-- **F5 — Design-contract DSL**: declarative, serializable specs for authoring and regression.
+- **F5 — Design-contract DSL** ✅ declarative, serializable specs for authoring and regression.
 - **F6 — Adapters & DX**: framework bindings, docs, agent skill.
 
 ## Contributing

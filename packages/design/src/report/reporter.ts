@@ -99,6 +99,56 @@ export function formatCompact(report: Report): string {
     return `r$ FAIL ${report.failed}/${report.total} — rules: ${uniqueRules.join(',')} — widths: ${uniqueWidths.join(',')}`;
 }
 
+// ─── contract reports ───────────────────────────────────────────────────
+
+import type { ContractReport } from '@responsivejs/contract';
+
+/** Human-readable contract report, grouped by rule id with authored intent. */
+export function formatContractConsole(report: ContractReport): string {
+    const lines: string[] = [];
+    const name = report.contract.name ? ` '${report.contract.name}'` : '';
+    lines.push(
+        report.pass
+            ? `r$ contract${name} ✓ ${report.passed}/${report.total} checks`
+            : `r$ contract${name} ✗ ${report.failed} violations (${report.total} checks)`,
+    );
+
+    for (const rule of report.rules) {
+        if (rule.skipped) {
+            lines.push(`  ~ ${rule.ruleId} (${rule.assert}) — skipped, no widths in range`);
+            continue;
+        }
+        if (rule.pass) continue;
+        lines.push(`  ✗ ${rule.ruleId} (${rule.assert})`);
+        const description = rule.violations[0]?.ruleDescription;
+        if (description) lines.push(`    intent: ${description}`);
+        for (const v of rule.violations.slice(0, 5)) {
+            lines.push(`    @${v.width}px ${v.element ?? v.elements?.join(' + ') ?? '?'} — ${v.detail}`);
+        }
+        if (rule.violations.length > 5) lines.push(`    … and ${rule.violations.length - 5} more`);
+    }
+
+    for (const s of report.score ?? []) {
+        if (!s.pass) {
+            lines.push(`  ✗ score.${s.metric}${s.scope ? ` (${s.scope})` : ''}: ${s.actual.toFixed(3)} < ${s.min}`);
+        }
+    }
+    for (const b of report.baselines ?? []) {
+        if (b.unrecorded) lines.push(`  ~ baseline ${b.selector}.${b.prop} — not recorded yet`);
+        else if (!b.pass) lines.push(`  ✗ baseline ${b.selector}.${b.prop} — ${b.deviations.length} deviations`);
+    }
+
+    return lines.join('\n');
+}
+
+/** One-line contract summary for CI logs. */
+export function formatContractCompact(report: ContractReport): string {
+    const name = report.contract.name ?? 'contract';
+    if (report.pass) return `r$ ${name} PASS (${report.total} checks)`;
+    const failedRules = report.rules.filter((r) => !r.pass && !r.skipped).map((r) => r.ruleId);
+    return `r$ ${name} FAIL ${report.failed}/${report.total} — rules: ${failedRules.join(',')}`;
+}
+
 // ─── SARIF 2.1.0 ────────────────────────────────────────────────────────
 
 const SARIF_LEVEL: Record<string, string> = { error: 'error', warning: 'warning', info: 'note' };
