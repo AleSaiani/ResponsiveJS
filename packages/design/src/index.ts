@@ -15,6 +15,9 @@ import { formatConsole, formatJSON, formatCompact } from './report/reporter.js';
 import { scoreFromStore, scoreSubtree, type ScoreResult } from './score/index.js';
 import { LiveValidator } from './realtime/live.js';
 import { applyDesignSystem, type DesignSystemConfig, type ValidationSelectors } from './constraints/design-system.js';
+import { analyze, type AnalyzeOptions } from './analyze/index.js';
+import type { UnifiedReport } from './analyze/core.js';
+import { PlaywrightSource } from './source/playwright.js';
 
 export class ResponsiveValidator {
     private store: SnapshotStore | null = null;
@@ -107,6 +110,17 @@ export class ResponsiveValidator {
         return this;
     }
 
+    /** Run the unified oracle: constraints + score + a11y (axe, when available).
+     *  Reuses the existing sweep when present; otherwise sweeps first (needs url+selectors). */
+    async analyze(opts: Omit<AnalyzeOptions, 'source' | 'store'> = {}): Promise<UnifiedReport> {
+        return analyze({
+            ...opts,
+            source: new PlaywrightSource(this.page),
+            store: this.store ?? undefined,
+            selectors: opts.selectors ?? this.store?.selectors,
+        });
+    }
+
     /** Validate against a design system — loads DS rules and applies all constraints automatically.
      *  Call after sweep(). Returns the report. */
     validateDesignSystem(ds: DesignSystemConfig, selectors?: ValidationSelectors): Report {
@@ -149,3 +163,21 @@ export type { ScoreResult } from './score/index.js';
 export { LiveValidator } from './realtime/live.js';
 export { calibrate, DEFAULT_WEIGHTS as CALIBRATION_DEFAULTS, type CalibrationSample, type CalibrationResult } from './score/calibration.js';
 export { applyDesignSystem, type DesignSystemConfig, type ValidationSelectors } from './constraints/design-system.js';
+
+// ─── F3: unified oracle + MeasurementSource ─────────────────────────────
+export { analyze, type AnalyzeOptions } from './analyze/index.js';
+export {
+    analyzeStore,
+    mergeReports,
+    type AnalyzeStoreOptions,
+    type UnifiedReport,
+    type ConstraintsConfig,
+} from './analyze/core.js';
+export type { MeasurementSource } from './source/types.js';
+export { PlaywrightSource, type PlaywrightSourceOptions } from './source/playwright.js';
+export { CdpSource, type CdpClient, type CdpSourceOptions } from './source/cdp.js';
+export { sweepSource, resweepSource, resolveWidths } from './source/sweep.js';
+export { runAxe, normalizeAxeResults, type A11yOptions } from './a11y/axe.js';
+export { storeToJSON, storeFromJSON, type SerializedStore, type ViewportSnapshotWire } from './browser/wire.js';
+export { formatConsole, formatJSON, formatCompact, formatSARIF, toSerializable } from './report/reporter.js';
+export { Asserter } from './constraints/index.js';

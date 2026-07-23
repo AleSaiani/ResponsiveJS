@@ -4,191 +4,24 @@
  */
 
 import type { Page } from '@playwright/test';
-import type { ElementSnapshot, ViewportSnapshot, ChildRelation, InteractionSnapshot } from '@responsivejs/core/types';
-import { fromDOMRect } from '@responsivejs/core/rect';
-
-/** Raw measurement result from the browser (serializable) */
-interface RawMeasurement {
-    selector: string;
-    index: number;
-    rect: { x: number; y: number; width: number; height: number };
-    styles: {
-        fontSize: number;
-        lineHeight: number;
-        fontWeight: number;
-        gap: number;
-        paddingTop: number;
-        paddingRight: number;
-        paddingBottom: number;
-        paddingLeft: number;
-        marginTop: number;
-        marginRight: number;
-        marginBottom: number;
-        marginLeft: number;
-        borderRadiusTL: number;
-        borderRadiusTR: number;
-        borderRadiusBR: number;
-        borderRadiusBL: number;
-        minWidth: number;
-        maxWidth: number;
-        minHeight: number;
-        maxHeight: number;
-        zIndex: number;
-        opacity: number;
-        outlineWidth: number;
-        outlineOffset: number;
-    };
-    computed: {
-        display: string;
-        overflow: string;
-        position: string;
-        visibility: string;
-        pointerEvents: string;
-        backgroundColor: string;
-        color: string;
-        boxSizing: string;
-        textAlign: string;
-        whiteSpace: string;
-        cursor: string;
-    };
-}
+import type { ElementSnapshot, ViewportSnapshot, InteractionSnapshot } from '@responsivejs/core/types';
+import { collectPage } from '../browser/inject.js';
+import { fromWire } from '../browser/wire.js';
 
 /**
  * Measure all elements matching the given selectors.
- * Runs entirely inside the browser via page.evaluate().
+ * Runs the shared in-page collector via page.evaluate().
  */
 export async function measure(page: Page, selectors: string[]): Promise<ViewportSnapshot> {
     const viewportSize = page.viewportSize();
     if (!viewportSize) throw new Error('Page has no viewport size set');
 
-    const raw: RawMeasurement[] = await page.evaluate((sels) => {
-        const results: any[] = [];
-
-        for (const selector of sels) {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach((el, index) => {
-                const r = el.getBoundingClientRect();
-                const cs = getComputedStyle(el);
-
-                results.push({
-                    selector,
-                    index,
-                    rect: { x: r.x, y: r.y, width: r.width, height: r.height },
-                    styles: {
-                        fontSize: parseFloat(cs.fontSize) || 0,
-                        lineHeight: parseFloat(cs.lineHeight) || 0,
-                        fontWeight: parseFloat(cs.fontWeight) || 400,
-                        gap: parseFloat(cs.gap) || 0,
-                        paddingTop: parseFloat(cs.paddingTop) || 0,
-                        paddingRight: parseFloat(cs.paddingRight) || 0,
-                        paddingBottom: parseFloat(cs.paddingBottom) || 0,
-                        paddingLeft: parseFloat(cs.paddingLeft) || 0,
-                        marginTop: parseFloat(cs.marginTop) || 0,
-                        marginRight: parseFloat(cs.marginRight) || 0,
-                        marginBottom: parseFloat(cs.marginBottom) || 0,
-                        marginLeft: parseFloat(cs.marginLeft) || 0,
-                        borderRadiusTL: parseFloat(cs.borderTopLeftRadius) || 0,
-                        borderRadiusTR: parseFloat(cs.borderTopRightRadius) || 0,
-                        borderRadiusBR: parseFloat(cs.borderBottomRightRadius) || 0,
-                        borderRadiusBL: parseFloat(cs.borderBottomLeftRadius) || 0,
-                        minWidth: parseFloat(cs.minWidth) || 0,
-                        maxWidth: cs.maxWidth === 'none' ? Infinity : (parseFloat(cs.maxWidth) || 0),
-                        minHeight: parseFloat(cs.minHeight) || 0,
-                        maxHeight: cs.maxHeight === 'none' ? Infinity : (parseFloat(cs.maxHeight) || 0),
-                        zIndex: cs.zIndex === 'auto' ? 0 : (parseInt(cs.zIndex) || 0),
-                        opacity: parseFloat(cs.opacity) ?? 1,
-                        outlineWidth: parseFloat(cs.outlineWidth) || 0,
-                        outlineOffset: parseFloat(cs.outlineOffset) || 0,
-                    },
-                    computed: {
-                        display: cs.display,
-                        overflow: cs.overflow,
-                        position: cs.position,
-                        visibility: cs.visibility,
-                        pointerEvents: cs.pointerEvents,
-                        backgroundColor: cs.backgroundColor,
-                        color: cs.color,
-                        boxSizing: cs.boxSizing,
-                        textAlign: cs.textAlign,
-                        whiteSpace: cs.whiteSpace,
-                        cursor: cs.cursor,
-                    },
-                });
-            });
-        }
-
-        return results;
-    }, selectors);
-
-    // Convert raw measurements to ElementSnapshots with full Rect
-    const elements = new Map<string, ElementSnapshot[]>();
-
-    for (const m of raw) {
-        const snapshot: ElementSnapshot = {
-            selector: m.selector,
-            index: m.index,
-            rect: {
-                x: m.rect.x,
-                y: m.rect.y,
-                width: m.rect.width,
-                height: m.rect.height,
-                right: m.rect.x + m.rect.width,
-                bottom: m.rect.y + m.rect.height,
-                centerX: m.rect.x + m.rect.width / 2,
-                centerY: m.rect.y + m.rect.height / 2,
-                area: m.rect.width * m.rect.height,
-            },
-            styles: m.styles,
-            computed: m.computed,
-        };
-
-        const key = m.selector;
-        if (!elements.has(key)) elements.set(key, []);
-        elements.get(key)!.push(snapshot);
-    }
-
-    // Measure direct children of each container selector
-    const childRelationsRaw = await page.evaluate((sels) => {
-        const results: { selector: string; parentIndex: number; parentRect: any; childRects: any[] }[] = [];
-        for (const selector of sels) {
-            const parents = document.querySelectorAll(selector);
-            parents.forEach((parent, pi) => {
-                const pr = parent.getBoundingClientRect();
-                const childRects = Array.from(parent.children).map(c => {
-                    const cr = c.getBoundingClientRect();
-                    return { x: cr.x, y: cr.y, width: cr.width, height: cr.height };
-                });
-                if (childRects.length > 0) {
-                    results.push({
-                        selector,
-                        parentIndex: pi,
-                        parentRect: { x: pr.x, y: pr.y, width: pr.width, height: pr.height },
-                        childRects,
-                    });
-                }
-            });
-        }
-        return results;
-    }, selectors);
-
-    const childRelations = new Map<string, ChildRelation[]>();
-    for (const cr of childRelationsRaw) {
-        const relation: ChildRelation = {
-            parentSelector: cr.selector,
-            parentRect: fromDOMRect(cr.parentRect),
-            childRects: cr.childRects.map(fromDOMRect),
-        };
-        if (!childRelations.has(cr.selector)) childRelations.set(cr.selector, []);
-        childRelations.get(cr.selector)!.push(relation);
-    }
-
-    return {
+    const wire = await page.evaluate(collectPage, {
+        selectors,
         width: viewportSize.width,
         height: viewportSize.height,
-        elements,
-        childRelations,
-        timestamp: Date.now(),
-    };
+    });
+    return fromWire(wire);
 }
 
 // measureContainment only measures geometry plus a handful of styles; the

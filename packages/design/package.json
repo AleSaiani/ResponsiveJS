@@ -31,15 +31,20 @@
         "@responsivejs/core": "workspace:^"
     },
     "peerDependencies": {
-        "@playwright/test": ">=1.40.0"
+        "@playwright/test": ">=1.40.0",
+        "axe-core": ">=4.9.0"
     },
     "peerDependenciesMeta": {
         "@playwright/test": {
+            "optional": true
+        },
+        "axe-core": {
             "optional": true
         }
     },
     "devDependencies": {
         "@playwright/test": "^1.50.0",
+        "axe-core": "^4.10.0",
         "typescript": "^5.7.0"
     },
     "publishConfig": {

@@ -12,6 +12,18 @@ export { scoreFromStore, scoreSubtree, type ScoreResult } from '../score/index.j
 export { score as computeScore, type AestheticScore } from '@responsivejs/core/aesthetics';
 export type { ViewportSnapshot, SnapshotStore, ElementSnapshot, ChildRelation } from '@responsivejs/core/types';
 
+// F3: the pure oracle + injection/wire toolkit (all driver-free)
+export { analyzeStore, mergeReports, type AnalyzeStoreOptions, type UnifiedReport, type ConstraintsConfig } from '../analyze/core.js';
+export { collectPage, buildCollectExpression, type CollectArgs } from './inject.js';
+export {
+    fromWire,
+    toWire,
+    storeToJSON,
+    storeFromJSON,
+    type ViewportSnapshotWire,
+    type SerializedStore,
+} from './wire.js';
+
 import { collectStore, type CollectOptions } from './collect.js';
 import { scoreFromStore, type ScoreResult } from '../score/index.js';
 
