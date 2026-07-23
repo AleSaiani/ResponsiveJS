@@ -15,7 +15,8 @@
         "format": "prettier --write \"packages/*/{src,tests}/**/*.ts\" \"*.{md,json,ts,mjs}\"",
         "changeset": "changeset",
         "version": "changeset version",
-        "release": "pnpm build && changeset publish"
+        "release": "pnpm build && changeset publish",
+        "publish:local": "pnpm build && pnpm -r publish --registry http://localhost:4873 --no-git-checks --force"
     },
     "devDependencies": {
         "@changesets/changelog-github": "^0.5.1",
