@@ -20,7 +20,7 @@ and AI agents. One lineage (`r$`), one model, three uses:
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ----------- |
 | [`@responsivejs/core`](packages/core)      | The shared math: geometry, curves, stats, color, typography, aesthetics, snapshot model. Pure, zero-dep, browser-safe. | **alpha**   |
 | [`@responsivejs/design`](packages/design)  | The validation oracle: constraints, 17-metric aesthetic score, reports with fix suggestions, Playwright driver + zero-driver browser core. | **alpha**   |
-| `@responsivejs/runtime`                    | Authoring: reactive `value = f(width)`, container-aware, `clamp()` where CSS suffices.                                 | planned     |
+| [`@responsivejs/runtime`](packages/runtime) | Authoring: reactive `value = f(width)`, container-aware, `clamp()` where CSS suffices.                                | **alpha**   |
 | `@responsivejs/devtool`                    | The in-page visual overlay: width-sweep, problem overlay, curve inspector, score HUD.                                  | planned     |
 | Adapters (`react`, `vue`, …)               | Thin framework bindings.                                                                                               | planned     |
 
@@ -76,8 +76,8 @@ See [docs/DIRECTION.md](docs/DIRECTION.md) for the full picture and
 ## Roadmap
 
 - **F0 — Extraction** ✅ `core` + `design` published from the existing, battle-tested codebase.
-- **F1 — Core authoring**: `sample`/`interpolate` on `Curve` (the authoring half of the model).
-- **F2 — Runtime**: reactive values, container-aware, `clamp()` generation where CSS suffices.
+- **F1 — Core authoring** ✅ `sample`/`interpolate` on `Curve` (the authoring half of the model).
+- **F2 — Runtime** ✅ reactive values, container-aware, `clamp()` generation where CSS suffices.
 - **F3 — Design complete**: unified `analyze()` — geometry + responsive + a11y (WCAG/axe) + aesthetics.
 - **F4 — Devtool**: the in-page overlay.
 - **F5 — Design-contract DSL**: declarative, serializable specs for authoring and regression.

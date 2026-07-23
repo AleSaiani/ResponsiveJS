@@ -14,6 +14,14 @@ export default defineConfig({
                 find: /^@responsivejs\/core\/(.*)$/,
                 replacement: resolve(import.meta.dirname, 'packages/core/src/$1.ts'),
             },
+            {
+                find: /^@responsivejs\/runtime$/,
+                replacement: resolve(import.meta.dirname, 'packages/runtime/src/index.ts'),
+            },
+            {
+                find: /^@responsivejs\/runtime\/(.*)$/,
+                replacement: resolve(import.meta.dirname, 'packages/runtime/src/$1.ts'),
+            },
         ],
     },
     test: {

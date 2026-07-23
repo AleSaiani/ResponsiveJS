@@ -1,0 +1,67 @@
+{
+    "name": "@responsivejs/runtime",
+    "version": "0.0.0",
+    "description": "The authoring runtime of r$ — reactive value = f(width), viewport and container aware, CSS-first: emits clamp() where CSS suffices, JS only where it doesn't.",
+    "license": "MPL-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20.19"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./signals": {
+            "types": "./dist/signals.d.ts",
+            "default": "./dist/signals.js"
+        },
+        "./curves": {
+            "types": "./dist/curves.d.ts",
+            "default": "./dist/curves.js"
+        },
+        "./layout": {
+            "types": "./dist/layout.d.ts",
+            "default": "./dist/layout.js"
+        },
+        "./typography": {
+            "types": "./dist/typography.d.ts",
+            "default": "./dist/typography.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "@responsivejs/core": "workspace:^"
+    },
+    "devDependencies": {
+        "typescript": "^5.7.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AleSaiani/ResponsiveJS.git",
+        "directory": "packages/runtime"
+    },
+    "homepage": "https://github.com/AleSaiani/ResponsiveJS#readme",
+    "bugs": {
+        "url": "https://github.com/AleSaiani/ResponsiveJS/issues"
+    },
+    "keywords": [
+        "responsive",
+        "fluid",
+        "clamp",
+        "breakpoints",
+        "container-queries",
+        "signals",
+        "reactive"
+    ]
+}

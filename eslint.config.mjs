@@ -27,4 +27,12 @@ export default tseslint.config(
             '@typescript-eslint/no-explicit-any': 'off',
         },
     },
+    {
+        // The dependency-tracking stack assigns `this` to the module-level
+        // currentObserver — intentional observer-pattern, not an alias smell.
+        files: ['packages/runtime/src/signals.ts'],
+        rules: {
+            '@typescript-eslint/no-this-alias': 'off',
+        },
+    },
 );

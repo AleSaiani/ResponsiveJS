@@ -4,7 +4,9 @@
         "noEmit": true,
         "paths": {
             "@responsivejs/core": ["./packages/core/src/index.ts"],
-            "@responsivejs/core/*": ["./packages/core/src/*.ts"]
+            "@responsivejs/core/*": ["./packages/core/src/*.ts"],
+            "@responsivejs/runtime": ["./packages/runtime/src/index.ts"],
+            "@responsivejs/runtime/*": ["./packages/runtime/src/*.ts"]
         }
     },
     "include": [
