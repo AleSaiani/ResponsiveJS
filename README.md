@@ -79,7 +79,7 @@ See [docs/DIRECTION.md](docs/DIRECTION.md) for the full picture and
 - **F0 — Extraction** ✅ `core` + `design` published from the existing, battle-tested codebase.
 - **F1 — Core authoring** ✅ `sample`/`interpolate` on `Curve` (the authoring half of the model).
 - **F2 — Runtime** ✅ reactive values, container-aware, `clamp()` generation where CSS suffices.
-- **F3 — Design complete**: unified `analyze()` — geometry + responsive + a11y (WCAG/axe) + aesthetics.
+- **F3 — Design complete** ✅ unified `analyze()` — geometry + responsive + a11y (WCAG/axe) + aesthetics.
 - **F4 — Devtool**: the in-page overlay.
 - **F5 — Design-contract DSL** ✅ declarative, serializable specs for authoring and regression.
 - **F6 — Adapters & DX**: framework bindings, docs, agent skill.
