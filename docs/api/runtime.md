@@ -97,6 +97,8 @@ geometry('.nav', { wrapped: whenWraps, crowded: whenOverflows });
 
 Re-measures on element resize (shared ResizeObserver), viewport resize, and scroll for the
 scroll-sensitive ones. Every predicate's `measure(el)` is pure and callable one-shot.
+**Never `display: none` what a predicate measures** (zeroed rects flip the state back and it
+oscillates) — collapse keeping layout: `visibility: hidden; height: 0; overflow: hidden`.
 `GeometryHandle`: `elements`, `measure()`, `pause()`, `resume()`, `dispose()` (removes the
 attributes). SSR: inert. Bare factories are accepted (`wrapped: whenWraps` ≡ `whenWraps()`).
 

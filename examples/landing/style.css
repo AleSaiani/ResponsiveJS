@@ -16,8 +16,23 @@ body {
 main {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(200px, 320px);
+    grid-template-areas:
+        'hero sidebar'
+        'cards sidebar';
     gap: var(--space-l, 40px);
     padding: var(--space-l, 40px);
+}
+
+.hero {
+    grid-area: hero;
+}
+
+.cards {
+    grid-area: cards;
+}
+
+.sidebar {
+    grid-area: sidebar;
 }
 
 /* ── header + nav: the wrap-driven burger ─────────────────────────────── */
@@ -66,9 +81,15 @@ main {
 
 /* whenWraps() → the burger appears exactly when the links stop fitting.
  * The old way: a hand-tuned @media breakpoint that drifts out of date the
- * moment a nav item is added, renamed, or translated. */
+ * moment a nav item is added, renamed, or translated.
+ *
+ * Gotcha: never display:none what you measure — the children's rects go to
+ * zero, the predicate flips back, and the state oscillates. Collapse while
+ * KEEPING layout: hidden visibility + zero height, geometry intact. */
 .site-nav[data-wrapped] {
-    display: none;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
 }
 
 .site-nav[data-wrapped] ~ .menu-button,
@@ -123,5 +144,9 @@ main {
 @media (max-width: 767px) {
     main {
         grid-template-columns: 1fr;
+        grid-template-areas:
+            'hero'
+            'cards'
+            'sidebar';
     }
 }

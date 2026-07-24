@@ -31,6 +31,11 @@ geometry('.site-nav', { wrapped: whenWraps });
 
 JS detects, CSS styles. There is no width to maintain: adding a seventh link just works.
 
+**The one rule**: never `display: none` what you measure. A `display: none` nav has children
+with zero rects, so the predicate flips back and the state oscillates. Collapse while
+*keeping layout* instead — `visibility: hidden; height: 0; overflow: hidden` — and the
+measurement stays true while the nav is collapsed.
+
 ## 2. Shadow only while pinned — `whenStuck`
 
 **The hack:** an IntersectionObserver watching an invisible 1px sentinel above the header.
