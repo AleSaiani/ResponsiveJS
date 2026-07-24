@@ -11,6 +11,7 @@
 - [@responsivejs/runtime](api/runtime.md) — `responsive()`, `fluid()`, conditionals, layout/typography helpers, signals
 - [@responsivejs/design](api/design.md) — `r$(page)`, the Asserter, `analyze()`, MeasurementSource, browser core, reporters
 - [@responsivejs/contract](api/contract.md) — the contract format, registry, builder, loader, `verifyContract`
+- [@responsivejs/cli](api/cli.md) — the `rjs` command line: analyze / verify / record, driver-pluggable
 
 **Guides**
 

@@ -21,9 +21,24 @@ and AI agents. One lineage (`r$`), one model, three uses:
 | [`@responsivejs/core`](packages/core)      | The shared math: geometry, curves, stats, color, typography, aesthetics, snapshot model. Pure, zero-dep, browser-safe. | **alpha**   |
 | [`@responsivejs/design`](packages/design)  | The validation oracle: constraints, 17-metric aesthetic score, reports with fix suggestions, Playwright driver + zero-driver browser core. | **alpha**   |
 | [`@responsivejs/runtime`](packages/runtime) | Authoring: reactive `value = f(width)`, container-aware, `clamp()` where CSS suffices.                                | **alpha**   |
+| [`@responsivejs/cli`](packages/cli)        | The `rjs` command line: analyze / verify / record any URL, driver-pluggable (Playwright, agent-browser).               | **alpha**   |
 | `@responsivejs/devtool`                    | The in-page visual overlay: width-sweep, problem overlay, curve inspector, score HUD.                                  | planned     |
 | [`@responsivejs/contract`](packages/contract) | The design-contract DSL: declarative, serializable expectations for CI regression and AI agents.                     | **alpha**   |
 | Adapters (`react`, `vue`, …)               | Thin framework bindings.                                                                                               | planned     |
+
+## Quick start — audit any URL (CLI)
+
+```bash
+rjs analyze https://example.com -w 320,768,1280
+# r$ ✗ fail — 3 errors … noOverflow @320px .card[0] — right=496 > viewport=320
+# exit 1 → CI- and agent-loop-ready; -f json | sarif for machines
+
+rjs record home.contract.json https://staging.example.com   # pin today's geometry
+rjs verify home.contract.json https://pr-42.example.com     # regressions fail the build
+```
+
+Driver-pluggable: Playwright when installed, [agent-browser](https://github.com/vercel-labs/agent-browser)
+for zero-setup audits of any live URL. See the [CLI reference](docs/api/cli.md).
 
 ## Quick start — validate a layout (Playwright)
 

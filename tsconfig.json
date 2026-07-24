@@ -8,7 +8,8 @@
             "@responsivejs/runtime": ["./packages/runtime/src/index.ts"],
             "@responsivejs/runtime/*": ["./packages/runtime/src/*.ts"],
             "@responsivejs/contract": ["./packages/contract/src/index.ts"],
-            "@responsivejs/contract/*": ["./packages/contract/src/*.ts"]
+            "@responsivejs/contract/*": ["./packages/contract/src/*.ts"],
+            "@responsivejs/design": ["./packages/design/src/index.ts"]
         }
     },
     "include": [

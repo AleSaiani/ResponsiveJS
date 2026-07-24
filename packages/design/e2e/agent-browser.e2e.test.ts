@@ -8,15 +8,34 @@
  */
 
 import { describe, it, expect, afterAll } from 'vitest';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 import { delimiter, join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { EvalSource, chunkedEval } from '../src/source/eval.js';
 import { analyze } from '../src/analyze/index.js';
 
-const x = promisify(execFile);
 const SESSION = 'rjs-e2e';
+
+/**
+ * Resolve on exit, NOT on stream close: the first CLI command spawns the
+ * agent-browser daemon, which inherits the stdio pipes and never closes them.
+ */
+function run(bin: string, args: string[]): Promise<string> {
+    return new Promise((res, rej) => {
+        const child = spawn(bin, args, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+        let out = '';
+        let err = '';
+        child.stdout.on('data', (d: Buffer) => (out += d));
+        child.stderr.on('data', (d: Buffer) => (err += d));
+        child.on('error', rej);
+        child.on('exit', (code) => {
+            setTimeout(() => {
+                if (code === 0) res(out.trim());
+                else rej(new Error(err.trim() || out.trim() || `agent-browser exited with code ${code}`));
+            }, 30);
+        });
+    });
+}
 
 /** Native binary (npm layout: <bindir>/node_modules/agent-browser/bin/agent-browser-<plat>-<arch>). */
 function findAgentBrowser(): string | null {
@@ -31,9 +50,8 @@ function findAgentBrowser(): string | null {
 
 const BIN = findAgentBrowser();
 
-async function ab(...args: string[]): Promise<string> {
-    const { stdout } = await x(BIN!, ['--session', SESSION, ...args], { maxBuffer: 16 * 1024 * 1024 });
-    return stdout.trim();
+function ab(...args: string[]): Promise<string> {
+    return run(BIN!, ['--session', SESSION, ...args]);
 }
 
 async function rawEval(expression: string): Promise<unknown> {

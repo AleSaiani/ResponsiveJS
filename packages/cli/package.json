@@ -1,0 +1,65 @@
+{
+    "name": "@responsivejs/cli",
+    "version": "0.0.0",
+    "description": "rjs — the r$ command line: analyze, verify and record responsive design on any URL, driver-pluggable (Playwright, agent-browser).",
+    "license": "MPL-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20.19"
+    },
+    "bin": {
+        "rjs": "./dist/bin.js"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "@responsivejs/contract": "workspace:^",
+        "@responsivejs/core": "workspace:^",
+        "@responsivejs/design": "workspace:^"
+    },
+    "peerDependencies": {
+        "@playwright/test": ">=1.40.0",
+        "axe-core": ">=4.9.0"
+    },
+    "peerDependenciesMeta": {
+        "@playwright/test": {
+            "optional": true
+        },
+        "axe-core": {
+            "optional": true
+        }
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AleSaiani/ResponsiveJS.git",
+        "directory": "packages/cli"
+    },
+    "homepage": "https://github.com/AleSaiani/ResponsiveJS#readme",
+    "bugs": {
+        "url": "https://github.com/AleSaiani/ResponsiveJS/issues"
+    },
+    "keywords": [
+        "responsive",
+        "cli",
+        "audit",
+        "accessibility",
+        "layout",
+        "agent-browser",
+        "playwright"
+    ]
+}

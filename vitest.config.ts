@@ -30,6 +30,10 @@ export default defineConfig({
                 find: /^@responsivejs\/contract\/(.*)$/,
                 replacement: resolve(import.meta.dirname, 'packages/contract/src/$1.ts'),
             },
+            {
+                find: /^@responsivejs\/design$/,
+                replacement: resolve(import.meta.dirname, 'packages/design/src/index.ts'),
+            },
         ],
     },
     test: {

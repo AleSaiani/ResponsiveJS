@@ -302,13 +302,29 @@ function deriveWidths(parsed: DesignContract, rules: ContractRule[]): number[] {
     return [...new Set(widths)].sort((a, b) => a - b);
 }
 
-async function sweepAndVerify(input: DesignContract | object, page: Page, opts: { height?: number }): Promise<ContractReport> {
+/** The sweep a contract implies: selectors from rule args, widths from viewport (+bp±1). */
+export interface ContractSweepPlan {
+    selectors: string[];
+    widths: number[];
+    height?: number;
+}
+
+/** Driver-neutral: feed the plan to any MeasurementSource, then verify the store. */
+export function contractSweepPlan(input: DesignContract | object): ContractSweepPlan {
     const { parsed, rules } = normalize(input);
-    const store = await sweepSource(new PlaywrightSource(page), {
-        url: '',
+    return {
         selectors: collectSelectors(rules, parsed),
         widths: deriveWidths(parsed, rules),
-        height: opts.height ?? parsed.viewport?.height,
+        ...(parsed.viewport?.height !== undefined ? { height: parsed.viewport.height } : {}),
+    };
+}
+
+async function sweepAndVerify(input: DesignContract | object, page: Page, opts: { height?: number }): Promise<ContractReport> {
+    const plan = contractSweepPlan(input);
+    const store = await sweepSource(new PlaywrightSource(page), {
+        url: '',
+        ...plan,
+        height: opts.height ?? plan.height,
     });
     return verifyStore(input, store);
 }

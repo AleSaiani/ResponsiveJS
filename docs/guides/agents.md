@@ -72,13 +72,19 @@ solved by composing `chunkedEval`, which stages oversized expressions in-page ch
 
 ```typescript
 import { EvalSource, chunkedEval, analyze } from '@responsivejs/design';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 
-// agent-browser CLI as the driver — one isolated session, JSON output
-const x = promisify(execFile);
-const ab = async (...args: string[]) =>
-    (await x('agent-browser', ['--session', 'rjs', ...args], { shell: process.platform === 'win32' })).stdout;
+// agent-browser CLI as the driver — one isolated session, JSON output.
+// Resolve on exit, NOT stream close: the first command spawns the CLI's
+// daemon, which inherits the stdio pipes and holds them open forever.
+const ab = (...args: string[]) =>
+    new Promise<string>((res, rej) => {
+        const child = spawn('agent-browser', ['--session', 'rjs', ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
+        let out = '';
+        child.stdout.on('data', (d) => (out += d));
+        child.on('error', rej);
+        child.on('exit', (code) => setTimeout(() => (code === 0 ? res(out.trim()) : rej(new Error(out))), 30));
+    });
 const abEval = async (expr: string) => {
     const res = JSON.parse(await ab('--json', 'eval', expr));
     if (!res.success) throw new Error(res.error);
