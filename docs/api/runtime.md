@@ -4,11 +4,13 @@ The authoring half: reactive `value = f(width)`, CSS-first. Depends only on
 `@responsivejs/core`. Subpaths: `/signals`, `/curves`, `/layout`, `/typography`, `/geometry`
 (everything is also re-exported from the root).
 
-**The entry point is `r$`** — one callable namespace carrying the whole surface
-(`r$.fluid`, `r$.tokens`, `r$.geometry`, `r$.whenWraps`, `r$.breakpoints`, …), so the editor's
-autocomplete is the API browser. `responsive` is an alias of the same object (the historical name),
-and every member is also a named export for tree-shaking-sensitive code. New to the runtime?
-Start from the [guide](../guides/runtime.md), not this reference.
+**The entry point is `r$`** — one callable namespace carrying the everyday authoring surface
+(`r$.fluid`, `r$.tokens`, `r$.geometry`, `r$.whenWraps`, `r$.breakpoints`, `r$.sync`, …), so
+the editor's autocomplete is the API browser. `responsive` is an alias of the same object (the
+historical name). Precisely: every `r$` member exists, plus root named exports for the same
+functions and for the lower layers — the signal engine, curve sugar, `layout`/`typography`
+helpers and transform templates live as named exports / subpaths, not on the namespace.
+New to the runtime? Start from the [guide](../guides/runtime.md), not this reference.
 
 ## `r$()` — apply styles
 

@@ -113,11 +113,14 @@ violation that has an honest mechanical fix carries one; the rest give you
 `sources.a11y` tells you whether axe actually ran (`'axe'`), was skipped, or was unavailable —
 the report never silently pretends.
 
-## The aesthetic score
+## The aesthetic score (experimental)
 
 Seventeen measured metrics with academic lineage (Ngo/Birkhoff — balance, equilibrium,
-symmetry, proportion, density, rhythm…), each 0..1, averaged into `overall`. How to use it
-without over-trusting it:
+symmetry, proportion, density, rhythm…), each 0..1, averaged into `overall`. It is
+deterministic but **experimental**: elements matched by several selectors are currently
+counted once per selector, nested areas sum into density/weight, and the weights are not yet
+calibrated against human judgment — treat it as a relative signal subordinate to the
+verifiable constraints, never as a gate on its own. How to use it without over-trusting it:
 
 - **Read metrics, not the total.** Each low metric maps to a concrete adjustment: low
   `balance` → visual weight is lopsided; low `proportion` → sizes don't relate harmonically;
@@ -167,9 +170,11 @@ Three things contracts add over inline asserts:
 - **Baselines.** `recordBaseline` measures today's curves and pins them into the contract;
   later runs fail if the geometry drifts beyond tolerance. Record → commit → verify: visual
   regression without screenshots.
-- **Design-system packs.** `"designSystem": { "profile": "material-design-3" }` expands into
-  that system's rules (touch 48px, contrast, spacing tokens) — also `apple-hig`,
-  `fluent-ui-2`, or your own config.
+- **Design-system presets.** `"designSystem": { "profile": "material-design-3" }` expands
+  into that system's *measurable* rules — touch minimums, contrast, spacing tokens, radius
+  sanity, control heights (also `apple-hig`, `fluent-ui-2`, or your own config). These are
+  **validation presets**, not full conformance: they don't yet check type scales, color
+  palettes, elevation or per-component specs.
 
 When you outgrow the builder, write the JSON directly — the published
 [schema](../../packages/contract/schema/design-contract.v1.json) validates it, and unknown

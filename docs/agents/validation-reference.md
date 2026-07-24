@@ -50,9 +50,11 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
 ### Agent loop
 
 1. `rjs analyze <url> -f json` (or `verify` against a contract).
-2. Apply every `fixes[]` entry verbatim (selector → property: value).
-3. For violations without a `fix`: reason from `detail` + `expected/actual` (+ the rule's
-   `ruleDescription` in contract mode — it states WHY the rule exists).
+2. Apply `fixes[]` entries whose `value` is a concrete CSS value (e.g. `"44px"`) verbatim.
+   Entries with parenthesized placeholders — `"(increase contrast)"`, `"(gap or padding)"` —
+   are HINTS, not patches: treat them like fix-less violations (step 3).
+3. For violations without an applicable `fix`: reason from `detail` + `expected/actual` (+ the
+   rule's `ruleDescription` in contract mode — it states WHY the rule exists).
 4. Re-run. Stop at exit 0. Never claim success without the exit code.
 5. Contract mode, after an APPROVED visual change: `rjs record` re-pins baselines.
 

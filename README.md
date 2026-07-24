@@ -19,7 +19,7 @@ and AI agents. One lineage (`r$`), one model, three uses:
 | Package                                    | What it is                                                                                                            | Status      |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ----------- |
 | [`@responsivejs/core`](packages/core)      | The shared math: geometry, curves, stats, color, typography, aesthetics, snapshot model. Pure, zero-dep, browser-safe. | **alpha**   |
-| [`@responsivejs/design`](packages/design)  | The validation oracle: constraints, 17-metric aesthetic score, reports with fix suggestions, Playwright driver + zero-driver browser core. | **alpha**   |
+| [`@responsivejs/design`](packages/design)  | The validation oracle: constraints, reports with fix suggestions, aesthetic score (experimental), Playwright driver + zero-driver browser core. | **alpha**   |
 | [`@responsivejs/runtime`](packages/runtime) | Authoring: reactive `value = f(width)`, container-aware, `clamp()` where CSS suffices.                                | **alpha**   |
 | [`@responsivejs/cli`](packages/cli)        | The `rjs` command line: analyze / verify / record any URL, driver-pluggable (Playwright, agent-browser).               | **alpha**   |
 | `@responsivejs/devtool`                    | The in-page visual overlay: width-sweep, problem overlay, curve inspector, score HUD.                                  | planned     |

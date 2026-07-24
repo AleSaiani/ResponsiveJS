@@ -99,6 +99,12 @@ describe('rjs main', () => {
         expect(report.rules.some((r: { assert: string }) => r.assert === 'noOverflow')).toBe(true);
     });
 
+    it('verify -f sarif fails loudly instead of silently falling back to console', async () => {
+        const { io, err } = makeIo({ 'home.json': CONTRACT });
+        expect(await main(['verify', 'home.json', 'http://x', '-f', 'sarif'], io)).toBe(2);
+        expect(err.join('\n')).toContain('console|json');
+    });
+
     it('verify surfaces loader errors (did-you-mean) with exit 2', async () => {
         const bad = JSON.stringify({ name: 'x', version: 1, rules: [{ assert: 'noOverfow', args: {} }] });
         const { io, err } = makeIo({ 'bad.json': bad });
