@@ -73,3 +73,52 @@ describe('collectPage source', () => {
         expect(snap.elements.get('.hit')![0].rect.right).toBe(110);
     });
 });
+
+describe('collectPage — effective background', () => {
+    function domWithAncestors(elBg: string, parentBg: string | null) {
+        const styleFor = new Map<unknown, string>();
+        const grandparent = { getBoundingClientRect: () => ({ x: 0, y: 0, width: 0, height: 0 }), children: [], parentElement: null };
+        const parent = { getBoundingClientRect: () => ({ x: 0, y: 0, width: 0, height: 0 }), children: [], parentElement: grandparent };
+        const el = { getBoundingClientRect: () => ({ x: 0, y: 0, width: 100, height: 50 }), children: [], parentElement: parent };
+        styleFor.set(el, elBg);
+        if (parentBg) styleFor.set(parent, parentBg);
+        const base = makeFakeDom();
+        return {
+            el,
+            document: {
+                querySelectorAll: (sel: string) => ({
+                    forEach: (cb: (e: unknown, i: number) => void) => {
+                        if (sel === '.t') cb(el, 0);
+                    },
+                }),
+            },
+            window: base.window,
+            getComputedStyle: (node: unknown) => ({
+                ...(base.getComputedStyle() as Record<string, string>),
+                backgroundColor: styleFor.get(node) ?? 'rgba(0, 0, 0, 0)',
+            }),
+        };
+    }
+
+    function measuredBg(dom: ReturnType<typeof domWithAncestors>): string {
+        const expr = buildCollectExpression({ selectors: ['.t'] });
+        const run = new Function('document', 'window', 'getComputedStyle', `return ${expr};`);
+        const wire = run(dom.document, dom.window, dom.getComputedStyle);
+        return wire.elements[0][1][0].computed.backgroundColor;
+    }
+
+    it('transparent elements inherit the first painted ancestor background', () => {
+        const dom = domWithAncestors('rgba(0, 0, 0, 0)', 'rgb(20, 20, 20)');
+        expect(measuredBg(dom)).toBe('rgb(20, 20, 20)');
+    });
+
+    it('an element with its own background keeps it', () => {
+        const dom = domWithAncestors('rgb(200, 0, 0)', 'rgb(20, 20, 20)');
+        expect(measuredBg(dom)).toBe('rgb(200, 0, 0)');
+    });
+
+    it('a fully transparent chain falls back to the white canvas', () => {
+        const dom = domWithAncestors('rgba(0, 0, 0, 0)', null);
+        expect(measuredBg(dom)).toBe('rgb(255, 255, 255)');
+    });
+});

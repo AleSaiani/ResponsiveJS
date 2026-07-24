@@ -25,6 +25,35 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
     const width = args.width ?? window.innerWidth;
     const height = args.height ?? window.innerHeight;
 
+    // Effective (visible) background: transparent elements inherit whatever
+    // ancestor actually paints behind them — without this, contrast checks
+    // compare text against a color nobody sees. Semi-transparent backgrounds
+    // are returned as-is (no compositing). Memoized per ancestor.
+    const isTransparent = (bg: string): boolean =>
+        bg === 'transparent' || /^rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)$/.test(bg) || /\/\s*0\s*\)$/.test(bg);
+    const bgCache = new Map<Element, string>();
+    const effectiveBackground = (start: Element): string => {
+        const chain: Element[] = [];
+        let node: Element | null = start;
+        let resolved = 'rgb(255, 255, 255)'; // default canvas
+        while (node) {
+            const cached = bgCache.get(node);
+            if (cached !== undefined) {
+                resolved = cached;
+                break;
+            }
+            const bg = getComputedStyle(node).backgroundColor;
+            if (bg && !isTransparent(bg)) {
+                resolved = bg;
+                break;
+            }
+            chain.push(node);
+            node = node.parentElement;
+        }
+        for (const n of chain) bgCache.set(n, resolved);
+        return resolved;
+    };
+
     const elements: [string, ElementSnapshotWire[]][] = [];
     const childRelations: [string, ChildRelationWire[]][] = [];
 
@@ -73,7 +102,7 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
                     position: cs.position,
                     visibility: cs.visibility,
                     pointerEvents: cs.pointerEvents,
-                    backgroundColor: cs.backgroundColor,
+                    backgroundColor: effectiveBackground(el),
                     color: cs.color,
                     boxSizing: cs.boxSizing,
                     textAlign: cs.textAlign,

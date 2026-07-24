@@ -20,6 +20,19 @@ export function buildObserverScript(selectors: string[]): string {
         window.__rjs_store = new Map();
     }
 
+    // Effective background: walk up past transparent ancestors (see inject.ts).
+    function effectiveBackground(start) {
+        let node = start;
+        while (node) {
+            const bg = getComputedStyle(node).backgroundColor;
+            if (bg && bg !== 'transparent' && !/^rgba\\(\\s*\\d+,\\s*\\d+,\\s*\\d+,\\s*0\\s*\\)$/.test(bg) && !/\\/\\s*0\\s*\\)$/.test(bg)) {
+                return bg;
+            }
+            node = node.parentElement;
+        }
+        return 'rgb(255, 255, 255)';
+    }
+
     function measure() {
         const width = window.innerWidth;
         const results = [];
@@ -66,7 +79,7 @@ export function buildObserverScript(selectors: string[]): string {
                         position: cs.position,
                         visibility: cs.visibility,
                         pointerEvents: cs.pointerEvents,
-                        backgroundColor: cs.backgroundColor,
+                        backgroundColor: effectiveBackground(el),
                         color: cs.color,
                         boxSizing: cs.boxSizing,
                         textAlign: cs.textAlign,

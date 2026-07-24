@@ -349,6 +349,9 @@ export class Asserter {
             const elements = snapshot.elements.get(selector) || [];
             for (const el of elements) {
                 if (el.computed.cursor !== 'pointer') continue;
+                // WCAG 2.5.8 inline exception: targets that flow inside a line
+                // of text (links in prose) are exempt from the size minimum.
+                if (el.computed.display === 'inline') continue;
                 this.totalChecks++;
                 if (el.rect.width < 44 || el.rect.height < 44) {
                     this.violations.push({
