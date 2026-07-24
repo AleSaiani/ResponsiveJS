@@ -97,6 +97,34 @@ export class EvalSource implements MeasurementSource {
     }
 }
 
+export interface ChunkedEvalOptions {
+    /** Expressions longer than this are uploaded in chunks (default 12 000 chars). */
+    limit?: number;
+    /** In-page staging variable (default `__rjs_xfer`). */
+    varName?: string;
+}
+
+/**
+ * Wrap an EvalFn so oversized expressions survive argument-length limits
+ * (Windows command lines cap at ~32K; axe injection alone is ~500K): the
+ * expression is staged into an in-page variable chunk by chunk, then eval'd.
+ * Compose: `new EvalSource(chunkedEval(fn))`.
+ */
+export function chunkedEval(evalFn: EvalFn, opts: ChunkedEvalOptions = {}): EvalFn {
+    const limit = opts.limit ?? 12_000;
+    const varName = opts.varName ?? '__rjs_xfer';
+    return async (expression: string) => {
+        if (expression.length <= limit) return evalFn(expression);
+        await evalFn(`void (window.${varName} = "")`);
+        for (let i = 0; i < expression.length; i += limit) {
+            await evalFn(`void (window.${varName} += ${JSON.stringify(expression.slice(i, i + limit))})`);
+        }
+        // Indirect eval → global scope; the staged source may return a promise
+        // (the transport's awaitPromise semantics apply unchanged).
+        return evalFn(`(0, eval)(window.${varName})`);
+    };
+}
+
 /** Text transports (CLI stdout, message ports) deliver the wire as a JSON string. */
 function parseWire(raw: ViewportSnapshotWire | string): ViewportSnapshotWire {
     if (typeof raw !== 'string') return raw;

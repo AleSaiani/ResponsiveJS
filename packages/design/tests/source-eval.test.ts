@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { EvalSource } from '../src/source/eval.js';
+import { EvalSource, chunkedEval } from '../src/source/eval.js';
 import { sweepSource } from '../src/source/sweep.js';
 
 const WIRE = { width: 768, height: 900, timestamp: 1, elements: [], childRelations: [] };
@@ -96,5 +96,34 @@ describe('EvalSource', () => {
         await expect(sweepSource(source, { url: 'http://x', selectors: ['.a'], widths: [1280] })).rejects.toThrow(
             /cannot open URLs/,
         );
+    });
+});
+
+describe('chunkedEval', () => {
+    it('passes short expressions through untouched', async () => {
+        const fn = vi.fn(async () => 42);
+        const wrapped = chunkedEval(fn, { limit: 100 });
+        await expect(wrapped('1+1')).resolves.toBe(42);
+        expect(fn).toHaveBeenCalledTimes(1);
+        expect(fn).toHaveBeenCalledWith('1+1');
+    });
+
+    it('stages long expressions in chunks, then evals the staged source', async () => {
+        // A page-like fake: applies the staging writes, evals the final expression.
+        const page: Record<string, string> = {};
+        const fn = vi.fn(async (expr: string) => {
+            const reset = expr.match(/^void \(window\.(\w+) = ""\)$/);
+            if (reset) return void (page[reset[1]] = '');
+            const append = expr.match(/^void \(window\.(\w+) \+= (".*")\)$/s);
+            if (append) return void (page[append[1]] += JSON.parse(append[2]) as string);
+            const evalStaged = expr.match(/^\(0, eval\)\(window\.(\w+)\)$/);
+            if (evalStaged) return page[evalStaged[1]];
+            return undefined;
+        });
+
+        const original = 'x'.repeat(250) + '"quotes" and \\backslashes\\';
+        const wrapped = chunkedEval(fn, { limit: 100 });
+        await expect(wrapped(original)).resolves.toBe(original); // survives chunking byte-perfect
+        expect(fn.mock.calls.length).toBeGreaterThan(3); // reset + N chunks + eval
     });
 });

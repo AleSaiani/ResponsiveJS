@@ -176,7 +176,7 @@ export {
 export type { MeasurementSource } from './source/types.js';
 export { PlaywrightSource, type PlaywrightSourceOptions } from './source/playwright.js';
 export { CdpSource, type CdpClient, type CdpSourceOptions } from './source/cdp.js';
-export { EvalSource, type EvalFn, type EvalSourceOptions } from './source/eval.js';
+export { EvalSource, chunkedEval, type EvalFn, type EvalSourceOptions, type ChunkedEvalOptions } from './source/eval.js';
 export { sweepSource, resweepSource, resolveWidths, type SourceSweepOptions } from './source/sweep.js';
 export { runAxe, normalizeAxeResults, type A11yOptions } from './a11y/axe.js';
 export { storeToJSON, storeFromJSON, type SerializedStore, type ViewportSnapshotWire } from './browser/wire.js';

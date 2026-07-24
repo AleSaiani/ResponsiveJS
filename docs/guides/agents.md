@@ -67,6 +67,34 @@ const report = await analyze({
 Without a `setViewport` callback the source refuses widths that don't match the real viewport —
 measurements never lie. Text transports that return JSON strings are parsed automatically.
 
+Argument-length limits (Windows command lines cap at ~32K; axe injection alone is ~500K) are
+solved by composing `chunkedEval`, which stages oversized expressions in-page chunk by chunk:
+
+```typescript
+import { EvalSource, chunkedEval, analyze } from '@responsivejs/design';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+
+// agent-browser CLI as the driver — one isolated session, JSON output
+const x = promisify(execFile);
+const ab = async (...args: string[]) =>
+    (await x('agent-browser', ['--session', 'rjs', ...args], { shell: process.platform === 'win32' })).stdout;
+const abEval = async (expr: string) => {
+    const res = JSON.parse(await ab('--json', 'eval', expr));
+    if (!res.success) throw new Error(res.error);
+    return res.data.result;
+};
+
+const source = new EvalSource(chunkedEval(abEval), {
+    setViewport: async (w, h) => void (await ab('set', 'viewport', String(w), String(h))),
+    open: async (url) => void (await ab('open', url)),
+});
+
+const report = await analyze({ source, url: 'https://example.com', selectors: ['main', 'nav'], widths: [320, 768, 1280] });
+```
+
+This exact composition runs in the repo's e2e suite (`packages/design/e2e/agent-browser.e2e.test.ts`).
+
 For fully manual control the raw pieces are also exported:
 
 ```typescript
