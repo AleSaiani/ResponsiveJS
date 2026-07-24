@@ -81,4 +81,8 @@ versions with an upgrade hint.
 Deferred by design (v1): YAML, a11y/axe block, container scope, baseline interpolation,
 contract composition/`extends`, DTCG export.
 
+## Documentation
+
+Full API reference: [docs/api/contract.md](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/api/contract.md) · guide: [CI regression](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/guides/ci.md)
+
 Licensed under [MPL-2.0](LICENSE).

@@ -71,8 +71,14 @@ The browser entry is Playwright-free: inject it into any page (devtools, agents,
   `dFontSize/dWidth >= 0`, `stddev(gaps)/mean(gaps) < 0.1`.
 - **Reports are machine-readable**: `{ violations, fixes, scores }` — an agent can act on them.
 
-See [docs/DIRECTION.md](docs/DIRECTION.md) for the full picture and
-[docs/rating-research.md](docs/rating-research.md) for the research behind the aesthetic score.
+## Documentation
+
+Full docs live in [docs/](docs/README.md):
+[getting started](docs/getting-started.md) · [concepts](docs/concepts.md) · API reference for
+[core](docs/api/core.md) / [runtime](docs/api/runtime.md) / [design](docs/api/design.md) /
+[contract](docs/api/contract.md) · guides for [CI regression](docs/guides/ci.md) and
+[AI agents](docs/guides/agents.md) · [DIRECTION](docs/DIRECTION.md) (the founding document) ·
+[rating research](docs/rating-research.md) (the science behind the aesthetic score).
 
 ## Roadmap
 

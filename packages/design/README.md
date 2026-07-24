@@ -121,4 +121,8 @@ applyDesignSystem(r.assert, materialDesign, { interactive: ['.btn', 'a'] });
 
 Available: `apple-hig`, `fluent-ui-2`, `material-design-3`, `pragmatic`.
 
+## Documentation
+
+Full API reference: [docs/api/design.md](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/api/design.md) · guides: [CI regression](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/guides/ci.md), [AI agents](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/guides/agents.md)
+
 Licensed under [MPL-2.0](LICENSE).

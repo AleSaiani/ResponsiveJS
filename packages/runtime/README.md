@@ -68,4 +68,8 @@ viewport (a shared `ResizeObserver`; static emission switches `vw` → `cqi`).
 - **Reactivity**: the internal signal engine follows the TC39 `{get}`/`{get,set}` shape — framework
   adapters map trivially; `subscribe(signal, cb)` for everything else.
 
+## Documentation
+
+Full API reference: [docs/api/runtime.md](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/api/runtime.md) · [concepts](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/concepts.md)
+
 Licensed under [MPL-2.0](LICENSE).
