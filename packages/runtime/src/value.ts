@@ -31,11 +31,19 @@ export interface StaticEmission {
     mediaBlocks?: { min?: number; max?: number; declaration: string }[];
 }
 
+/** Cross-element domain: the value follows ANOTHER element's width. */
+export interface ElementSource {
+    readonly kind: 'element';
+    readonly target: string | Element;
+}
+
 export interface ResponsiveValue {
     readonly [RESPONSIVE_VALUE]: true;
     readonly kind: 'fluid' | 'stepped' | 'conditional' | 'custom' | 'combined' | 'color' | 'string';
     /** Bind to the nearest observed container instead of the viewport. */
     readonly container?: boolean;
+    /** Bind to a specific element's width (fromElement) — always JS-driven. */
+    readonly source?: ElementSource;
     readonly unit?: string;
     resolve(width: number): string | number;
     /** null → the value must stay JS-driven. */
@@ -60,6 +68,8 @@ export interface FluidOpts {
     curve?: CurveSpec;
     unit?: string;
     container?: boolean;
+    /** Cross-element domain: fluid(14, 18, { domain: fromElement('.sidebar') }). */
+    domain?: ElementSource;
     /** Domain override (defaults to the configured breakpoint range). */
     from?: number;
     to?: number;
@@ -127,12 +137,13 @@ function numericFluid(min: number, max: number, opts: FluidOpts): ResponsiveValu
     return makeValue({
         kind: 'fluid',
         container: opts.container,
+        source: opts.domain,
         unit: opts.unit,
         resolve(width) {
             return buildWidthFn(min, max, curve, domainOf(opts))(width);
         },
         toStatic(ctx) {
-            if (curve !== 'linear') return null;
+            if (curve !== 'linear' || opts.domain) return null; // element-driven ⇒ JS
             const d = opts.from !== undefined || opts.to !== undefined ? domainOf(opts) : ctx.domain;
             return { declaration: fluidClamp(min, max, d, opts.unit ?? ctx.unit, opts.container ?? ctx.container) };
         },

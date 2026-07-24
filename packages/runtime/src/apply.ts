@@ -121,8 +121,9 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
             const entries = Object.entries(currentMap);
             if (entries.length === 0) continue;
 
-            const viewportEntries = entries.filter(([, v]) => !(isResponsiveValue(v) && v.container));
-            const containerEntries = entries.filter(([, v]) => isResponsiveValue(v) && v.container);
+            const viewportEntries = entries.filter(([, v]) => !(isResponsiveValue(v) && (v.container || v.source)));
+            const containerEntries = entries.filter(([, v]) => isResponsiveValue(v) && v.container && !v.source);
+            const sourceEntries = entries.filter(([, v]) => isResponsiveValue(v) && v.source);
 
             if (viewportEntries.length > 0) {
                 const vw = viewportWidth();
@@ -131,6 +132,24 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
                         const width = vw.get();
                         if (paused) return;
                         for (const [prop, value] of viewportEntries) applyEntry(el, prop, value, width);
+                    }),
+                );
+            }
+
+            // fromElement(): the driving width is another element's width.
+            for (const [prop, value] of sourceEntries) {
+                const target = (value as { source: { target: string | Element } }).source.target;
+                const sourceEl = typeof target === 'string' ? document.querySelector(target) : target;
+                if (!sourceEl) {
+                    throw new Error(`r$: fromElement('${String(target)}') matched no element`);
+                }
+                const { signal, dispose } = containerWidth(sourceEl);
+                disposers.push(dispose);
+                disposers.push(
+                    effect(() => {
+                        const width = signal.get();
+                        if (paused) return;
+                        applyEntry(el, prop, value, width);
                     }),
                 );
             }

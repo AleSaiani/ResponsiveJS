@@ -1,8 +1,8 @@
 # API — @responsivejs/runtime
 
 The authoring half: reactive `value = f(width)`, CSS-first. Depends only on
-`@responsivejs/core`. Subpaths: `/signals`, `/curves`, `/layout`, `/typography` (everything is
-also re-exported from the root).
+`@responsivejs/core`. Subpaths: `/signals`, `/curves`, `/layout`, `/typography`, `/geometry`
+(everything is also re-exported from the root).
 
 ## `responsive()` — apply styles
 
@@ -25,7 +25,8 @@ removes effects, observers, injected CSS **and** applied inline styles.
 | Member | Meaning |
 | --- | --- |
 | `responsive.config({ breakpoints, defaultUnit='px', useMediaQueries=true, debug, ssrWidth=1024 })` | Global configuration (itself reactive). |
-| `responsive.breakpoints({ mobile: 320, … })` | Define named breakpoints. |
+| `responsive.breakpoints({ mobile: 320, … } as const)` | Define named breakpoints — returns the [typed API](#typed-breakpoints). |
+| `responsive.tokens({ '--space-md': fluid(8, 16) })` | [Token bridge](#tokens--fluid-custom-properties): fluid custom properties on `:root`. |
 | `responsive.static(selector, map): string` | CSS-only compilation — throws if anything needs JS. |
 | `responsive.dynamic(target, map)` | Skip the static split, drive everything via JS. |
 | `responsive.lazy(target, map)` | Apply on first intersection (IntersectionObserver). |
@@ -48,7 +49,8 @@ fluid('scale(0.8)', 'scale(1.2)')       // strings → structural interpolation 
 
 `FluidOpts`: `curve` (`'linear' | 'exponential' | 'logarithmic' | EasingName | Bezier`), `unit`,
 `container: true` (bind to nearest container; static output uses `cqi`), `from`/`to` (domain
-override — defaults to the configured breakpoint range).
+override — defaults to the configured breakpoint range), `domain: fromElement('.sidebar')`
+(cross-element: the value follows that element's width — always JS-driven).
 
 String interpolation requires **structural congruence** (same tokens, literals, units — bare `0`
 inherits the other side's unit) and throws a descriptive error otherwise. No fuzzy matching.
@@ -73,6 +75,67 @@ resolve correctly but force the JS path.
 - `scale(v)`, `rotate(v)`, `translate(x, y)`, `translateX/Y(v)`, `skew(x, y?)` — transform
   templates with conventional default units.
 - `isResponsiveValue(v)` — brand check.
+
+## `/geometry` — state from geometry
+
+The niche CSS still can't select on. **JS detects, CSS styles**: predicates measure facts off
+the live DOM; `geometry()` mirrors them into data-attributes for your stylesheets.
+
+```typescript
+geometry('.nav', { wrapped: whenWraps, crowded: whenOverflows });
+// → <nav data-wrapped>       CSS: .nav[data-wrapped] { /* burger */ }
+```
+
+| Predicate | True when | Extra sensitivity |
+| --- | --- | --- |
+| `whenWraps()` | a child starts below the first row | |
+| `whenOverflows(axis?)` | scroll size > client size (`'x'` default, `'y'`, `'both'`) | |
+| `whenTruncated()` | content overflows an axis whose overflow is hidden/clip | |
+| `whenStuck()` | a `position: sticky` element is currently pinned | scroll |
+| `linesOf()` | *(number)* rendered text lines → `data-lines="3"` | |
+| `whenCollides(other)` | the rects of the element and `other` overlap | scroll |
+
+Re-measures on element resize (shared ResizeObserver), viewport resize, and scroll for the
+scroll-sensitive ones. Every predicate's `measure(el)` is pure and callable one-shot.
+`GeometryHandle`: `elements`, `measure()`, `pause()`, `resume()`, `dispose()` (removes the
+attributes). SSR: inert. Bare factories are accepted (`wrapped: whenWraps` ≡ `whenWraps()`).
+
+## Cross-element
+
+- `fromElement(target)` — a fluid **domain**: `fluid(14, 18, { domain: fromElement('.sidebar'),
+  from: 200, to: 600 })` makes the value follow the sidebar's width, not the viewport.
+- `sync(target, 'height' | 'width')` — equalize a dimension across unrelated containers (max
+  natural size wins). Re-measures on viewport resize and `handle.measure()`.
+- `ratio(a, b, { min?, max? })` — the design constraint promoted to **enforcement**: keeps
+  `width(a)/width(b)` in bounds by constraining `a`, and frees it while the layout complies.
+
+## Typed breakpoints
+
+```typescript
+const bp = defineBreakpoints({ mobile: 320, tablet: 768, desktop: 1024 } as const);
+bp.below('tablet', 'column', 'row');   // autocompletes; a typo is a COMPILE error
+bp.between('mobile', 'desktop', …);
+bp.match({ mobile: 14, desktop: 18 });
+bp.width('tablet');                    // 768
+bp.matches('tablet');                  // reactive { signal, dispose }
+bp.names;                              // ['mobile', 'tablet', 'desktop'] (ascending)
+```
+
+Also configures the global runtime, so the string-based `breakpoint.*` API keeps working.
+
+## Tokens — fluid custom properties
+
+```typescript
+const t = responsive.tokens({ '--space-md': fluid(8, 16), '--font-hero': fluid(24, 48, { curve: 'exponential' }) });
+```
+
+One write point instead of N styled elements: linear values compile to a static `clamp()`
+stylesheet on `:root` (zero JS at runtime); non-linear/conditional/color values update their
+variable from ONE viewport effect. The page consumes `var(--space-md)` anywhere — themable,
+inspectable, SSR-friendly (`t.css` is the stylesheet to ship). `t.dynamic` lists the JS-driven
+names; `t.toDTCG()` exports Design-Tokens-Community-Group JSON (static values verbatim,
+responsive curves sampled under `$extensions['design.responsivejs']`); `t.dispose()` removes
+everything.
 
 ## `/curves` — sugar
 
@@ -115,6 +178,8 @@ Width sources (all SSR-safe, all disposable):
 | `mediaQuery(q): { signal, dispose }` | Refcounted matchMedia registry. |
 | `breakpointSignal(ref)` | `mediaQuery('(min-width: …)')` via named breakpoints. |
 | `containerWidth(el): { signal, dispose }` | ONE shared ResizeObserver, refcounted per element. |
+| `elementSize(el): { signal, dispose }` | `{width, height}` off the same observer and refcount. |
+| `scrollTick(): State<number>` | ONE capture-phase scroll listener (nested containers too). |
 
 ## Emission
 

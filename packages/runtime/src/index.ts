@@ -11,6 +11,7 @@ import { configure, type RuntimeConfig } from './config.js';
 import { defineBreakpoints } from './breakpoints.js';
 import { template, applyUtilities } from './template.js';
 import { lazy, memo, batch, debug } from './perf.js';
+import { tokens } from './tokens.js';
 import type { StyleMap } from './value.js';
 
 // ─── the responsive() namespace ─────────────────────────────────────────
@@ -35,6 +36,8 @@ interface ResponsiveFn {
     flush(): void;
     /** Utility grammar: responsive.apply('.el', 'text-fluid-sm-xl p-fluid-2-8'). */
     apply(target: string | Element, spec: string): ResponsiveHandle;
+    /** Token bridge: fluid values as custom properties on :root (clamp where linear). */
+    tokens: typeof tokens;
 }
 
 function responsiveBase(
@@ -58,6 +61,7 @@ export const responsive: ResponsiveFn = Object.assign(responsiveBase as Responsi
     debug,
     flush,
     apply: applyUtilities,
+    tokens,
 });
 
 // ─── values ─────────────────────────────────────────────────────────────
@@ -65,6 +69,9 @@ export const responsive: ResponsiveFn = Object.assign(responsiveBase as Responsi
 export { fluid, custom, combine, isResponsiveValue } from './value.js';
 export type { ResponsiveValue, StyleValue, StyleMap, FluidOpts, StaticContext, StaticEmission } from './value.js';
 export { when, whenInRange, breakpoint } from './conditionals.js';
+export { fromElement, sync, ratio } from './cross.js';
+export type { CrossHandle, RatioBounds } from './cross.js';
+export type { ElementSource } from './value.js';
 export { scale, rotate, translate, translateX, translateY, skew } from './transforms.js';
 
 // ─── curves (also under ./curves) ───────────────────────────────────────
@@ -76,6 +83,11 @@ export { linear, exponential, logarithmic, easeIn, easeOut, easeInOut, cubic } f
 export { grid, space } from './layout.js';
 export { typography } from './typography.js';
 export type { TypeScale, TypeScaleOptions } from './typography.js';
+
+// ─── token bridge ───────────────────────────────────────────────────────
+
+export { tokens } from './tokens.js';
+export type { TokensMap, TokensHandle, TokenName, DTCGToken } from './tokens.js';
 
 // ─── geometry predicates (also under ./geometry) ────────────────────────
 
