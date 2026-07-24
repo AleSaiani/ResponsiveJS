@@ -22,6 +22,7 @@ function makeIo(files: Record<string, string> = {}) {
     const out: string[] = [];
     const err: string[] = [];
     const written: Record<string, string> = {};
+    const writtenBytes: Record<string, Uint8Array> = {};
     const close = vi.fn(async () => {});
     const io: CliIo = {
         stdout: (t) => out.push(t),
@@ -31,9 +32,10 @@ function makeIo(files: Record<string, string> = {}) {
             throw new Error('ENOENT');
         },
         writeFile: async (p, t) => void (written[p] = t),
+        writeFileBytes: async (p, b) => void (writtenBytes[p] = b),
         resolveDriver: vi.fn(async () => ({ kind: 'fake', source: fakeSource(), close })),
     };
-    return { io, out, err, written, close };
+    return { io, out, err, written, writtenBytes, close };
 }
 
 const CONTRACT = JSON.stringify({
@@ -69,8 +71,8 @@ describe('rjs main', () => {
         expect(await main(['analyze', 'http://x', '-f', 'xml'], b.io)).toBe(2);
 
         const c = makeIo();
-        expect(await main(['audit', 'http://x'], c.io)).toBe(2);
-        expect(c.err.join('\n')).toContain("unknown command 'audit'");
+        expect(await main(['paint', 'http://x'], c.io)).toBe(2);
+        expect(c.err.join('\n')).toContain("unknown command 'paint'");
     });
 
     it('analyze finds the overflow, exits 1, closes the driver', async () => {

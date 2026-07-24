@@ -12,6 +12,8 @@ rjs analyze <url>  [-d auto|playwright|agent-browser] [-w 320,768,1280] [-s "mai
 rjs verify  <contract.json> <url>  [same driver/format/out flags]
 rjs record  <contract.json> <url>  [-o other.json]
 rjs init    <url>  [-o contract.json]   # generate a contract FROM the page's constructs
+rjs audit   <url>  [--vs url] [--crawl] [--max-pages n] [--screenshots dir] [-o report.html]
+                                   # human-facing HTML report — prefer analyze -f json for loops
 rjs doctor                         # environment readiness: exit 0 = a driver is usable
 ```
 

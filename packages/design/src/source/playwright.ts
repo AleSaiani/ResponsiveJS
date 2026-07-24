@@ -40,4 +40,8 @@ export class PlaywrightSource implements MeasurementSource {
     evaluate<T = unknown>(expression: string): Promise<T> {
         return this.page.evaluate(expression) as Promise<T>;
     }
+
+    async screenshot(): Promise<Uint8Array> {
+        return new Uint8Array(await this.page.screenshot({ type: 'png' }));
+    }
 }

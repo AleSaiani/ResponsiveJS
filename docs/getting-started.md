@@ -36,6 +36,9 @@ peers of `design`), Node ≥ 20.19, MPL-2.0.
 ```bash
 npx @responsivejs/cli analyze https://example.com -w 320,768,1280
 # constraints + aesthetic score + a11y · exit 0 pass / 1 violations · -f json|sarif
+
+npx @responsivejs/cli audit https://example.com --vs https://competitor.com
+# → one self-contained HTML report: screenshots with violation overlays, side-by-side
 ```
 
 Driver-pluggable (Playwright, or [agent-browser](https://github.com/vercel-labs/agent-browser)

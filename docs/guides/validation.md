@@ -192,8 +192,9 @@ your `r$.breakpoints` the sweep widths. What isn't expressible yet is listed on 
 
 ## Drivers: the seam under everything
 
-`sweep` needs three capabilities: set a viewport, measure, (optionally) evaluate JS. That's
-the whole `MeasurementSource` interface — and everything above it is driver-neutral:
+`sweep` needs three capabilities: set a viewport, measure, (optionally) evaluate JS — plus
+an optional screenshot seam that powers `rjs audit`'s visual reports. That's the whole
+`MeasurementSource` interface — and everything above it is driver-neutral:
 
 - **`PlaywrightSource`** — the default, what `r$(page)` uses. For CI.
 - **`CdpSource`** — any structural `{ send(method, params) }` client (CDPSession,
@@ -236,6 +237,12 @@ The `rjs` CLI is this same engine with exit codes: `rjs analyze <url>` (0 pass /
 violations), `rjs verify <contract> <url>`, `rjs record`. Use the library in Playwright tests
 where you already have fixtures; use the CLI where you want zero project setup or a quick
 audit of any URL. `-f sarif` feeds code-scanning UIs; `-f json` feeds anything else.
+
+And when the audience is a *person*, not a pipeline: `rjs audit <url>` produces one
+self-contained HTML file — screenshots per width with the violation rectangles drawn on
+them (from the measured rects), grouped findings, fixes, scores. `--crawl` covers the
+same-origin pages, `--vs competitor.com` opens with a side-by-side table. It's the
+"here's what's wrong with our site" artifact, generated in one command.
 
 The flags that matter day to day: `-s "main,.card"` (scope selectors — see below), `-w
 320,768,1280`, `--strict` (fail on warnings too), `--touch-min 44` (platform touch rule

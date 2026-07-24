@@ -25,6 +25,8 @@ export interface AnalyzeOptions extends AnalyzeStoreOptions {
     height?: number;
     scroll?: boolean;
     scrollSteps?: number;
+    /** Capture a viewport screenshot per width into store.screenshots. */
+    screenshots?: boolean;
     /**
      * Default: runs when axe-core is installed and the source can evaluate;
      * silently skipped otherwise. Explicit config + missing axe-core → throw.
@@ -55,6 +57,7 @@ export async function analyze(opts: AnalyzeOptions): Promise<UnifiedReport> {
             height: opts.height,
             scroll: opts.scroll,
             scrollSteps: opts.scrollSteps,
+            screenshots: opts.screenshots,
         });
     }
 

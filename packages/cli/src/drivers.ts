@@ -9,6 +9,8 @@
 import { spawn } from 'node:child_process';
 import { delimiter, join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { EvalSource, PlaywrightSource, chunkedEval, type MeasurementSource } from '@responsivejs/design';
 
 export type DriverChoice = 'auto' | 'playwright' | 'agent-browser';
@@ -120,11 +122,23 @@ function tryAgentBrowser(): ResolvedDriver | null {
         return parsed.data?.result;
     };
 
+    // agent-browser writes screenshots to a path; round-trip through a temp file.
+    const screenshot = async (): Promise<Uint8Array> => {
+        const path = join(tmpdir(), `rjs-shot-${process.pid}-${Date.now()}.png`);
+        try {
+            await ab('screenshot', path);
+            return new Uint8Array(await readFile(path));
+        } finally {
+            await rm(path, { force: true }).catch(() => {});
+        }
+    };
+
     return {
         kind: 'agent-browser',
         source: new EvalSource(chunkedEval(abEval), {
             setViewport: async (w, h) => void (await ab('set', 'viewport', String(w), String(h))),
             open: async (url) => void (await ab('open', url)),
+            screenshot,
         }),
         close: async () => void (await ab('close').catch(() => {})),
     };

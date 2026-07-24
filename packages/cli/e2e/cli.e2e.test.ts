@@ -25,6 +25,7 @@ function makeIo(files: Record<string, string> = {}) {
     const out: string[] = [];
     const err: string[] = [];
     const written: Record<string, string> = {};
+    const writtenBytes: Record<string, Uint8Array> = {};
     const io: CliIo = {
         stdout: (t) => out.push(t),
         stderr: (t) => err.push(t),
@@ -33,9 +34,10 @@ function makeIo(files: Record<string, string> = {}) {
             throw new Error('ENOENT');
         },
         writeFile: async (p, t) => void (written[p] = t),
+        writeFileBytes: async (p, b) => void (writtenBytes[p] = b),
         resolveDriver,
     };
-    return { io, out, err, written, files };
+    return { io, out, err, written, writtenBytes, files };
 }
 
 describe('rjs against a real page (playwright driver)', () => {
@@ -64,6 +66,22 @@ describe('rjs against a real page (playwright driver)', () => {
         expect(geo.target).toBe('.site-nav');
         expect(geo.behavior).toContain('data-wrapped');
     }, 120_000);
+
+    it('audit produces a self-contained HTML report with real screenshots', async () => {
+        const { io, out, written } = makeIo();
+        const code = await main(
+            ['audit', url, '-d', 'playwright', '-w', '400,1400', '-s', 'main,.hero h1,.card,.cta', '-o', 'audit.html', '--no-a11y'],
+            io,
+        );
+        expect([0, 1]).toContain(code);
+        const html = written['audit.html'];
+        expect(html).toContain('<!doctype html>');
+        expect(html).toContain('@400px');
+        expect(html).toContain('@1400px');
+        // real chromium screenshots, embedded — a PNG data URI per width
+        expect((html.match(/data:image\/png;base64,/g) ?? []).length).toBe(2);
+        expect(out.join('\n')).toContain('audit.html');
+    }, 180_000);
 
     it('init → record → verify: the contract GENERATED from the constructs holds', async () => {
         const gen = makeIo();

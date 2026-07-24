@@ -26,6 +26,8 @@ export interface EvalSourceOptions {
     setViewport?: (width: number, height: number) => Promise<void>;
     /** Navigate to a URL. Absent ⇒ pre-navigate and omit `url` when sweeping. */
     open?: (url: string) => Promise<void>;
+    /** Viewport screenshot (PNG bytes). Absent ⇒ screenshot features unavailable. */
+    screenshot?: () => Promise<Uint8Array>;
     /** Settle delay after viewport changes (CSS transitions, container queries). */
     settleMs?: number;
     /** Allowed drift (px) between requested and live width when no setter exists. */
@@ -35,6 +37,7 @@ export interface EvalSourceOptions {
 export class EvalSource implements MeasurementSource {
     readonly kind = 'eval';
     open?: (url: string) => Promise<void>;
+    screenshot?: () => Promise<Uint8Array>;
 
     private width: number | null = null;
     private height: number | null = null;
@@ -51,6 +54,7 @@ export class EvalSource implements MeasurementSource {
         this.widthTolerance = opts.widthTolerance ?? 1;
         // Assigned conditionally: sweepSource feature-detects `source.open`.
         if (opts.open) this.open = opts.open;
+        if (opts.screenshot) this.screenshot = opts.screenshot;
     }
 
     async setViewport(width: number, height: number): Promise<void> {

@@ -29,5 +29,9 @@ export interface MeasurementSource {
      */
     evaluate?<T = unknown>(expression: string): Promise<T>;
 
+    /** Viewport screenshot (PNG bytes) of the current state. Absent ⇒
+     *  screenshot features are unavailable (audit degrades gracefully). */
+    screenshot?(): Promise<Uint8Array>;
+
     close?(): Promise<void>;
 }

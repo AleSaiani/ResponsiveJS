@@ -75,7 +75,14 @@ export async function sweepSource(source: MeasurementSource, opts: SourceSweepOp
         await source.open(opts.url);
     }
 
+    if (opts.screenshots && !source.screenshot) {
+        // Fail loud, not silent: a report claiming "with screenshots" that has
+        // none would misrepresent what ran.
+        throw new Error(`r$: source '${source.kind}' cannot take screenshots — drop the screenshots option or use a capable driver`);
+    }
+
     let manifest: SnapshotStore['manifest'];
+    const screenshots = opts.screenshots ? new Map<number, Uint8Array>() : undefined;
     for (const w of widths) {
         await source.setViewport(w, height);
         const snapshot = opts.scroll
@@ -83,9 +90,16 @@ export async function sweepSource(source: MeasurementSource, opts: SourceSweepOp
             : await source.measure(opts.selectors);
         snapshots.set(w, snapshot);
         if (snapshot.manifest) manifest = snapshot.manifest;
+        if (screenshots) screenshots.set(w, await source.screenshot!());
     }
 
-    return { snapshots, widths, selectors: opts.selectors, ...(manifest ? { manifest } : {}) };
+    return {
+        snapshots,
+        widths,
+        selectors: opts.selectors,
+        ...(manifest ? { manifest } : {}),
+        ...(screenshots ? { screenshots } : {}),
+    };
 }
 
 /** Incremental re-sweep: re-measure specific widths/selectors into an existing store. */

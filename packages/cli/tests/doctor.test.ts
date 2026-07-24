@@ -9,6 +9,7 @@ function makeIo() {
         stderr: () => {},
         readFile: async () => '',
         writeFile: async () => {},
+        writeFileBytes: async () => {},
         resolveDriver: async () => {
             throw new Error('unused');
         },

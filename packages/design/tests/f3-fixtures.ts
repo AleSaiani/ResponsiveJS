@@ -86,6 +86,8 @@ export class FakeSource implements MeasurementSource {
     }
 
     open?: (url: string) => Promise<void>;
+    /** Optional seam: tests assign a fake to exercise screenshot flows. */
+    screenshot?: () => Promise<Uint8Array>;
 
     async setViewport(width: number, height: number): Promise<void> {
         this.calls.push(`viewport:${width}x${height}`);

@@ -12,12 +12,14 @@ import { runVerify } from './commands/verify.js';
 import { runRecord } from './commands/record.js';
 import { runDoctor } from './commands/doctor.js';
 import { runInit } from './commands/init.js';
+import { runAudit } from './commands/audit.js';
 
 export interface CliIo {
     stdout(text: string): void;
     stderr(text: string): void;
     readFile(path: string): Promise<string>;
     writeFile(path: string, text: string): Promise<void>;
+    writeFileBytes(path: string, bytes: Uint8Array): Promise<void>;
     resolveDriver(choice: DriverChoice, opts: { headed?: boolean }): Promise<ResolvedDriver>;
 }
 
@@ -27,6 +29,7 @@ export function defaultIo(): CliIo {
         stderr: (text) => console.error(text),
         readFile: (path) => readFile(path, 'utf8'),
         writeFile: (path, text) => writeFile(path, text, 'utf8'),
+        writeFileBytes: (path, bytes) => writeFile(path, bytes),
         resolveDriver,
     };
 }
@@ -38,6 +41,8 @@ Usage: rjs <command> [args] [options]
 Commands:
   analyze <url>              Sweep the page and run the full oracle
                              (constraints + aesthetic score + a11y)
+  audit <url>                One-shot HTML report with screenshots
+                             (--crawl same-origin pages, --vs competitor)
   verify <contract> <url>    Execute a design contract against a live page
   record <contract> <url>    Measure and pin baseline curves into the contract
   init <url>                 Generate a contract from the page's r$ constructs
@@ -55,6 +60,10 @@ Options:
       --no-a11y              Skip axe (analyze)
       --strict               Fail on warnings too (analyze)
       --headed               Show the browser window (playwright)
+      --vs <url>             Audit a second site side by side (audit)
+      --crawl                Follow same-origin links (audit)
+      --max-pages <n>        Crawl limit                           [5]
+      --screenshots <dir>    Also write the per-width PNGs to a directory (audit)
   -h, --help                 Show this help
   -v, --version              Show version
 
@@ -75,6 +84,10 @@ const OPTIONS = {
     'no-a11y': { type: 'boolean', default: false },
     strict: { type: 'boolean', default: false },
     headed: { type: 'boolean', default: false },
+    vs: { type: 'string' },
+    crawl: { type: 'boolean', default: false },
+    'max-pages': { type: 'string' },
+    screenshots: { type: 'string' },
     help: { type: 'boolean', short: 'h', default: false },
     version: { type: 'boolean', short: 'v', default: false },
 } as const;
@@ -91,6 +104,10 @@ export interface SharedOptions {
     a11y: boolean;
     strict: boolean;
     headed: boolean;
+    vs?: string;
+    crawl: boolean;
+    maxPages?: number;
+    screenshotsDir?: string;
 }
 
 export async function main(argv: string[], io: CliIo = defaultIo()): Promise<number> {
@@ -128,6 +145,10 @@ export async function main(argv: string[], io: CliIo = defaultIo()): Promise<num
                 requireArgs(args, 1, 'rjs analyze <url>');
                 return await runAnalyze(args[0], shared, io);
             }
+            case 'audit': {
+                requireArgs(args, 1, 'rjs audit <url> [--vs <url>] [--crawl] [-o report.html]');
+                return await runAudit(args[0], shared, io);
+            }
             case 'verify': {
                 requireArgs(args, 2, 'rjs verify <contract> <url>');
                 return await runVerify(args[0], args[1], shared, io);
@@ -143,7 +164,7 @@ export async function main(argv: string[], io: CliIo = defaultIo()): Promise<num
             case 'doctor':
                 return await runDoctor(io);
             default:
-                io.stderr(`r$ ✗ unknown command '${command}'. Commands: analyze, verify, record, init, doctor.`);
+                io.stderr(`r$ ✗ unknown command '${command}'. Commands: analyze, audit, verify, record, init, doctor.`);
                 return 2;
         }
     } catch (e) {
@@ -177,6 +198,10 @@ function normalizeOptions(values: Record<string, unknown>): SharedOptions {
         a11y: !(values['no-a11y'] as boolean),
         strict: values.strict as boolean,
         headed: values.headed as boolean,
+        vs: values.vs as string | undefined,
+        crawl: values.crawl as boolean,
+        maxPages: values['max-pages'] ? parseNumber(values['max-pages'] as string, 'max-pages') : undefined,
+        screenshotsDir: values.screenshots as string | undefined,
     };
 }
 

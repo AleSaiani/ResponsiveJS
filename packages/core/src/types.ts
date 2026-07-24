@@ -112,6 +112,8 @@ export interface SnapshotStore {
     selectors: string[];
     /** Runtime provenance manifest, lifted from the measured page. */
     manifest?: ProvenanceEntry[];
+    /** Per-width viewport screenshots (PNG bytes), when the sweep captured them. */
+    screenshots?: Map<number, Uint8Array>;
 }
 
 /** Machine-readable fix suggestion for agentic consumers.
@@ -187,6 +189,8 @@ export interface SweepOptions {
     height?: number;
     scroll?: boolean;
     scrollSteps?: number;
+    /** Capture a viewport screenshot per width (needs a source with the seam). */
+    screenshots?: boolean;
 }
 
 /** Measured element in normal, hover, and focus states */

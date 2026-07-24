@@ -11,6 +11,8 @@ The binary is **`rjs`**. Exit codes: `0` pass, `1` violations, `2` usage/run err
 
 ```
 rjs analyze <url>              sweep + oracle (constraints + aesthetic score + a11y)
+rjs audit <url>                one-shot self-contained HTML report with screenshots
+                               (--crawl same-origin pages, --vs competitor)
 rjs verify <contract> <url>    execute a design contract against a live page
 rjs record <contract> <url>    measure and pin baseline curves into the contract
 rjs init <url>                 generate a contract from the page's r$ constructs

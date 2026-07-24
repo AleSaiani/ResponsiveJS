@@ -191,6 +191,7 @@ export {
     formatContractCompact,
     formatContractSARIF,
 } from './report/reporter.js';
+export { renderAuditHTML, type PageAudit } from './report/html.js';
 export { Asserter } from './constraints/index.js';
 
 // ─── F5: design-contract execution ──────────────────────────────────────
