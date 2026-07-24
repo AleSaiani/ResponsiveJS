@@ -153,58 +153,36 @@ Why this is usually better than styling elements directly:
 
 ## Geometry: state CSS can't see
 
-CSS has no selector for *"my children wrapped onto two rows"*, *"this sticky header is
-currently pinned"*, *"this text is actually truncated"*. Detecting those is why layout code
-degenerates into ResizeObserver + measurement + class-toggling spaghetti.
-
-r$'s answer is a family of **predicates** — small measurements — and one wiring function:
+CSS has no selector for *"my children wrapped"*, *"this sticky header is pinned"*, *"this
+text is truncated"*. r$'s answer is a family of **predicates** — pure measurements — wired by
+`geometry()` into data-attributes your stylesheet reacts to (**JS detects, CSS styles**):
 
 ```typescript
 r$.geometry('.site-nav', { wrapped: r$.whenWraps });
+// → <nav data-wrapped> while the links sit on >1 row; CSS does the burger.
 ```
-
-From now on the nav carries `data-wrapped` exactly while its children sit on more than one
-row. The styling stays where styling belongs:
-
-```css
-.site-nav[data-wrapped] { visibility: hidden; height: 0; overflow: hidden; }
-.site-nav[data-wrapped] ~ .menu-button { display: block; }
-```
-
-This is the **“JS detects, CSS styles”** pattern. JS maintains a fact; CSS decides what the
-fact looks like. Your burger menu now has no breakpoint to go stale — add a seventh link,
-translate the labels to German, it keeps working. (If any step here feels compressed, the
-[case studies](case-studies.md) unpack this exact example end to end — what is measured, the
-DOM before/after, and the test.)
-
-**The one rule** (learn it once): never `display: none` the element a predicate measures.
-Hidden-by-display elements have zero-sized children, so the predicate would flip back and the
-state would oscillate. Collapse while *keeping layout* — `visibility: hidden; height: 0;
-overflow: hidden` — as above.
-
-The predicates, and when to reach for each:
 
 | Predicate | The fact it maintains | Typical use |
 | --- | --- | --- |
 | `r$.whenWraps()` | children flow on >1 row | burger menus, toolbar overflow |
 | `r$.whenOverflows('x'\|'y'\|'both')` | content exceeds the box | "scroll for more" affordances |
-| `r$.whenTruncated()` | text is clipped (ellipsis/clamp active) | show a "more" link only when needed |
+| `r$.whenTruncated()` | text is clipped (ellipsis/clamp active) | show "more" only when needed |
 | `r$.whenStuck()` | a sticky element is pinned right now | header shadow, condensed toolbar |
-| `r$.linesOf()` | number of rendered text lines | `data-lines="2"` → balance-dependent styling |
+| `r$.linesOf()` | number of rendered text lines | `data-lines="2"` styling |
 | `r$.whenCollides(other)` | two elements' boxes overlap | floating UI avoiding content |
 
-Details worth knowing:
+Mechanics in brief: boolean facts toggle attribute presence, numeric ones write the value
+(`data-lines="3"`); re-measurement is automatic (shared ResizeObserver, viewport resize,
+scroll for the scroll-sensitive two); every `measure(el)` is pure and callable one-shot;
+handles expose `measure()/pause()/resume()/dispose()`; SSR-inert.
 
-- Boolean facts toggle attribute *presence*; numeric ones (`linesOf`) write the value —
-  `data-lines="3"` — so CSS can key on counts: `h2[data-lines='1'] { text-align: center; }`.
-- Re-measurement is automatic — element resize (one shared ResizeObserver), viewport resize,
-  and scroll for the scroll-dependent predicates (`whenStuck`, `whenCollides`).
-- Every predicate's `measure(el)` is a pure function you can call once, without wiring:
-  `r$.whenWraps().measure(nav)` → boolean.
-- The handle: `measure()` forces a re-check after you mutate content; `pause()/resume()`
-  suspend it; `dispose()` removes observers *and* the attributes.
-- Server-side, `geometry()` is inert (no window → no-op) — it's progressive enhancement by
-  construction.
+**The one rule**: never `display: none` what a predicate measures — collapse keeping layout
+(`visibility: hidden; height: 0; overflow: hidden`), or the state oscillates.
+
+This is taught hands-on in [tutorial steps 3–4](../tutorial.md#step-3--the-burger-that-cant-go-stale),
+unpacked completely (DOM before/after, the measurement, the test) in the
+[deep dives](case-studies.md#deep-dives), and every predicate has a pattern in the
+[catalog](case-studies.md).
 
 ## Cross-element relations
 
@@ -230,18 +208,57 @@ r$.ratio('.sidebar', '.main', { min: 0.2, max: 0.33 });
 in CI — here promoted to runtime *enforcement*. Inside the bounds the layout flows free (the
 constraint is removed); outside them the first element's width is pinned to the boundary.
 
-## Conditionals, when a function isn't enough
+## Responsive or adaptive? Choosing the mechanism
+
+Every responsive decision is one of three kinds — and r$ has one mechanism per kind:
+
+| The property/behavior is… | Mechanism | Examples |
+| --- | --- | --- |
+| **Continuous** — it can meaningfully take every in-between value | `r$.fluid` (responsive) | sizes, spacing, type, colors, shadows, radii |
+| **Discrete by width** — the layout changes *structure* at a threshold | `bp.*` / `whenInRange` / `when` (adaptive) | display, grid templates, flex-direction, component variants |
+| **Discrete by geometry** — the trigger is a measured fact, not a width | `r$.geometry` (adaptive) | nav wrapped, header stuck, text truncated |
+
+The test: *does an in-between value mean anything?* A font can be 16.37px — fluid. A sidebar
+can't be 37% visible — that's a switch. And if the right moment for the switch is "when it no
+longer fits" rather than "at 768px", the trigger is geometric — use a predicate, not a
+breakpoint.
+
+### Adaptive by width, concretely
 
 ```typescript
+const bp = r$.breakpoints({ mobile: 320, tablet: 768, desktop: 1280 } as const);
+
+r$('.sidebar', {
+    display: bp.below('tablet', 'none', 'block'),          // hide on mobile — static @media
+});
+r$('.filters', {
+    flexDirection: bp.below('tablet', 'column', 'row'),    // stack → row
+});
 r$('.panel', {
-    // arbitrary predicate — always JS-driven:
-    padding: r$.when((w) => w > 600 && isLoggedIn(), 32, 16),
-    // range value — static @media when branches are plain values:
-    outline: r$.whenInRange(320, 767, '2px solid red'),
+    outline: r$.whenInRange(320, 767, '2px solid red'),    // only inside a range
+    padding: r$.when((w) => w > 600 && isCompactMode(), 16, 32),  // arbitrary logic — JS path
 });
 ```
 
-Branches nest: a `fluid` inside a `when` resolves correctly (and forces the JS path).
+Plain-value branches compile to static `@media`; a `when()` with a lambda stays JS (CSS can't
+run your predicate). `bp.below(px, value)` **without** a fallback is max-width-guarded — the
+value never leaks above the threshold.
+
+### Mixing the regimes
+
+Branches nest: an adaptive switch can hold fluid values, so each regime stays fluid *inside*
+its range —
+
+```typescript
+r$('.hero h1', {
+    // two regimes, each fluid: tighter curve on mobile, wider on desktop
+    fontSize: bp.below('tablet', r$.fluid(24, 32, { to: 767 }), r$.fluid(36, 64, { from: 768 })),
+});
+```
+
+(Nested `ResponsiveValue` branches resolve correctly and take the JS path.) The complete
+per-property examples — backgrounds, shadows, transforms — live in the
+[catalog's styling section](case-studies.md#styling-any-property).
 
 ## Lifecycle, testing, SSR
 

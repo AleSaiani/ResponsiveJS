@@ -151,6 +151,94 @@ SSR stylesheet.
 viewport (static output uses `cqi`; the handle configures `container-type` on the parent,
 refcounted). The same card component sizes correctly in a sidebar and in the main column.
 
+## Styling any property
+
+The style map takes **any** CSS property (camelCase), and `fluid` is polymorphic — numbers,
+colors, structured strings. These patterns show the range on real problems.
+
+### The hero that sets a mood — background color ramps
+
+Problem: on a phone the hero must be quiet and readable; on a cinema display it can be
+atmospheric. Discrete theme swaps at a breakpoint look like a glitch.
+
+```typescript
+r$('.hero', {
+    backgroundColor: r$.fluid('#16181d', '#1e2340'),   // deepens as space grows
+    color: r$.fluid('#e8e8e8', '#ffffff'),
+});
+```
+
+Interpolation runs in OKLab — no gray dead-zone mid-ramp (the classic sRGB artifact). Any
+color property works: `borderColor`, `outlineColor`, `caretColor`.
+
+### Depth that grows with space — fluid shadows
+
+Problem: design systems scale elevation in steps (sm/md/lg) and pick one per breakpoint;
+cards jump between flat and floating. Structured-string interpolation makes elevation
+continuous — numbers *and* the shadow color interpolate together:
+
+```typescript
+r$('.card', {
+    boxShadow: r$.fluid('0 1px 3px rgba(0,0,0,0.30)', '0 16px 48px rgba(0,0,0,0.18)'),
+    borderRadius: r$.fluid(8, 16),
+});
+```
+
+Mobile: tight, dark, close to the surface. Desktop: soft, wide, floating. Same works for
+`filter: blur(…)`, `textShadow` — any congruent value string.
+
+### Presence without reflow — fluid transforms
+
+Problem: a decorative element should be subtler on small screens, but animating `width`
+causes reflow. Transforms are compositor-only:
+
+```typescript
+import { combine, scale, rotate } from '@responsivejs/runtime';
+
+r$('.hero-badge', {
+    transform: combine([scale(r$.fluid(0.85, 1.15)), rotate(r$.fluid(-2, -6, 'deg'))]),
+});
+```
+
+### Density as a system — the dashboard ramp
+
+Problem: dashboards need to be dense on laptops and breathable on big monitors — usually
+solved by a "compact mode" toggle users must find. Make density a *function of space*
+instead, in one place:
+
+```typescript
+r$.tokens({
+    '--cell-pad': r$.fluid(6, 14),
+    '--row-gap': r$.fluid(4, 10),
+    '--font-data': r$.fluid(12.5, 15),
+});
+```
+
+```css
+td { padding: var(--cell-pad); font-size: var(--font-data); }
+tr { margin-block: var(--row-gap); }
+```
+
+Every table, list and card in the app breathes together — and the whole ramp is one token
+block you can hand to design as DTCG.
+
+### Structure switching — the adaptive side
+
+When the change is *structural* (an in-between value means nothing), switch discretely —
+plain-value branches compile to static `@media`:
+
+```typescript
+const bp = r$.breakpoints({ mobile: 320, tablet: 768, desktop: 1280 } as const);
+
+r$('.filters', { flexDirection: bp.below('tablet', 'column', 'row') });
+r$('.sidebar', { display: bp.below('tablet', 'none', 'block') });
+```
+
+And the regimes mix: a switch's branches can hold fluid values, so each regime stays fluid
+inside its range. When to flow vs when to switch — and when the trigger should be geometric
+rather than a width — is the [responsive-or-adaptive framework](runtime.md#responsive-or-adaptive-choosing-the-mechanism)
+in the guide.
+
 ## Lifecycle & environments
 
 ### SPA components — keep the handle
