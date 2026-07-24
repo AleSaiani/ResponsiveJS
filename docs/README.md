@@ -8,7 +8,7 @@
 **API reference**
 
 - [@responsivejs/core](api/core.md) — geometry, curves, interpolation, color/WCAG/OKLab, typography, aesthetics, snapshot model
-- [@responsivejs/runtime](api/runtime.md) — `responsive()`, `fluid()`, conditionals, layout/typography helpers, signals
+- [@responsivejs/runtime](api/runtime.md) — `r$()`, `r$.fluid`, `r$.geometry`, `r$.tokens`, conditionals, layout/typography helpers, signals
 - [@responsivejs/design](api/design.md) — `r$(page)`, the Asserter, `analyze()`, MeasurementSource, browser core, reporters
 - [@responsivejs/contract](api/contract.md) — the contract format, registry, builder, loader, `verifyContract`
 - [@responsivejs/cli](api/cli.md) — the `rjs` command line: analyze / verify / record, driver-pluggable

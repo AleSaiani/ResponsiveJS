@@ -6,7 +6,7 @@ The authoring half: reactive `value = f(width)`, CSS-first. Depends only on
 
 **The entry point is `r$`** — one callable namespace carrying the whole surface
 (`r$.fluid`, `r$.tokens`, `r$.geometry`, `r$.whenWraps`, `r$.breakpoints`, …), so the editor's
-autocomplete is the API browser. `responsive` is the same object under its historical name,
+autocomplete is the API browser. `responsive` is an alias of the same object (the historical name),
 and every member is also a named export for tree-shaking-sensitive code. New to the runtime?
 Start from the [guide](../guides/runtime.md), not this reference.
 
@@ -30,17 +30,17 @@ removes effects, observers, injected CSS **and** applied inline styles.
 
 | Member | Meaning |
 | --- | --- |
-| `responsive.config({ breakpoints, defaultUnit='px', useMediaQueries=true, debug, ssrWidth=1024 })` | Global configuration (itself reactive). |
-| `responsive.breakpoints({ mobile: 320, … } as const)` | Define named breakpoints — returns the [typed API](#typed-breakpoints). |
-| `responsive.tokens({ '--space-md': fluid(8, 16) })` | [Token bridge](#tokens--fluid-custom-properties): fluid custom properties on `:root`. |
-| `responsive.static(selector, map): string` | CSS-only compilation — throws if anything needs JS. |
-| `responsive.dynamic(target, map)` | Skip the static split, drive everything via JS. |
-| `responsive.lazy(target, map)` | Apply on first intersection (IntersectionObserver). |
-| `responsive.batch(fn)` | One signal flush + one style flush for several calls. |
-| `responsive.memo(map)` | Cache custom-function values per 1px width bucket. |
-| `responsive.debug(bool)` | Log resolved values on change. |
-| `responsive.flush()` | Synchronously drain pending style writes (tests). |
-| `responsive.apply(target, 'text-fluid-sm-xl p-fluid-2-8')` | Utility micro-grammar (`{text\|p\|m\|gap\|bg\|color}-fluid-{from}-{to}`). |
+| `r$.config({ breakpoints, defaultUnit='px', useMediaQueries=true, debug, ssrWidth=1024 })` | Global configuration (itself reactive). |
+| `r$.breakpoints({ mobile: 320, … } as const)` | Define named breakpoints — returns the [typed API](#typed-breakpoints). |
+| `r$.tokens({ '--space-md': fluid(8, 16) })` | [Token bridge](#tokens--fluid-custom-properties): fluid custom properties on `:root`. |
+| `r$.static(selector, map): string` | CSS-only compilation — throws if anything needs JS. |
+| `r$.dynamic(target, map)` | Skip the static split, drive everything via JS. |
+| `r$.lazy(target, map)` | Apply on first intersection (IntersectionObserver). |
+| `r$.batch(fn)` | One signal flush + one style flush for several calls. |
+| `r$.memo(map)` | Cache custom-function values per 1px width bucket. |
+| `r$.debug(bool)` | Log resolved values on change. |
+| `r$.flush()` | Synchronously drain pending style writes (tests). |
+| `r$.apply(target, 'text-fluid-sm-xl p-fluid-2-8')` | Utility micro-grammar (`{text\|p\|m\|gap\|bg\|color}-fluid-{from}-{to}`). |
 
 ## Values
 
@@ -120,7 +120,7 @@ attributes). SSR: inert. Bare factories are accepted (`wrapped: whenWraps` ≡ `
 ## Typed breakpoints
 
 ```typescript
-const bp = defineBreakpoints({ mobile: 320, tablet: 768, desktop: 1024 } as const);
+const bp = r$.breakpoints({ mobile: 320, tablet: 768, desktop: 1024 } as const);  // defineBreakpoints as named export
 bp.below('tablet', 'column', 'row');   // autocompletes; a typo is a COMPILE error
 bp.between('mobile', 'desktop', …);
 bp.match({ mobile: 14, desktop: 18 });
@@ -134,7 +134,7 @@ Also configures the global runtime, so the string-based `breakpoint.*` API keeps
 ## Tokens — fluid custom properties
 
 ```typescript
-const t = responsive.tokens({ '--space-md': fluid(8, 16), '--font-hero': fluid(24, 48, { curve: 'exponential' }) });
+const t = r$.tokens({ '--space-md': fluid(8, 16), '--font-hero': fluid(24, 48, { curve: 'exponential' }) });
 ```
 
 One write point instead of N styled elements: linear values compile to a static `clamp()`
@@ -200,4 +200,4 @@ formula: `slope = (max−min)/(vMax−vMin)`, `intercept = min − slope·vMin` 
 ## SSR
 
 No `window` access at module level. Values resolve at `config.ssrWidth` until hydration; prefer
-`responsive.static()` for server-rendered CSS.
+`r$.static()` for server-rendered CSS.

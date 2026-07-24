@@ -20,47 +20,47 @@ as `r$.<name>` (e.g. `r$.fluid`, `r$.geometry`, `r$.whenWraps`); `r$(target, map
    `handle.dispose()` removes everything it did (effects, observers, CSS, attributes).
 5. **Prefer `tokens()` over per-element styles** for design-scale values: one write point on
    `:root`, consumed as `var()`.
-6. SSR: all constructs are inert without `window`; ship `responsive.static()` / `tokens().css`.
+6. SSR: all constructs are inert without `window`; ship `r$.static()` / `tokens().css`.
 
 ## Signatures
 
 ```typescript
 // Apply styles (CSS-first split on selector targets)
-responsive(target, map): ResponsiveHandle          // target: selector | Element | Element[]
-responsive.dynamic(target, map)                    // force JS path
-responsive.static(selector, map): string           // CSS only; throws if JS needed
-responsive.flush()                                 // drain pending writes (tests)
+r$(target, map): ResponsiveHandle          // target: selector | Element | Element[]
+r$.dynamic(target, map)                    // force JS path
+r$.static(selector, map): string           // CSS only; throws if JS needed
+r$.flush()                                 // drain pending writes (tests)
 
 // Values
-fluid(min, max, unit? | { curve?, unit?, container?, from?, to?, domain? })
-fluid([8, 16, 24, 32], opts?)                      // per-breakpoint segments
-fluid('#f00', '#00f')                              // OKLab color mix (JS)
-when(pred, a, b?) · whenInRange(min, max, v, else?)
-breakpoint.below(ref, a, b?) · .above · .between(lo, hi, a, b?) · .match({name: value})
+r$.fluid(min, max, unit? | { curve?, unit?, container?, from?, to?, domain? })
+r$.fluid([8, 16, 24, 32], opts?)                      // per-breakpoint segments
+r$.fluid('#f00', '#00f')                              // OKLab color mix (JS)
+r$.when(pred, a, b?) · r$.whenInRange(min, max, v, else?)
+r$.breakpoint.below(ref, a, b?) · .above · .between(lo, hi, a, b?) · .match({name: value})
 
 // Typed breakpoints (returns API typed on YOUR names; typo = compile error)
-const bp = defineBreakpoints({ mobile: 320, tablet: 768 } as const);
+const bp = r$.breakpoints({ mobile: 320, tablet: 768 } as const);
 bp.below('tablet', a, b?) · bp.above · bp.between · bp.match({...}) · bp.width(name)
 bp.matches(name): { signal, dispose } · bp.names
 
 // Tokens (fluid custom properties on :root)
-const t = responsive.tokens({ '--space-m': fluid(16, 24) });
+const t = r$.tokens({ '--space-m': r$.fluid(16, 24) });
 t.css            // static stylesheet (SSR)
 t.dynamic        // names that stay JS-driven
 t.toDTCG()       // Design-Tokens JSON, curves sampled
 t.dispose()
 
 // Geometry predicates → data-attributes
-geometry(target, { stateName: predicate }, { prefix? }): GeometryHandle
-whenWraps() · whenOverflows('x'|'y'|'both'?) · whenTruncated() · whenStuck()
-linesOf()  /* number → data-lines="3" */ · whenCollides(otherSelectorOrElement)
+r$.geometry(target, { stateName: predicate }, { prefix? }): GeometryHandle
+r$.whenWraps() · r$.whenOverflows('x'|'y'|'both'?) · r$.whenTruncated() · r$.whenStuck()
+r$.linesOf()  /* number → data-lines="3" */ · r$.whenCollides(otherSelectorOrElement)
 predicate.measure(el)                              // pure one-shot, no reactivity
 handle.measure() · handle.pause() · handle.resume() · handle.dispose()
 
 // Cross-element
-fromElement(target)                                 // fluid domain: follows THAT element's width
-sync(target, 'height'|'width'): { measure, dispose }   // equalize across containers
-ratio(a, b, { min?, max? }): { measure, dispose }      // enforce width ratio on a
+r$.fromElement(target)                                 // fluid domain: follows THAT element's width
+r$.sync(target, 'height'|'width'): { measure, dispose }   // equalize across containers
+r$.ratio(a, b, { min?, max? }): { measure, dispose }      // enforce width ratio on a
 
 // Reactivity (TC39-shaped, zero-dep)
 state(v) · computed(fn) · effect(fn): dispose · subscribe(sig, cb) · batch(fn) · untrack(fn)
@@ -71,25 +71,25 @@ viewportWidth() · containerWidth(el) · elementSize(el) · mediaQuery(q) · scr
 
 | Need | Use | NOT |
 | --- | --- | --- |
-| Value scales with viewport | `fluid(min, max)` in `tokens()` | resize listeners |
-| Value scales with own container | `fluid(…, { container: true })` | ancestor queries in JS |
-| Value follows ANOTHER element | `fluid(…, { domain: fromElement(sel) })` | polling rects |
-| Nav collapses when it stops fitting | `geometry + whenWraps` | a magic `@media` px |
-| Style while sticky is pinned | `geometry + whenStuck` | IO sentinel hack |
-| "Show more" when clamped | `geometry + whenTruncated` | char-count heuristics |
-| Equal heights, different parents | `sync(sel, 'height')` | manual measure loops |
-| Sidebar/main ratio guarantee | `ratio(a, b, bounds)` | hoping the CSS holds |
-| Named responsive switches | `defineBreakpoints(...as const)` + `bp.*` | string names |
+| Value scales with viewport | `r$.fluid(min, max)` in `tokens()` | resize listeners |
+| Value scales with own container | `r$.fluid(…, { container: true })` | ancestor queries in JS |
+| Value follows ANOTHER element | `r$.fluid(…, { domain: r$.fromElement(sel) })` | polling rects |
+| Nav collapses when it stops fitting | `r$.geometry` + `r$.whenWraps` | a magic `@media` px |
+| Style while sticky is pinned | `r$.geometry` + `r$.whenStuck` | IO sentinel hack |
+| "Show more" when clamped | `r$.geometry` + `r$.whenTruncated` | char-count heuristics |
+| Equal heights, different parents | `r$.sync(sel, 'height')` | manual measure loops |
+| Sidebar/main ratio guarantee | `r$.ratio(a, b, bounds)` | hoping the CSS holds |
+| Named responsive switches | `r$.breakpoints(...as const)` + `bp.*` | string names |
 
 ## Minimal correct pattern
 
 ```typescript
-import { responsive, fluid, geometry, whenWraps, defineBreakpoints } from '@responsivejs/runtime';
+import { r$ } from '@responsivejs/runtime';
 
-const bp = defineBreakpoints({ mobile: 320, tablet: 768, desktop: 1280 } as const);
-const tokens = responsive.tokens({ '--space-m': fluid(16, 24), '--font-hero': fluid(28, 56) });
-const nav = geometry('.site-nav', { wrapped: whenWraps });
-const grid = responsive('.cards', { gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)') });
+const bp = r$.breakpoints({ mobile: 320, tablet: 768, desktop: 1280 } as const);
+const tokens = r$.tokens({ '--space-m': r$.fluid(16, 24), '--font-hero': r$.fluid(28, 56) });
+const nav = r$.geometry('.site-nav', { wrapped: r$.whenWraps });
+const grid = r$('.cards', { gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)') });
 
 // on unmount:
 for (const h of [tokens, nav, grid]) h.dispose();

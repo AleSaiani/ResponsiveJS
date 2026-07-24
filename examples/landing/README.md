@@ -22,10 +22,10 @@ nav item is added, renamed, or translated into a longer language.
 **The construct:** the state is derived from geometry itself —
 
 ```ts
-geometry('.site-nav', { wrapped: whenWraps });
+r$.geometry('.site-nav', { wrapped: r$.whenWraps });
 ```
 ```css
-.site-nav[data-wrapped] { display: none; }
+.site-nav[data-wrapped] { visibility: hidden; height: 0; overflow: hidden; }
 .site-nav[data-wrapped] ~ .menu-button { display: block; }
 ```
 
@@ -43,13 +43,13 @@ measurement stays true while the nav is collapsed.
 **The construct:**
 
 ```ts
-geometry('.site-header', { stuck: whenStuck() });
+r$.geometry('.site-header', { stuck: r$.whenStuck() });
 ```
 ```css
 .site-header[data-stuck] { box-shadow: 0 2px 12px rgb(0 0 0 / 0.12); }
 ```
 
-## 3. The design scale as fluid tokens — `responsive.tokens`
+## 3. The design scale as fluid tokens — `r$.tokens`
 
 **The hack:** clamp() formulas copy-pasted per property, or a Sass function nobody can inspect
 in devtools.
@@ -57,9 +57,9 @@ in devtools.
 **The construct:** one write point, consumed as `var()` everywhere —
 
 ```ts
-responsive.tokens({
-    '--space-m': fluid(16, 24),          // → static clamp() on :root, ZERO runtime JS
-    '--font-hero': fluid(28, 64, { curve: 'exponential' }), // JS-driven (CSS can't curve)
+r$.tokens({
+    '--space-m': r$.fluid(16, 24),          // → static clamp() on :root, ZERO runtime JS
+    '--font-hero': r$.fluid(28, 64, { curve: 'exponential' }), // JS-driven (CSS can't curve)
 });
 ```
 
@@ -71,7 +71,7 @@ Linear tokens cost nothing at runtime; only the exponential hero size is maintai
 **The hack:** subgrid (when the layout allows it), or a resize listener measuring and patching
 heights with its own stale-value bugs.
 
-**The construct:** `sync('.card h3', 'height')` — max natural height wins, re-measured on
+**The construct:** `r$.sync('.card h3', 'height')` — max natural height wins, re-measured on
 resize, constraint lifted on dispose.
 
 ## 5. Type driven by another element — `fromElement`
@@ -81,18 +81,18 @@ resize, constraint lifted on dispose.
 **The construct:** any element's width can be the domain —
 
 ```ts
-responsive('.hero .tagline', {
-    fontSize: fluid(14, 18, { domain: fromElement('.sidebar'), from: 200, to: 400 }),
+r$('.hero .tagline', {
+    fontSize: r$.fluid(14, 18, { domain: r$.fromElement('.sidebar'), from: 200, to: 400 }),
 });
 ```
 
-## 6. Breakpoint names the compiler checks — `defineBreakpoints`
+## 6. Breakpoint names the compiler checks — `r$.breakpoints`
 
 **The hack:** `'mobile'` strings that throw at runtime when someone types `'moble'`.
 
 **The construct:**
 
 ```ts
-const bp = defineBreakpoints({ mobile: 320, tablet: 768, desktop: 1280 } as const);
+const bp = r$.breakpoints({ mobile: 320, tablet: 768, desktop: 1280 } as const);
 bp.below('tablet', '1fr', 'repeat(3, 1fr)');   // typo = compile error
 ```
