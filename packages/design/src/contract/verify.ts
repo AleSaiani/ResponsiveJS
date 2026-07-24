@@ -37,13 +37,11 @@ import { sweepSource } from '../source/sweep.js';
 import appleHig from '../design-systems/apple-hig.json' with { type: 'json' };
 import fluentUi2 from '../design-systems/fluent-ui-2.json' with { type: 'json' };
 import materialDesign3 from '../design-systems/material-design-3.json' with { type: 'json' };
-import pragmatic from '../design-systems/pragmatic.json' with { type: 'json' };
 
 const BUNDLED_PROFILES: Record<string, DesignSystemConfig> = {
     'apple-hig': appleHig as unknown as DesignSystemConfig,
     'fluent-ui-2': fluentUi2 as unknown as DesignSystemConfig,
     'material-design-3': materialDesign3 as unknown as DesignSystemConfig,
-    pragmatic: pragmatic as unknown as DesignSystemConfig,
 };
 
 // ─── normalization ──────────────────────────────────────────────────────

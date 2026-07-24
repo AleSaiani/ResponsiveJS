@@ -44,11 +44,11 @@ export interface ValidationSelectors {
 }
 
 export const DEFAULT_SELECTORS: ValidationSelectors = {
-    interactive: ['button', '.pdx-primary', '.pdx-secondary', '.pdx-ghost', '.pdx-danger'],
+    interactive: ['button', 'a[href]', '[role="button"]'],
     text: ['h1', 'h2', 'h3', 'p'],
-    inputs: ['.pdx-input', 'input', 'select', 'textarea'],
-    containers: ['main', 'pdx-stack', 'pdx-row', 'pdx-grid'],
-    surfaces: ['.pdx-surface-card'],
+    inputs: ['input', 'select', 'textarea'],
+    containers: ['main', 'section', 'nav', 'header', 'footer'],
+    surfaces: ['article', '.card'],
     extra: [],
 };
 

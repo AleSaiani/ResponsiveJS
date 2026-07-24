@@ -114,6 +114,6 @@ for code-scanning CI · `formatContractConsole` / `formatContractCompact` (see
 ## Design systems
 
 Bundled profiles (`@responsivejs/design/design-systems/*.json`): `apple-hig`, `fluent-ui-2`,
-`material-design-3`, `pragmatic`. `applyDesignSystem(asserter, ds, selectors?)` applies a
+`material-design-3`. `applyDesignSystem(asserter, ds, selectors?)` applies a
 profile's constraints; `designSystemRules(ds, selectors?)` returns the same checks as contract
 rules (the two are parity-tested).

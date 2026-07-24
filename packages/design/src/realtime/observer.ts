@@ -5,7 +5,7 @@
 
 /**
  * Build a self-contained script string that, when evaluated in a browser,
- * sets up observers and stores measurements in `window.__pdx_store`.
+ * sets up observers and stores measurements in `window.__rjs_store`.
  */
 export function buildObserverScript(selectors: string[]): string {
     const selectorsJSON = JSON.stringify(selectors);
@@ -16,8 +16,8 @@ export function buildObserverScript(selectors: string[]): string {
     const selectors = ${selectorsJSON};
 
     // Global store: Map<viewportWidth, measurement[]>
-    if (!window.__pdx_store) {
-        window.__pdx_store = new Map();
+    if (!window.__rjs_store) {
+        window.__rjs_store = new Map();
     }
 
     function measure() {
@@ -77,7 +77,7 @@ export function buildObserverScript(selectors: string[]): string {
             });
         }
 
-        window.__pdx_store.set(width, {
+        window.__rjs_store.set(width, {
             width: width,
             height: window.innerHeight,
             measurements: results,
@@ -86,24 +86,24 @@ export function buildObserverScript(selectors: string[]): string {
     }
 
     // Cleanup previous observers if re-injected
-    if (window.__pdx_resizeObserver) {
-        window.__pdx_resizeObserver.disconnect();
+    if (window.__rjs_resizeObserver) {
+        window.__rjs_resizeObserver.disconnect();
     }
-    if (window.__pdx_mutationObserver) {
-        window.__pdx_mutationObserver.disconnect();
+    if (window.__rjs_mutationObserver) {
+        window.__rjs_mutationObserver.disconnect();
     }
 
     // ResizeObserver on documentElement to detect viewport resize
-    window.__pdx_resizeObserver = new ResizeObserver(function() {
+    window.__rjs_resizeObserver = new ResizeObserver(function() {
         measure();
     });
-    window.__pdx_resizeObserver.observe(document.documentElement);
+    window.__rjs_resizeObserver.observe(document.documentElement);
 
     // MutationObserver on body to detect DOM changes
-    window.__pdx_mutationObserver = new MutationObserver(function() {
+    window.__rjs_mutationObserver = new MutationObserver(function() {
         measure();
     });
-    window.__pdx_mutationObserver.observe(document.body, {
+    window.__rjs_mutationObserver.observe(document.body, {
         childList: true,
         subtree: true,
         attributes: true

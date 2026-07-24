@@ -118,7 +118,7 @@ import materialDesign from '@responsivejs/design/design-systems/material-design-
 applyDesignSystem(r.assert, materialDesign, { interactive: ['.btn', 'a'] });
 ```
 
-Available: `apple-hig`, `fluent-ui-2`, `material-design-3`, `pragmatic`.
+Available: `apple-hig`, `fluent-ui-2`, `material-design-3`.
 
 ## Documentation
 

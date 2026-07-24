@@ -50,7 +50,7 @@ describe('builder round-trip', () => {
     });
 
     it('use() embeds a design-system profile', () => {
-        const built = contract().use('pragmatic', { interactive: ['button'] }).assert('noOverflow').build();
-        expect(built.designSystem).toEqual({ profile: 'pragmatic', selectors: { interactive: ['button'] } });
+        const built = contract().use('material-design-3', { interactive: ['button'] }).assert('noOverflow').build();
+        expect(built.designSystem).toEqual({ profile: 'material-design-3', selectors: { interactive: ['button'] } });
     });
 });

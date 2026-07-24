@@ -79,22 +79,29 @@ Full docs live in [docs/](docs/README.md):
 [contract](docs/api/contract.md) · guides for [CI regression](docs/guides/ci.md) and
 [AI agents](docs/guides/agents.md).
 
+## Works with your tools
+
+The validation oracle is **driver-pluggable**: Playwright for CI, any CDP client for agent
+loops — including [Vercel's agent-browser](https://github.com/vercel-labs/agent-browser) or a
+raw `eval` primitive. The browser tool is the arm, `r$` is the judgment: they compose, no
+lock-in. See the [agents guide](docs/guides/agents.md).
+
 ## Roadmap
 
-- **F0 — Extraction** ✅ `core` + `design` published from the existing, battle-tested codebase.
-- **F1 — Core authoring** ✅ `sample`/`interpolate` on `Curve` (the authoring half of the model).
-- **F2 — Runtime** ✅ reactive values, container-aware, `clamp()` generation where CSS suffices.
-- **F3 — Design complete** ✅ unified `analyze()` — geometry + responsive + a11y (WCAG/axe) + aesthetics.
-- **F4 — Devtool**: the in-page overlay.
-- **F5 — Design-contract DSL** ✅ declarative, serializable specs for authoring and regression.
-- **F6 — Adapters & DX**: framework bindings, docs, agent skill.
+**Available now (alpha)**: the shared math (`core`), the authoring runtime (`runtime`), the
+validation oracle with a11y and aesthetic scoring (`design`), and the contract DSL (`contract`).
+
+**Next**:
+
+- **Devtool** — the in-page visual overlay: width-sweep with live problem highlighting, a curve
+  inspector (`f(width)` per property), an aesthetic-score HUD, and a recorder that exports your
+  adjustments as `clamp()` / runtime config / design tokens.
+- **Framework adapters** — thin React/Vue bindings over the runtime's TC39-shaped signals.
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Development needs Node ≥ 20.19 and pnpm.
 
-## Provenance & license
+## License
 
-Extracted from [Pragmatic.Design.UI](https://github.com/AleSaiani), where the validation layer was
-developed and battle-tested against a 100+ component library. Licensed under
 [MPL-2.0](LICENSE).

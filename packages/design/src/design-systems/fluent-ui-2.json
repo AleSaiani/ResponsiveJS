@@ -1,5 +1,5 @@
 {
-  "$schema": "pragmatic-design-system/v1",
+  "$schema": "responsivejs-design-system/v1",
   "name": "Fluent UI 2",
   "source": "fluent2.microsoft.design",
 

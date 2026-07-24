@@ -612,9 +612,9 @@ export class Asserter {
 
     /** Focusable elements should have a visible focus indicator.
      *  Note: checks resting state only. Elements using box-shadow focus rings
-     *  (like Pragmatic CSS) will show as 'info' not 'error' since we can't
-     *  measure :focus-visible state without interaction. Use measureInteraction()
-     *  for definitive focus ring validation. */
+     *  will show as 'info' not 'error' since we can't measure :focus-visible
+     *  state without interaction. Use measureInteraction() for definitive
+     *  focus ring validation. */
     focusVisible(selector: string): this {
         for (const [w, snapshot] of this.store.snapshots) {
             const elements = snapshot.elements.get(selector) || [];
@@ -633,7 +633,7 @@ export class Asserter {
                         detail: `outlineWidth=${el.styles.outlineWidth}px at rest — verify :focus-visible state has visible indicator`,
                         severity: 'info',
                         suggestion: 'Verify focus ring via outline or box-shadow on :focus-visible (WCAG 2.4.7)',
-                        fix: { selector, property: 'outline', value: '2px solid var(--pdx-color-focus)', reason: 'Focus must be visible for keyboard users' },
+                        fix: { selector, property: 'outline', value: '2px solid currentColor', reason: 'Focus must be visible for keyboard users' },
                     });
                 }
             }

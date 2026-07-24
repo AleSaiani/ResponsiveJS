@@ -144,7 +144,7 @@ describe('design-system unification', () => {
 
     it('contracts embed profiles: rules appear with ds.* ids', () => {
         const c = contract()
-            .use('pragmatic', selectors)
+            .use('material-design-3', selectors)
             .assert('noOverflow', undefined, { id: 'own-rule' })
             .build();
         const report = verifyContract(c, makeStore([320], ['button', 'h1', 'main']));

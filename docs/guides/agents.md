@@ -23,7 +23,9 @@ where an honest one exists — a structured `fix`:
 
 ## Driving from CDP (agent-browser, remote Chrome)
 
-`CdpSource` takes any structural `{ send(method, params) }` client — no dependency:
+`CdpSource` takes any structural `{ send(method, params) }` client — no dependency. This is how
+r$ composes with browser tools like [Vercel's agent-browser](https://github.com/vercel-labs/agent-browser),
+Playwright's `CDPSession`, or chrome-remote-interface:
 
 ```typescript
 import { CdpSource, analyze } from '@responsivejs/design';

@@ -43,9 +43,9 @@ export class LiveValidator {
     async snapshot(): Promise<SnapshotStore> {
         this.ensureAttached();
 
-        // Read __pdx_store from browser — it's a Map<number, BrowserSnapshot>
+        // Read __rjs_store from browser — it's a Map<number, BrowserSnapshot>
         const rawEntries: [number, BrowserSnapshot][] = await this.page!.evaluate(() => {
-            const store = (window as any).__pdx_store as Map<number, any>;
+            const store = (window as any).__rjs_store as Map<number, any>;
             return Array.from(store.entries());
         });
 
@@ -81,7 +81,7 @@ export class LiveValidator {
         // clear() never produces a fresh measurement, that recursion never terminated (L-94).
         for (let attempt = 0; attempt < 2; attempt++) {
             const raw: BrowserSnapshot | null = await this.page!.evaluate((w) => {
-                const store = (window as any).__pdx_store as Map<number, any>;
+                const store = (window as any).__rjs_store as Map<number, any>;
                 return store.get(w) ?? null;
             }, targetWidth);
 
@@ -92,7 +92,7 @@ export class LiveValidator {
             }
 
             // No snapshot yet — nudge the observer to re-measure, then retry ONCE.
-            await this.page!.evaluate(() => { (window as any).__pdx_store?.clear(); });
+            await this.page!.evaluate(() => { (window as any).__rjs_store?.clear(); });
             await this.page!.waitForTimeout(50);
         }
 
@@ -114,15 +114,15 @@ export class LiveValidator {
         if (this.page) {
             await this.page.evaluate(() => {
                 const win = window as any;
-                if (win.__pdx_resizeObserver) {
-                    win.__pdx_resizeObserver.disconnect();
-                    delete win.__pdx_resizeObserver;
+                if (win.__rjs_resizeObserver) {
+                    win.__rjs_resizeObserver.disconnect();
+                    delete win.__rjs_resizeObserver;
                 }
-                if (win.__pdx_mutationObserver) {
-                    win.__pdx_mutationObserver.disconnect();
-                    delete win.__pdx_mutationObserver;
+                if (win.__rjs_mutationObserver) {
+                    win.__rjs_mutationObserver.disconnect();
+                    delete win.__rjs_mutationObserver;
                 }
-                delete win.__pdx_store;
+                delete win.__rjs_store;
             });
         }
         this.page = null;

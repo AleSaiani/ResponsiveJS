@@ -48,7 +48,7 @@ test against the real `Asserter` class prevents drift. Also: `CONSTRAINT_NAMES`,
 contract(name?)                       // → ContractBuilder
     .viewport({ widths: [...] })
     .select('alias', '.selector')     // registers "$alias"
-    .use('pragmatic', selectors?)     // embed a DS profile (or inline config)
+    .use('material-design-3', selectors?)     // embed a DS profile (or inline config)
     .at('*' | { min?, max? })         // scope subsequent asserts (describe-block style)
     .below(768) / .upTo(1024) / .from(768) / .between(a, b)
     .assert(name, args?, { id?, severity?, description? })
