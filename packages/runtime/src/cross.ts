@@ -34,6 +34,10 @@ export function sync(target: Target, prop: 'height' | 'width' = 'height'): Cross
     const elements = resolveElements(target);
     if (elements.length < 2) return inert;
 
+    // Pre-existing inline values are overridden while the sync is active
+    // (that is the construct's job) but restored on dispose.
+    const saved = new Map(elements.map((el) => [el, el.style.getPropertyValue(prop)]));
+
     const measure = (): void => {
         // Natural size: measure with our own constraint lifted.
         for (const el of elements) el.style.removeProperty(prop);
@@ -52,7 +56,11 @@ export function sync(target: Target, prop: 'height' | 'width' = 'height'): Cross
         measure,
         dispose() {
             stop();
-            for (const el of elements) el.style.removeProperty(prop);
+            for (const el of elements) {
+                const previous = saved.get(el);
+                if (previous) el.style.setProperty(prop, previous);
+                else el.style.removeProperty(prop);
+            }
         },
     };
 }
@@ -69,6 +77,8 @@ export function ratio(a: string | Element, b: string | Element, bounds: RatioBou
     const [elA] = resolveElements(a);
     const [elB] = resolveElements(b);
     if (!elA || !elB) return inert;
+
+    const savedWidth = elA.style.getPropertyValue('width');
 
     const measure = (): void => {
         elA.style.removeProperty('width');
@@ -93,7 +103,8 @@ export function ratio(a: string | Element, b: string | Element, bounds: RatioBou
         measure,
         dispose() {
             stop();
-            elA.style.removeProperty('width');
+            if (savedWidth) elA.style.setProperty('width', savedWidth);
+            else elA.style.removeProperty('width');
         },
     };
 }

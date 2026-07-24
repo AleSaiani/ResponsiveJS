@@ -3,6 +3,11 @@
  * group resolves values against the viewport (or container) width signal and
  * enqueues style patches; writes are coalesced into one rAF flush per frame.
  * Reads are pull-based (signals), so deferring writes cannot go stale.
+ *
+ * Ownership model (2026-07-24 review): every handle owns a UNIQUE stylesheet
+ * key; the inline value that existed before the handle's first write to a
+ * property is saved and restored on dispose (or when update() drops the
+ * property); shared side effects (container-type) are refcounted.
  */
 
 import { effect, type Disposer } from './signals.js';
@@ -13,11 +18,11 @@ import { emitCSS, injectStyle, removeStyle, toKebab, declarationValue } from './
 
 export interface ResponsiveHandle {
     readonly elements: readonly HTMLElement[];
-    /** Replace the style map (disposes and re-creates the effects). */
+    /** Replace the style map: dropped properties are restored, the rest re-applies. */
     update(map: StyleMap): void;
     pause(): void;
     resume(): void;
-    /** Remove effects, observers, injected CSS and applied inline styles. */
+    /** Remove effects, observers, injected CSS — and restore pre-existing inline styles. */
     dispose(): void;
 }
 
@@ -57,6 +62,37 @@ export function flush(): void {
     writeQueue.clear();
 }
 
+// ─── shared container-type ownership (refcounted) ───────────────────────
+
+const containerTypeRefs = new WeakMap<HTMLElement, number>();
+
+/** Set container-type: inline-size unless the user already declared one.
+ *  Refcounted across handles; the last release removes OUR declaration. */
+export function acquireContainerType(el: HTMLElement): Disposer {
+    const refs = containerTypeRefs.get(el);
+    if (refs !== undefined) {
+        containerTypeRefs.set(el, refs + 1);
+    } else if (el.style.containerType) {
+        return () => {}; // user-owned — never touch it
+    } else {
+        el.style.containerType = 'inline-size';
+        containerTypeRefs.set(el, 1);
+    }
+    let released = false;
+    return () => {
+        if (released) return;
+        released = true;
+        const current = containerTypeRefs.get(el);
+        if (current === undefined) return;
+        if (current <= 1) {
+            containerTypeRefs.delete(el);
+            el.style.removeProperty('container-type');
+        } else {
+            containerTypeRefs.set(el, current - 1);
+        }
+    };
+}
+
 // ─── target resolution ──────────────────────────────────────────────────
 
 export type Target = string | Element | Element[] | NodeListOf<Element>;
@@ -82,42 +118,73 @@ let handleCounter = 0;
 export function applyResponsive(target: Target, map: StyleMap, options: ApplyOptions = {}): ResponsiveHandle {
     const cfg = configState.get();
     const elements = resolveElements(target);
-    const styleKey = typeof target === 'string' ? `r$:${target}` : `r$:#${++handleCounter}`;
+    // Unique per handle: two r$('.x', …) calls must never share (or clobber)
+    // each other's stylesheet. Later injection wins the cascade — documented.
+    const styleKey = `r$:#${++handleCounter}${typeof target === 'string' ? `:${target}` : ''}`;
     let injectedCSS = false;
 
-    let dynamicMap: StyleMap = map;
-    const cssFirst = options.cssFirst ?? cfg.useMediaQueries;
-    if (cssFirst && typeof target === 'string') {
-        const { css, dynamicRest } = emitCSS(target, map);
+    const splitStatic = (m: StyleMap): StyleMap => {
+        if (!(options.cssFirst ?? cfg.useMediaQueries) || typeof target !== 'string') return m;
+        const { css, dynamicRest } = emitCSS(target, m);
         if (css.length > 0) {
             injectStyle(css, styleKey);
             injectedCSS = true;
+        } else if (injectedCSS) {
+            removeStyle(styleKey);
+            injectedCSS = false;
         }
-        dynamicMap = dynamicRest;
-    }
+        return dynamicRest;
+    };
+
+    let fullMap = map;
+    let currentMap = splitStatic(map);
 
     let disposers: Disposer[] = [];
-    const appliedProps = new Set<string>();
     let paused = false;
-    let currentMap = dynamicMap;
+    /** Inline value present BEFORE our first write, per element × property. */
+    const savedInline = new Map<HTMLElement, Map<string, string>>();
 
     const applyEntry = (el: HTMLElement, prop: string, value: StyleValue, width: number): void => {
         const kebab = toKebab(prop);
+        let saved = savedInline.get(el);
+        if (!saved) {
+            saved = new Map();
+            savedInline.set(el, saved);
+        }
+        if (!saved.has(kebab)) saved.set(kebab, el.style.getPropertyValue(kebab));
+
         const resolved = isResponsiveValue(value)
             ? value.resolve(width)
             : typeof value === 'function'
               ? value(width)
               : value;
         const unit = configState.get().defaultUnit;
-        appliedProps.add(kebab);
         enqueueWrite(el, kebab, declarationValue(resolved, kebab, unit));
         if (configState.get().debug) {
             console.log(`[r$] ${describeElement(el)} ${kebab} @ ${width}px →`, resolved);
         }
     };
 
+    const restoreProp = (el: HTMLElement, kebab: string): void => {
+        writeQueue.get(el)?.delete(kebab); // cancel our pending write
+        const saved = savedInline.get(el)?.get(kebab);
+        if (saved) el.style.setProperty(kebab, saved);
+        else el.style.removeProperty(kebab);
+        savedInline.get(el)?.delete(kebab);
+    };
+
     const setup = (): void => {
+        // Static-only container values still need a real container configured:
+        // the stylesheet says cqi, but CSS cannot reach the parent — this
+        // one-time setup is the JS half of the CSS-first container path.
+        const hasContainerValue = Object.values(fullMap).some((v) => isResponsiveValue(v) && v.container && !v.source);
+
         for (const el of elements) {
+            if (hasContainerValue) {
+                const container = el.parentElement ?? el;
+                if (container instanceof HTMLElement) disposers.push(acquireContainerType(container));
+            }
+
             const entries = Object.entries(currentMap);
             if (entries.length === 0) continue;
 
@@ -158,7 +225,6 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
                 // cqi semantics: the container is the nearest ancestor; fall back
                 // to the element itself when it has no parent.
                 const container = el.parentElement ?? el;
-                if (container instanceof HTMLElement) container.style.containerType ||= 'inline-size';
                 const { signal, dispose } = containerWidth(container);
                 disposers.push(dispose);
                 disposers.push(
@@ -183,12 +249,16 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
         elements,
         update(next: StyleMap) {
             teardown();
-            currentMap = next;
-            if (injectedCSS) {
-                const { css, dynamicRest } = emitCSS(typeof target === 'string' ? target : '', next);
-                injectStyle(css, styleKey);
-                currentMap = dynamicRest;
+            fullMap = next;
+            const nextDynamic = splitStatic(next);
+            // Properties we owned that the new map no longer touches: restore.
+            const nextKebabs = new Set(Object.keys(next).map(toKebab));
+            for (const [el, saved] of savedInline) {
+                for (const kebab of [...saved.keys()]) {
+                    if (!nextKebabs.has(kebab)) restoreProp(el, kebab);
+                }
             }
+            currentMap = nextDynamic;
             setup();
         },
         pause() {
@@ -203,10 +273,11 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
         dispose() {
             teardown();
             if (injectedCSS) removeStyle(styleKey);
-            for (const el of elements) {
-                for (const prop of appliedProps) el.style.removeProperty(prop);
-                writeQueue.delete(el);
+            for (const [el, saved] of savedInline) {
+                for (const kebab of [...saved.keys()]) restoreProp(el, kebab);
+                if (writeQueue.get(el)?.size === 0) writeQueue.delete(el);
             }
+            savedInline.clear();
         },
     };
 }
@@ -215,7 +286,9 @@ function describeElement(el: HTMLElement): string {
     return el.id ? `#${el.id}` : el.className ? `.${String(el.className).split(' ')[0]}` : el.tagName.toLowerCase();
 }
 
-/** responsive.static(): compile the map to CSS only. Injects in browser, returns the CSS. */
+/** responsive.static(): compile the map to CSS only. Injects in browser, returns the CSS.
+ *  NOTE: container values compile to cqi — with static-only emission YOU must
+ *  declare `container-type` on the container (r$() full application does it for you). */
 export function staticCSS(selector: string, map: StyleMap): string {
     const { css, dynamicRest } = emitCSS(selector, map);
     const dynamicProps = Object.keys(dynamicRest);

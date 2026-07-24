@@ -52,9 +52,12 @@ export function tokens(map: TokensMap): TokensHandle {
 
     const dynamicNames = Object.keys(dynamicRest) as TokenName[];
     const disposers: Disposer[] = [];
+    /** Inline :root values present before our first write — restored on dispose. */
+    const savedVars = new Map<string, string>();
 
     if (dynamicNames.length > 0 && typeof document !== 'undefined') {
         const root = document.documentElement;
+        for (const name of dynamicNames) savedVars.set(name, root.style.getPropertyValue(name));
         const vw = viewportWidth();
         disposers.push(
             effect(() => {
@@ -94,7 +97,12 @@ export function tokens(map: TokensMap): TokensHandle {
             for (const d of disposers) d();
             if (css.length > 0) removeStyle(styleKey);
             if (typeof document !== 'undefined') {
-                for (const name of dynamicNames) document.documentElement.style.removeProperty(name);
+                const root = document.documentElement;
+                for (const name of dynamicNames) {
+                    const saved = savedVars.get(name);
+                    if (saved) root.style.setProperty(name, saved);
+                    else root.style.removeProperty(name);
+                }
             }
         },
     };
