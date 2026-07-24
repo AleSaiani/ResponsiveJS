@@ -172,7 +172,9 @@ row. The styling stays where styling belongs:
 
 This is the **“JS detects, CSS styles”** pattern. JS maintains a fact; CSS decides what the
 fact looks like. Your burger menu now has no breakpoint to go stale — add a seventh link,
-translate the labels to German, it keeps working.
+translate the labels to German, it keeps working. (If any step here feels compressed, the
+[case studies](case-studies.md) unpack this exact example end to end — what is measured, the
+DOM before/after, and the test.)
 
 **The one rule** (learn it once): never `display: none` the element a predicate measures.
 Hidden-by-display elements have zero-sized children, so the predicate would flip back and the
@@ -260,6 +262,65 @@ the static half yourself: `r$.static(selector, map)` returns the CSS (and throws
 — if the map contains anything that would silently need JS), and `r$.tokens(...).css` is the
 token stylesheet. Geometry attributes appear on hydration.
 
+## Customizing, extending, seeing inside
+
+r$'s constructs are deliberately small objects — which means every one of them can be
+customized, extended, or interrogated.
+
+**Write your own predicate.** A geometry predicate is just `{ measure(el) }` — a function
+that answers a question about an element (plus `scroll: true` if scrolling changes the
+answer). If r$ doesn't ship the fact you need, define it:
+
+```typescript
+const whenPortrait = {
+    measure: (el: Element) => {
+        const r = el.getBoundingClientRect();
+        return r.height > r.width;
+    },
+};
+
+r$.geometry('.media-card', { portrait: whenPortrait });
+// → <div class="media-card" data-portrait> … CSS takes it from there
+```
+
+Your predicate gets the exact same re-measurement machinery as the built-ins.
+
+**Rename the attributes.** `r$.geometry(target, states, { prefix: 'data-r-' })` if `data-*`
+names could collide with something else in your app.
+
+**React in JS, not just CSS.** Data-attributes are for stylesheets; when *logic* needs the
+fact, drop one level to the signal layer the constructs are built on:
+
+```typescript
+import { effect, elementSize, viewportWidth, subscribe } from '@responsivejs/runtime';
+
+const { signal: size, dispose } = elementSize(document.querySelector('.sidebar')!);
+const stop = effect(() => {
+    if (size.get().width < 250) collapseSidebarInYourStateStore();
+});
+
+const bp = r$.breakpoints({ tablet: 768 } as const);
+const tablet = bp.matches('tablet');
+subscribe(tablet.signal, (isTablet) => reloadLighterImages(isTablet));
+```
+
+Same sources, same refcounting — a predicate and your effect share one ResizeObserver.
+
+**Escape hatches at every level.** A value that no combinator expresses is one function away:
+`r$.custom((width) => myFormula(width))` participates in maps like any fluid. A one-shot
+answer without any wiring: `r$.whenWraps().measure(el)`. A forced re-check after you mutated
+content: `handle.measure()`.
+
+**See what r$ is doing.** Three inspection points, all in plain devtools:
+
+- `r$.debug(true)` — logs every resolved value as it's applied (`[r$] .hero font-size @
+  400px → 27.5`).
+- The injected stylesheets are ordinary `<style data-responsivejs>` tags in `<head>` — open
+  one and read the exact `clamp()`/`@media` CSS your values compiled to.
+- Tokens live on `:root` — the Styles panel shows every variable and its current value; the
+  Elements panel shows geometry's `data-*` attributes appearing and leaving live as you
+  resize.
+
 ## What it costs
 
 One passive resize listener, one shared ResizeObserver, one capture-phase scroll listener —
@@ -269,6 +330,9 @@ signal is a property access), and the whole runtime is ~11 kB gzipped with zero 
 
 ## Where next
 
+- [Case studies](case-studies.md) — the burger, the pinned header, "read more": complete
+  walkthroughs with the DOM before/after and the tests.
+- [Testing guide](testing.md) — unit-test the pure half, browser-test the geometric half.
 - [Cookbook](runtime-cookbook.md) — the same constructs as paste-ready recipes.
 - [Landing example](../../examples/landing) — all of the above on one real page, with the
   hack each construct replaces.

@@ -25,6 +25,11 @@
   construct explained with its purpose and gradual examples. Start here for authoring.
 - **[The design guide](guides/validation.md)** — validating with `r$(page)`: measure → model
   → judge, the Asserter, `analyze()`, scores, contracts, drivers. Start here for validation.
+- **[Case studies](guides/case-studies.md)** — real cases end to end, nothing assumed: the
+  burger menu, the pinned header, "read more" — what the predicate measures, the DOM
+  before/after, the CSS, the test
+- **[Testing responsive behavior](guides/testing.md)** — what's unit-testable (pure values)
+  vs what needs a real browser, the patterns and the traps
 - [Runtime cookbook](guides/runtime-cookbook.md) — one recipe per construct: fluid tokens,
   wrap-driven burger, stuck shadow, truncation, equal heights, cross-element, typed breakpoints
 - [Validation cookbook](guides/validation-cookbook.md) — zero-setup audit → CI gate →

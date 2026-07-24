@@ -41,7 +41,8 @@ r$.geometry('.site-nav', { wrapped: r$.whenWraps });
 ```
 
 The burger appears exactly when the links stop fitting — adding a seventh link, renaming one,
-or translating to German just works.
+or translating to German just works. Full anatomy (what is measured, the DOM before/after,
+the test): [case study #1](case-studies.md#case-1--the-burger-menu-whenwraps).
 
 **Gotcha (the one rule of geometry)**: never `display: none` what a predicate measures — the
 children's rects go to zero, the predicate flips back, the state oscillates. Collapse while

@@ -12,7 +12,10 @@ header casts a shadow only **while stuck**, spacing and type flow as `clamp()` c
 properties, card headings stay equal-height, and the tagline's size follows the **sidebar's**
 width.
 
-Each construct below replaces a specific hack you have probably written.
+Each construct below replaces a specific hack you have probably written. These sections are
+deliberately short — the [case studies](../../docs/guides/case-studies.md) walk the burger,
+the pinned header and "read more" end to end (what is measured, the DOM before/after, how to
+test it), and the [testing guide](../../docs/guides/testing.md) covers verification patterns.
 
 ## 1. The wrap-driven burger — `whenWraps`
 
