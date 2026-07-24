@@ -36,9 +36,9 @@ test('layout is correct at all viewports', async ({ page }) => {
 });
 ```
 
-~24 chainable constraints: containment, alignment, monotonicity, continuity, proportions, touch
-targets, WCAG contrast, typography scales, spacing tokens, z-order, focus visibility… Violations
-carry a `fix` suggestion (`{ selector, property, value, reason }`).
+27 chainable constraints: containment, alignment, monotonicity, continuity, proportions, touch
+targets, WCAG contrast, typography scales, spacing tokens, z-order, focus visibility,
+visibility contracts… Violations carry a `fix` suggestion (`{ selector, property, value, reason }`).
 
 ## Zero-driver browser core
 
