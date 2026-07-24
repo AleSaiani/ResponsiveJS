@@ -5,9 +5,10 @@ One page per question — start from what you're trying to do.
 | Your question | The page |
 | --- | --- |
 | What is this, where do I start? | [Getting started](getting-started.md) |
+| **Teach me — I'll build along** | **[The tutorial](tutorial.md)** — empty page → fluid, measured, contract-pinned landing in 7 steps (~30 min) |
 | How does the model work? | [Concepts](concepts.md) — `value = f(width)`, snapshots, the oracle, CSS-first |
 | **How do I author responsive behavior in JS/TS?** | **[The runtime guide](guides/runtime.md)** — `r$.`: every construct's purpose, gradual examples, customizing & debugging |
-| Show me a real case, nothing assumed | [Case studies](guides/case-studies.md) — burger menu, pinned header, "read more": what is measured, the DOM before/after, the CSS, the test |
+| What's the pattern for MY problem? | [The pattern catalog](guides/case-studies.md) — every construct on a real problem, organized by what you're building; three unpacked end to end |
 | **How do I validate/score a page?** | **[The design guide](guides/validation.md)** — `r$(page)`: measure → model → judge, `analyze()`, contracts, cutting false positives |
 | How do I test all of this? | [Testing responsive behavior](guides/testing.md) — what's unit-testable vs what needs a browser, patterns and traps |
 | How do I wire it into CI? | [CI guide](guides/ci.md) — pipelines, SARIF, baselines strategy |

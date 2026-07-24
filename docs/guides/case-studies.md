@@ -1,13 +1,186 @@
-# Case studies — real cases, end to end
+# The pattern catalog — every construct, on a real problem
 
-Three complete walkthroughs. Each one shows the *whole* mechanism: the HTML you start from,
-what the predicate actually measures, what changes in the DOM (before/after), the CSS that
-reacts, and how to verify it. Nothing is assumed — if a snippet in the
-[runtime guide](runtime.md) feels compressed, this is the page that unpacks it.
+One pattern per real-world problem, organized by what you're building. Each: the problem, the
+construct, what it replaces. New here? Do the [tutorial](../tutorial.md) first — it builds a
+page with the core patterns. Three of the entries below are also
+[unpacked end to end](#deep-dives) (DOM before/after, the measurement, the test).
+
+## Navigation & page chrome
+
+### The burger that appears exactly when needed — `whenWraps`
+
+Replaces: the hand-tuned `@media (max-width: 843px)` that rots when a link is added or the
+site is translated.
+
+```typescript
+r$.geometry('.site-nav', { wrapped: r$.whenWraps });
+```
+```css
+.site-nav[data-wrapped] { visibility: hidden; height: 0; overflow: hidden; }
+.site-nav[data-wrapped] ~ .menu-button { display: block; }
+```
+
+[Full anatomy below](#deep-dive-1--the-burger-menu-whenwraps). Rule: collapse *keeping
+layout* — never `display: none` what a predicate measures.
+
+### Toolbar "More…" overflow — `whenOverflows`
+
+Replaces: guessing how many toolbar buttons fit at which width.
+
+```typescript
+r$.geometry('.toolbar', { crowded: r$.whenOverflows() });
+```
+```css
+.toolbar { overflow: hidden; }
+.toolbar[data-crowded] ~ .more-menu-button { display: inline-flex; }
+```
+
+The "More…" button exists exactly while content exceeds the box.
+
+### Header effects only while pinned — `whenStuck`
+
+Replaces: the IntersectionObserver-sentinel hack. `r$.geometry('.site-header', { stuck:
+r$.whenStuck() })` → `.site-header[data-stuck] { box-shadow: …; }` — shadow, condensed logo,
+blur: anything, only while actually stuck. [Full anatomy below](#deep-dive-2--header-effects-only-while-pinned-whenstuck).
+
+## Content
+
+### "Read more" only when something was cut — `whenTruncated`
+
+Replaces: character-count heuristics that break with fonts, widths, languages.
+`r$.geometry('.excerpt', { truncated: r$.whenTruncated() })` →
+`.excerpt[data-truncated] + .read-more { display: inline; }`.
+[Full anatomy below](#deep-dive-3--read-more-only-when-truncated-whentruncated).
+
+### Layout that reacts to line count — `linesOf`
+
+Replaces: nothing — this wasn't feasible. A heading that centers when it fits on one line,
+left-aligns when it wraps:
+
+```typescript
+r$.geometry('.card h2', { lines: r$.linesOf() });   // → data-lines="1" | "2" | …
+```
+```css
+.card h2[data-lines='1'] { text-align: center; }
+```
+
+### The carousel scroll affordance — `whenOverflows('x')`
+
+Show the "scroll →" hint only while there IS more content:
+
+```typescript
+r$.geometry('.chip-row', { scrollable: r$.whenOverflows('x') });
+```
+```css
+.chip-row[data-scrollable]::after { content: '→'; /* fade gradient, arrow, anything */ }
+```
+
+## Relations between elements
+
+### Equal heights across unrelated containers — `sync`
+
+Replaces: subgrid (when the DOM allows it) or hand-rolled measure loops with stale-value
+bugs. `r$.sync('.card h3', 'height')` — max natural height wins, re-synced on resize,
+restored on dispose. Call `handle.measure()` after swapping content dynamically.
+
+### A layout invariant, enforced — `ratio`
+
+Replaces: hoping the CSS holds. `r$.ratio('.sidebar', '.main', { min: 0.2, max: 0.33 })` —
+inside the bounds the layout flows free; outside them the sidebar is pinned to the boundary.
+This is the validation constraint `proportion` promoted to runtime *enforcement*: author and
+verifier speak the same rule.
+
+### A value driven by ANOTHER element — `fromElement`
+
+Replaces: nothing — container queries only see ancestors.
+
+```typescript
+r$('.main-content', {
+    fontSize: r$.fluid(14, 18, { domain: r$.fromElement('.sidebar'), from: 200, to: 400 }),
+});
+```
+
+Master-detail panes, editors whose type tracks the preview pane, anything where element A
+answers to element B's size.
+
+### Floating UI that yields to content — `whenCollides`
+
+```typescript
+r$.geometry('.floating-cta', { overlapping: r$.whenCollides('.footer') });
+```
+```css
+.floating-cta[data-overlapping] { opacity: 0.15; pointer-events: none; }
+```
+
+The FAB fades exactly while it covers the footer — measured, not scripted to scroll offsets.
+
+## Fluid values & the design system
+
+### The type scale with character — curves
+
+Linear is free (static `clamp()`); when linear feels flat, shape the growth:
+
+```typescript
+r$.tokens({
+    '--font-hero': r$.fluid(28, 64, { curve: 'exponential' }),  // restrained on mobile, dramatic on wide
+    '--font-body': r$.fluid(15, 18),                            // linear → zero JS
+});
+```
+
+### Per-breakpoint values without the ladder — `fluid([...])`
+
+`r$.fluid([12, 16, 24, 32])` places one value per configured breakpoint and interpolates the
+segments — the multi-stop scale as one expression, still statically compiled where linear.
+
+### Perceptual color transitions — `fluid(color, color)`
+
+`r$.fluid('#1a1a2e', '#4a4a6a')` interpolates in OKLab — no gray dead-zone in the middle
+(the classic sRGB-mix artifact). Backgrounds that lighten as the viewport grows, borders that
+soften: `color: r$.fluid('#111', '#555')`.
+
+### Themes and design tokens as a pipeline — `tokens` + DTCG
+
+The scale lives in one place, CSS consumes `var()` everywhere, themes are alternative token
+sets — and `handle.toDTCG()` exports the whole system (curves sampled per breakpoint) as
+Design Tokens Community Group JSON for Figma/Style Dictionary pipelines. `handle.css` is the
+SSR stylesheet.
+
+### Container-aware components — `{ container: true }`
+
+`r$.fluid(14, 18, { container: true })` binds to the nearest container instead of the
+viewport (static output uses `cqi`; the handle configures `container-type` on the parent,
+refcounted). The same card component sizes correctly in a sidebar and in the main column.
+
+## Lifecycle & environments
+
+### SPA components — keep the handle
+
+Every construct returns a handle; tie it to unmount and everything is undone *and restored*:
+
+```typescript
+useEffect(() => {
+    const nav = r$.geometry(ref.current!, { wrapped: r$.whenWraps });
+    return () => nav.dispose();
+}, []);
+```
+
+Note: selectors resolve at creation — for elements mounted later, create the construct in the
+component that owns them (adapters that manage this automatically are on the roadmap).
+
+### SSR without flashes — static emission
+
+Linear constructs never needed JS: ship `r$.tokens(...).css` / `r$.static(selector, map)` as
+server-rendered CSS; geometry attributes hydrate on the client (constructs are inert without
+`window`). The page is correct before a single byte of JS runs.
 
 ---
 
-## Case 1 — The burger menu (`whenWraps`)
+# Deep dives
+
+Three of the patterns above, unpacked completely: the HTML, what the predicate measures, the
+exact DOM before/after, why the CSS is shaped that way, and the test.
+
+## Deep dive 1 — The burger menu (`whenWraps`)
 
 ### The situation
 
@@ -119,7 +292,7 @@ happy-dom: see [the testing guide](testing.md).)
 
 ---
 
-## Case 2 — Header effects only while pinned (`whenStuck`)
+## Deep dive 2 — Header effects only while pinned (`whenStuck`)
 
 ### The situation
 
@@ -168,7 +341,7 @@ you chose — at a wide viewport a short page may not scroll at all, and the tes
 
 ---
 
-## Case 3 — "Read more" only when truncated (`whenTruncated`)
+## Deep dive 3 — "Read more" only when truncated (`whenTruncated`)
 
 ### The situation
 

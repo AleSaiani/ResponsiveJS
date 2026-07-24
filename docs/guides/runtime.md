@@ -1,9 +1,10 @@
 # Using r$ in JavaScript / TypeScript — the runtime guide
 
 This is the guide to `@responsivejs/runtime`: what each API is *for*, how the pieces fit,
-and worked examples that grow from one line to a real page. The
+and worked examples that grow from one line to a real page. Prefer building along?
+The [tutorial](../tutorial.md) walks the same ground hands-on. The
 [API reference](../api/runtime.md) has every exact signature; the
-[case studies](case-studies.md) unpack three real cases end to end.
+[pattern catalog](case-studies.md) covers every construct on a real problem.
 
 ```bash
 npm i @responsivejs/runtime
@@ -339,8 +340,8 @@ signal is a property access), and the whole runtime is ~11 kB gzipped with zero 
 
 ## Where next
 
-- [Case studies](case-studies.md) — the burger, the pinned header, "read more": complete
-  walkthroughs with the DOM before/after and the tests.
+- [The pattern catalog](case-studies.md) — every construct on a real problem, three of them
+  unpacked end to end (DOM before/after, the measurement, the test).
 - [Testing guide](testing.md) — unit-test the pure half, browser-test the geometric half.
 - [Landing example](../../examples/landing) — all of the above on one real page, with the
   hack each construct replaces.

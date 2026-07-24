@@ -102,7 +102,8 @@ The browser entry is Playwright-free: inject it into any page (devtools, agents,
 
 ## Documentation
 
-Full docs live in [docs/](docs/README.md):
+Start with **[the tutorial](docs/tutorial.md)** — empty page to fluid, contract-pinned
+landing in ~30 minutes. Full docs live in [docs/](docs/README.md):
 [getting started](docs/getting-started.md) · [concepts](docs/concepts.md) · API reference for
 [core](docs/api/core.md) / [runtime](docs/api/runtime.md) / [design](docs/api/design.md) /
 [contract](docs/api/contract.md) · guides for [CI regression](docs/guides/ci.md) and

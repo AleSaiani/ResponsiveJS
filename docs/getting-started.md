@@ -1,7 +1,22 @@
 # Getting started
 
-ResponsiveJS (`r$`) is four packages around one model — **`value = f(width)`**. Pick the entry
-that matches what you want to do:
+ResponsiveJS (`r$`) is one model — **`value = f(width)`** — with two halves: *author*
+responsive behavior CSS can't express, *verify* the rendered result with measurements.
+
+## What it replaces
+
+| The hack you write today | The r$ construct | What you gain |
+| --- | --- | --- |
+| A `@media` ladder for every size | `r$.tokens({ '--space-m': r$.fluid(16, 24) })` | Smooth scaling, static `clamp()`, zero JS |
+| The burger breakpoint that rots | `r$.geometry('.nav', { wrapped: r$.whenWraps })` | Adapts by *measurement* — add a link, still correct |
+| IntersectionObserver sticky-sentinel | `r$.whenStuck()` | One line, no sentinel DOM |
+| Resize listeners + manual measuring | `r$.sync`, `r$.ratio`, `r$.fromElement` | Cross-element relations, cleanup included |
+| `'mobile'` strings that typo at runtime | `r$.breakpoints({...} as const)` | Names the compiler checks |
+| Squinting at three screen sizes | `rjs analyze <url>` | Measured verdict at every width, exit-code gated |
+| Screenshot diffing for regressions | `rjs record` / `verify` contracts | The layout's rules as reviewable JSON |
+
+**Fastest way in: [the tutorial](tutorial.md)** — build a page with all of it in ~30 minutes.
+Or pick your entry:
 
 | I want to…                                             | Install                                | Start here |
 | ------------------------------------------------------ | -------------------------------------- | ---------- |
