@@ -4,7 +4,6 @@
 
 - [Getting started](getting-started.md) — install, pick your entry point, first examples
 - [Concepts](concepts.md) — the `value = f(width)` model, snapshots, the oracle, CSS-first
-- [DIRECTION](DIRECTION.md) — the founding document: vision, surfaces, roadmap
 
 **API reference**
 
@@ -18,6 +17,5 @@
 - [Responsive regression in CI](guides/ci.md) — assertions → oracle → contracts, SARIF, baselines
 - [r$ for AI agents](guides/agents.md) — the fix loop, CDP/eval drivers, contracts as instructions
 
-**Background**
-
-- [Rating research](rating-research.md) — the literature behind the 17-metric aesthetic score
+The aesthetic score is grounded in Ngo, Teo & Byrne (2003), *Modelling interface aesthetics*,
+and Birkhoff (1933), *Aesthetic Measure* — see [api/core.md](api/core.md#aesthetics--the-17-metric-score).

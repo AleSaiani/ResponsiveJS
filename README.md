@@ -77,8 +77,7 @@ Full docs live in [docs/](docs/README.md):
 [getting started](docs/getting-started.md) · [concepts](docs/concepts.md) · API reference for
 [core](docs/api/core.md) / [runtime](docs/api/runtime.md) / [design](docs/api/design.md) /
 [contract](docs/api/contract.md) · guides for [CI regression](docs/guides/ci.md) and
-[AI agents](docs/guides/agents.md) · [DIRECTION](docs/DIRECTION.md) (the founding document) ·
-[rating research](docs/rating-research.md) (the science behind the aesthetic score).
+[AI agents](docs/guides/agents.md).
 
 ## Roadmap
 

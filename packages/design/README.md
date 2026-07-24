@@ -50,8 +50,7 @@ const { average, suggestions } = scoreDOM(['main', '.card', 'nav a']);
 
 Playwright-free by construction: import it in a browser app or inject it into any page via a
 driver's `eval` (CDP, agent-browser, devtools). It exposes the live-DOM collector plus the pure
-scoring core — 17 aesthetic metrics (Ngo/Teo/Byrne 2003 + Birkhoff 1933), see
-[rating research](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/rating-research.md).
+scoring core — 17 aesthetic metrics (Ngo/Teo/Byrne 2003 + Birkhoff 1933).
 
 ## The unified oracle: `analyze()`
 

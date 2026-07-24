@@ -69,7 +69,7 @@ on every driver, not just Playwright.
    deliberately disabled: it false-positives on gradients/translucency).
 3. **axe** — the rest of WCAG A/AA, when `axe-core` is installed.
 4. **Aesthetic score** — 17 metrics (Ngo/Teo/Byrne 2003 + Birkhoff 1933): balance, symmetry,
-   rhythm, density, unity… See [rating-research](rating-research.md).
+   rhythm, density, unity…
 
 Severity semantics: `pass` fails only on `error`; `clean` demands zero violations of any kind.
 

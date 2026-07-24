@@ -88,7 +88,7 @@ returns an `AestheticScore` with 15 weighted metrics (`balance`, `equilibrium`, 
 `proportion`, `rhythm`, `density`, `regularity`, `simplicity`, `unity`, `homogeneity`,
 `sequence`, `cohesion`, `economy`, `colorHarmony`, `typographyHarmony`), plus `birkhoff` and the
 weighted `overall` — all 0..1. Each metric is also exported as a standalone function. Grounded in
-Ngo/Teo/Byrne (2003) and Birkhoff (1933) — see [rating-research](../rating-research.md).
+Ngo, Teo & Byrne (2003), *Modelling interface aesthetics*, and Birkhoff (1933), *Aesthetic Measure*.
 
 ## `/types` — the data model
 
