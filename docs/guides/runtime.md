@@ -55,7 +55,7 @@ What just happened, precisely:
    ```typescript
    const hero = r$('.hero h1', { fontSize: r$.fluid(24, 48) });
    // …later, e.g. on route change:
-   hero.dispose();   // removes the stylesheet, styles, observers — everything it did
+   hero.dispose();   // removes what it did AND restores pre-existing inline values
    ```
 
 Every r$ construct follows this same shape: *describe → apply → get a disposable handle*.
@@ -245,7 +245,9 @@ Branches nest: a `fluid` inside a `when` resolves correctly (and forces the JS p
 ## Lifecycle, testing, SSR
 
 **Handles.** Everything returns one. `dispose()` always un-does exactly what the construct
-did. In component frameworks, tie it to unmount:
+did — including restoring inline values that existed before it (an inline `font-size` you
+had set survives a handle's lifetime). Handles are isolated: two on the same selector own
+separate stylesheets and dispose independently. In component frameworks, tie it to unmount:
 
 ```typescript
 useEffect(() => {

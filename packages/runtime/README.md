@@ -64,8 +64,10 @@ engine), `/curves`, `/layout`, `/typography`, `/geometry`.
 
 ## Contracts worth knowing
 
-- **Disposal**: every construct returns a handle; `dispose()` removes exactly what it did —
-  effects, observers, injected CSS, inline styles, data-attributes.
+- **Disposal & ownership**: every construct returns a handle; `dispose()` removes exactly
+  what it did — effects, observers, injected CSS, data-attributes — and RESTORES inline
+  values that pre-existed. Handles are isolated (unique stylesheets, refcounted shared
+  side effects like `container-type`).
 - **Geometry's one rule**: never `display: none` the element a predicate measures; collapse
   keeping layout (`visibility: hidden; height: 0; overflow: hidden`).
 - **SSR**: no `window` access at module level; ship `r$.static()` / `r$.tokens(...).css`.

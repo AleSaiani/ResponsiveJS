@@ -59,8 +59,11 @@ What each line really does:
 - **`r.assert`** is a chainable **Asserter**. Each call checks one equation at every measured
   width and records violations instead of throwing — you always get the full picture, not the
   first failure.
-- **`r.report()`** returns `{ pass, total, passed, failed, violations }`. Each violation says
-  *what* broke, *where* (`.btn[0]`), *at which width*, and *by how much* (`expected`/`actual`).
+- **`r.report()`** returns `{ pass, total, passed, failed, violations }`. `failed` counts
+  failed *checks* — one check can carry several violations (minSize failing width AND
+  height), so `failed ≤ violations.length` and `passed` is never negative. Each violation
+  says *what* broke, *where* (`.btn[0]`), *at which width*, and *by how much*
+  (`expected`/`actual`).
 
 ### Picking constraints
 

@@ -34,8 +34,9 @@ honest. `new Asserter(store)` works on any store (no Playwright).
 `minSize(sel, { width?, height? })` · `gapUniform(sel, threshold?)` ·
 `monotonic(sel, prop, dir?)` · `continuous(sel, prop, maxJump)` · `proportion(a, b, { min, max })`
 · `childrenContained(sel, tol?)` · `childrenEqualWidth(sel, tol?)` · `noZeroHeight(sel)` ·
-`touchTarget(sel, min?)` (default 24 = WCAG 2.5.8 AA floor; platform guidance 44–48; inline
-targets in prose exempt) · `textReadable(sel)` · `contrastRatio(sel, 'AA' | 'AAA')` ·
+`touchTarget(sel, min?)` (default 24 = WCAG 2.5.8 AA floor; platform guidance 44–48;
+interactive = DOM semantics — native controls/roles/tabindex — or cursor:pointer; inline
+targets in prose exempt; unrendered skipped) · `textReadable(sel)` · `contrastRatio(sel, 'AA' | 'AAA')` ·
 `borderRadiusValid(sel)` · `zStackOrder(selectors)` · `typographyScale(sel)` ·
 `spacingTokens(sel, tokens)` · `aspectRatio(sel, ratio, tol?)` · `focusVisible(sel)` ·
 `noHiddenOverflow(sel)` · `alignedToGrid(sel, gridSize)` · `breakpointSafe(breakpoints)` ·

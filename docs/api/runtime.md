@@ -25,8 +25,14 @@ r$`selector { prop: ${r$.fluid(14, 24)}px }`   // tagged-template form
 - With a selector target and `useMediaQueries` on (default), the map is **split**: statically
   expressible values become one injected `<style data-responsivejs>`; the rest is JS-driven.
 
-`ResponsiveHandle`: `elements`, `update(map)`, `pause()`, `resume()`, `dispose()` — dispose
-removes effects, observers, injected CSS **and** applied inline styles.
+`ResponsiveHandle`: `elements`, `update(map)`, `pause()`, `resume()`, `dispose()`.
+Ownership guarantees: every handle owns a **unique** stylesheet (two `r$('.x', …)` calls never
+clobber each other; the cascade goes to the later injection); the inline value present before
+the handle's first write to a property is **restored** on dispose; `update(map)` restores
+properties the new map no longer contains; `container: true` values acquire
+`container-type: inline-size` on the parent through a refcounted owner that never overrides a
+user declaration (also on the static path — the stylesheet says `cqi`, the handle provides
+the container; with `r$.static()` alone, declaring the container is on you).
 
 ### The namespace
 
@@ -69,7 +75,7 @@ inherits the other side's unit) and throws a descriptive error otherwise. No fuz
 | --- | --- | --- |
 | `when(pred, a, b?)` / `when([[pred, v], …])` | no | Arbitrary predicate; first match wins. |
 | `whenInRange(min, max, value, otherwise?)` | yes* | 2013 heritage; min+max `@media`. |
-| `breakpoint.below(ref, a, b?)` | yes* | `ref` is a name or px. Mobile-first emission. |
+| `breakpoint.below(ref, a, b?)` | yes* | `ref` is a name or px. Mobile-first emission; without `b` the value is `@media (max-width)`-guarded — it never leaks above the threshold. |
 | `breakpoint.above(ref, a, b?)` / `.between(lo, hi, a, b?)` | yes* | |
 | `breakpoint.match({ mobile: 14, desktop: 18 })` | yes* | Largest matching breakpoint wins. |
 

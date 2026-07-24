@@ -16,7 +16,8 @@ as `r$.<name>` (e.g. `r$.fluid`, `r$.geometry`, `r$.whenWraps`); `r$(target, map
 3. **JS detects, CSS styles**: predicates set data-attributes; put the styling in the
    stylesheet (`.nav[data-wrapped] { … }`), never in JS.
 4. **Keep handles, dispose on unmount**: every construct returns a handle;
-   `handle.dispose()` removes everything it did (effects, observers, CSS, attributes).
+   `handle.dispose()` removes everything it did (effects, observers, CSS, attributes) AND
+   restores inline values that existed before the handle touched them.
 5. **Prefer `tokens()` over per-element styles** for design-scale values: one write point on
    `:root`, consumed as `var()`.
 6. SSR: all constructs are inert without `window`; ship `r$.static()` / `tokens().css`.

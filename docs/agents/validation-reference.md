@@ -22,7 +22,8 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
 {
     "pass": false,          // no ERROR-severity violations (loop gate)
     "clean": false,         // no violations at all (polish gate)
-    "total": 46, "passed": 39, "failed": 7,
+    "total": 46, "passed": 39, "failed": 7,   // failed counts CHECKS (can be < violations.length;
+                                              // one check may carry several violations). Never negative.
     "widths": [320, 1280],
     "sources": { "measurement": "playwright|agent-browser|eval|cdp|store", "a11y": "axe|skipped|unavailable" },
     "summary": { "errors": 7, "warnings": 0, "info": 0, "byRule": {"noOverflow": 1}, "byWidth": {"320": 3} },
@@ -93,6 +94,11 @@ JSON Schema (validate before use):
 [`design-contract.v1.json`](../../packages/contract/schema/design-contract.v1.json).
 Unknown assert names / args fail at load with did-you-mean suggestions.
 
+Guarantees: selector-less (global) rules like `noOverflow` sweep a landmark default set —
+a contract of only global rules still measures real elements. A run that performed ZERO
+checks never passes: it fails with a `contract.noChecks` error violation. Treat that as
+"my targets don't exist on this page", not as success.
+
 ## The 27 constraints
 
 | assert | args | meaning |
@@ -109,7 +115,7 @@ Unknown assert names / args fail at load with did-you-mean suggestions.
 | `childrenContained` | selector, tolerance?:number | Direct children stay inside their container. |
 | `childrenEqualWidth` | selector, tolerance?:number | Direct children keep equal widths. |
 | `noZeroHeight` | selector | Elements never collapse to zero height while having width. |
-| `touchTarget` | selector, min?:number | Touch targets ≥ min at mobile widths (default 24, WCAG 2.5.8 AA; inline prose links exempt). |
+| `touchTarget` | selector, min?:number | Touch targets ≥ min at mobile widths (default 24, WCAG 2.5.8 AA). Interactive = DOM semantics (native controls, roles, tabindex, not disabled) or cursor:pointer; inline prose links exempt; unrendered (0×0) skipped. |
 | `textReadable` | selector | Font size and line-height stay readable. |
 | `contrastRatio` | selector, level?:'AA'\|'AAA' | WCAG contrast, measured effective backgrounds. |
 | `borderRadiusValid` | selector | Border radii stay consistent with element size. |
