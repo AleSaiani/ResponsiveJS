@@ -56,6 +56,24 @@ export interface ElementSnapshot {
     };
 }
 
+/**
+ * Provenance — the bridge between the authoring and verification planes.
+ * A runtime construct registers what it controls; the collector ships the
+ * manifest with the measurements; the oracle traces violations back to the
+ * construct that owns the element.
+ */
+export interface ProvenanceEntry {
+    id: number;
+    /** Which construct: 'style' (r$ apply), 'geometry', 'tokens', 'sync', 'ratio'. */
+    construct: string;
+    /** The selector (or element description) the construct controls. */
+    target: string;
+    /** What it does there — property/state names with their value kinds. */
+    behavior: string[];
+    /** Best-effort call site (file:line from the creation stack). */
+    source?: string;
+}
+
 /** Parent with its direct children rects */
 export interface ChildRelation {
     parentSelector: string;
@@ -71,6 +89,8 @@ export interface ViewportSnapshot {
     childRelations: Map<string, ChildRelation[]>;
     timestamp: number;
     scrollY?: number;
+    /** Runtime provenance manifest, when the page runs @responsivejs/runtime. */
+    manifest?: ProvenanceEntry[];
 }
 
 /** All measurements across all viewport widths */
@@ -78,6 +98,8 @@ export interface SnapshotStore {
     snapshots: Map<number, ViewportSnapshot>;
     widths: number[];
     selectors: string[];
+    /** Runtime provenance manifest, lifted from the measured page. */
+    manifest?: ProvenanceEntry[];
 }
 
 /** Machine-readable fix suggestion for agentic consumers. */
@@ -100,6 +122,12 @@ export interface Violation {
     severity?: 'error' | 'warning' | 'info';
     suggestion?: string;
     fix?: FixSuggestion;
+    /** The runtime construct that owns this element (from the provenance manifest). */
+    owner?: {
+        construct: string;
+        behavior: string[];
+        source?: string;
+    };
 }
 
 /** Report from constraint validation */

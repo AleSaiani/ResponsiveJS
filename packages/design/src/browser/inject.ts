@@ -142,7 +142,18 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
         if (relations.length > 0) childRelations.push([selector, relations]);
     }
 
-    return { width, height, elements, childRelations, timestamp: Date.now() };
+    // Provenance: if the page runs @responsivejs/runtime, ship its manifest
+    // with the measurements (the closed loop's transport).
+    const manifest = (window as unknown as { __rjs_manifest?: unknown }).__rjs_manifest;
+
+    return {
+        width,
+        height,
+        elements,
+        childRelations,
+        timestamp: Date.now(),
+        ...(Array.isArray(manifest) ? { manifest: manifest as ViewportSnapshotWire['manifest'] } : {}),
+    };
 }
 
 /**

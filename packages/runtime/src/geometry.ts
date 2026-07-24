@@ -18,6 +18,7 @@ import { effect, type Disposer } from './signals.js';
 import { viewportWidth, elementSize, scrollTick } from './viewport.js';
 import { resolveElements, type Target } from './apply.js';
 import { toKebab } from './static.js';
+import { registerProvenance } from './provenance.js';
 
 export interface GeometryPredicate {
     /** Pure, synchronous measurement — also callable directly for one-shot checks. */
@@ -164,6 +165,13 @@ export function geometry(
     const needsScroll = predicates.some(([, p]) => p.scroll);
     let paused = false;
     const disposers: Disposer[] = [];
+    disposers.push(
+        registerProvenance({
+            construct: 'geometry',
+            target: typeof target === 'string' ? target : `${elements.length} element(s)`,
+            behavior: predicates.map(([attr]) => attr),
+        }),
+    );
 
     const measureElement = (el: HTMLElement): void => {
         for (const [attr, predicate] of predicates) {

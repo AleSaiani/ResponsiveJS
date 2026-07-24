@@ -14,6 +14,7 @@ import { viewportWidth } from './viewport.js';
 import { configState } from './config.js';
 import { emitCSS, injectStyle, removeStyle, declarationValue } from './static.js';
 import { isResponsiveValue, type StyleMap, type StyleValue } from './value.js';
+import { registerProvenance } from './provenance.js';
 
 export type TokenName = `--${string}`;
 export type TokensMap = Record<TokenName, StyleValue>;
@@ -52,6 +53,15 @@ export function tokens(map: TokensMap): TokensHandle {
 
     const dynamicNames = Object.keys(dynamicRest) as TokenName[];
     const disposers: Disposer[] = [];
+    disposers.push(
+        registerProvenance({
+            construct: 'tokens',
+            target: ':root',
+            behavior: (Object.keys(map) as TokenName[]).map(
+                (n) => `${n}: ${dynamicNames.includes(n) ? 'dynamic' : 'static clamp'}`,
+            ),
+        }),
+    );
     /** Inline :root values present before our first write — restored on dispose. */
     const savedVars = new Map<string, string>();
 

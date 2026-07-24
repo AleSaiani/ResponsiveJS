@@ -7,7 +7,7 @@ import type { SnapshotStore } from '@responsivejs/core/types';
 import type { MeasurementSource } from '../source/types.js';
 import { sweepSource } from '../source/sweep.js';
 import { runAxe, type A11yOptions } from '../a11y/axe.js';
-import { analyzeStore, finalizeReport, type AnalyzeStoreOptions, type UnifiedReport } from './core.js';
+import { analyzeStore, finalizeReport, attachOwnership, type AnalyzeStoreOptions, type UnifiedReport } from './core.js';
 
 export interface AnalyzeOptions extends AnalyzeStoreOptions {
     /** Required unless `store` is given. Also enables a11y for store input. */
@@ -82,6 +82,7 @@ export async function analyze(opts: AnalyzeOptions): Promise<UnifiedReport> {
     }
 
     const violations = [...baseline.violations, ...axeViolations];
+    attachOwnership(violations, store.manifest);
     const total = baseline.total + axeViolations.length + axePasses;
 
     return finalizeReport(
@@ -93,6 +94,7 @@ export async function analyze(opts: AnalyzeOptions): Promise<UnifiedReport> {
             measurement: source?.kind ?? 'store',
             a11y: a11yState,
             durationMs: Date.now() - started,
+            manifest: store.manifest,
         },
     );
 }

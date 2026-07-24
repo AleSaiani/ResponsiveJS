@@ -31,6 +31,7 @@ import type { DesignSystemConfig, ValidationSelectors } from '../constraints/des
 import { scoreFromStore, scoreSubtree } from '../score/index.js';
 import { designSystemRules } from './design-system-rules.js';
 import { compileRule } from './dispatch.js';
+import { attachOwnership } from '../analyze/core.js';
 import { PlaywrightSource } from '../source/playwright.js';
 import { sweepSource } from '../source/sweep.js';
 
@@ -250,6 +251,7 @@ function verifyStore(input: DesignContract | object, store: SnapshotStore): Cont
         });
     }
 
+    attachOwnership(allViolations, store.manifest);
     const failedChecks = new Set(allViolations.map((v) => `${v.ruleId ?? v.rule}|${v.element ?? ''}|${v.width}`)).size;
     return {
         contract: { name: parsed.name, version: parsed.version },

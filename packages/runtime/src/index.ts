@@ -12,6 +12,7 @@ import { defineBreakpoints } from './breakpoints.js';
 import { template, applyUtilities } from './template.js';
 import { lazy, memo, batch, debug } from './perf.js';
 import { tokens } from './tokens.js';
+import { manifest } from './provenance.js';
 import { fluid, custom, combine, type StyleMap } from './value.js';
 import { when, whenInRange, breakpoint } from './conditionals.js';
 import { fromElement, sync, ratio } from './cross.js';
@@ -66,6 +67,8 @@ interface ResponsiveFn {
     flush(): void;
     /** Utility grammar: r$.apply('.el', 'text-fluid-sm-xl p-fluid-2-8'). */
     apply(target: string | Element, spec: string): ResponsiveHandle;
+    /** The live provenance manifest of every active construct (also on window.__rjs_manifest). */
+    manifest: typeof manifest;
 }
 
 function responsiveBase(
@@ -111,6 +114,7 @@ export const r$: ResponsiveFn = Object.assign(responsiveBase as ResponsiveFn, {
     debug,
     flush,
     apply: applyUtilities,
+    manifest,
 });
 
 /** Alias of r$ — the historical name. */
@@ -135,6 +139,11 @@ export { linear, exponential, logarithmic, easeIn, easeOut, easeInOut, cubic } f
 export { grid, space } from './layout.js';
 export { typography } from './typography.js';
 export type { TypeScale, TypeScaleOptions } from './typography.js';
+
+// ─── provenance (the closed loop's authoring side) ──────────────────────
+
+export { manifest, registerProvenance } from './provenance.js';
+export type { ProvenanceEntry } from '@responsivejs/core/types';
 
 // ─── token bridge ───────────────────────────────────────────────────────
 

@@ -4,7 +4,7 @@
  * Exported from the browser subpath too: no Playwright anywhere below here.
  */
 
-import type { SnapshotStore, Report, Violation, FixSuggestion } from '@responsivejs/core/types';
+import type { SnapshotStore, Report, Violation, FixSuggestion, ProvenanceEntry } from '@responsivejs/core/types';
 import { Asserter } from '../constraints/index.js';
 import { applyDesignSystem, type DesignSystemConfig, type ValidationSelectors } from '../constraints/design-system.js';
 import { scoreFromStore, scoreSubtree, type ScoreResult } from '../score/index.js';
@@ -40,6 +40,8 @@ export interface UnifiedReport extends Report {
     widths: number[];
     url?: string;
     sources: { measurement: string; a11y: 'axe' | 'skipped' | 'unavailable' };
+    /** The page's runtime provenance manifest, when it runs @responsivejs/runtime. */
+    manifest?: ProvenanceEntry[];
     summary: {
         errors: number;
         warnings: number;
@@ -90,6 +92,24 @@ function applyDefaultConstraints(assert: Asserter, selectors: string[], cfg: Con
     cfg.custom?.(assert);
 }
 
+/**
+ * Provenance: annotate violations with the runtime construct that owns the
+ * element (from the manifest the collector shipped with the measurements).
+ * The closed loop's read side — an agent can patch the CONSTRUCT, not the CSS.
+ */
+export function attachOwnership(violations: Violation[], manifest: SnapshotStore['manifest']): void {
+    if (!manifest || manifest.length === 0) return;
+    const bySelector = new Map(manifest.map((e) => [e.target, e]));
+    for (const v of violations) {
+        if (!v.element || v.owner) continue;
+        const selector = v.element.replace(/\[\d+\]$/, '');
+        const entry = bySelector.get(selector);
+        if (entry) {
+            v.owner = { construct: entry.construct, behavior: entry.behavior, ...(entry.source ? { source: entry.source } : {}) };
+        }
+    }
+}
+
 /** Analyze an in-memory store: constraints + score → UnifiedReport (sync, pure). */
 export function analyzeStore(store: SnapshotStore, opts: AnalyzeStoreOptions = {}): UnifiedReport {
     const started = Date.now();
@@ -106,6 +126,7 @@ export function analyzeStore(store: SnapshotStore, opts: AnalyzeStoreOptions = {
     }
 
     const base = assert.report();
+    attachOwnership(base.violations, store.manifest);
     let scores: ScoreResult | undefined;
     if (opts.score !== false) {
         scores = opts.score?.subtree ? scoreSubtree(store, opts.score.subtree) : scoreFromStore(store);
@@ -117,6 +138,7 @@ export function analyzeStore(store: SnapshotStore, opts: AnalyzeStoreOptions = {
         measurement: 'store',
         a11y: 'skipped',
         durationMs: Date.now() - started,
+        manifest: store.manifest,
     });
 }
 
@@ -127,6 +149,7 @@ interface FinalizeExtras {
     measurement: string;
     a11y: UnifiedReport['sources']['a11y'];
     durationMs: number;
+    manifest?: ProvenanceEntry[];
 }
 
 /** Assemble a UnifiedReport from a base Report and context. */
@@ -141,6 +164,7 @@ export function finalizeReport(base: Report, extras: FinalizeExtras): UnifiedRep
         widths: extras.widths,
         url: extras.url,
         sources: { measurement: extras.measurement, a11y: extras.a11y },
+        ...(extras.manifest ? { manifest: extras.manifest } : {}),
         summary,
         durationMs: extras.durationMs,
     };
@@ -159,5 +183,6 @@ export function mergeReports(base: UnifiedReport, ...extra: Report[]): UnifiedRe
         measurement: base.sources.measurement,
         a11y: base.sources.a11y,
         durationMs: base.durationMs,
+        manifest: base.manifest,
     });
 }

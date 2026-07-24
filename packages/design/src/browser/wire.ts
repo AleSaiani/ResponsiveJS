@@ -7,7 +7,7 @@
  * here and nowhere else.
  */
 
-import type { ElementSnapshot, ViewportSnapshot, ChildRelation, SnapshotStore } from '@responsivejs/core/types';
+import type { ElementSnapshot, ViewportSnapshot, ChildRelation, SnapshotStore, ProvenanceEntry } from '@responsivejs/core/types';
 import { fromDOMRect, type Rect } from '@responsivejs/core/rect';
 
 export interface RawRect {
@@ -38,6 +38,8 @@ export interface ViewportSnapshotWire {
     timestamp: number;
     elements: [selector: string, snapshots: ElementSnapshotWire[]][];
     childRelations: [selector: string, relations: ChildRelationWire[]][];
+    /** Runtime provenance manifest (window.__rjs_manifest), when present. */
+    manifest?: ProvenanceEntry[];
 }
 
 export interface SerializedStore {
@@ -83,6 +85,7 @@ export function fromWire(wire: ViewportSnapshotWire): ViewportSnapshot {
         width: wire.width,
         height: wire.height,
         ...(wire.scrollY !== undefined ? { scrollY: wire.scrollY } : {}),
+        ...(wire.manifest ? { manifest: wire.manifest } : {}),
         elements,
         childRelations,
         timestamp: wire.timestamp,

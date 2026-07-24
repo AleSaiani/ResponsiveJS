@@ -6,7 +6,38 @@
 import { describe, it, expect } from 'vitest';
 import { verifyContract, contractSweepPlan } from '../src/contract/verify.js';
 import { Asserter } from '../src/constraints/index.js';
+import { analyzeStore, attachOwnership } from '../src/analyze/core.js';
 import { makeStore, makeEl, makeRect } from './f3-fixtures.js';
+
+describe('provenance — violations trace back to the owning construct', () => {
+    const overflowStore = () => ({
+        ...makeStore([320], ['.card'], () => [makeEl('.card', { rect: makeRect(0, 0, 480, 100) })]),
+        manifest: [
+            { id: 1, construct: 'style', target: '.card', behavior: ['width: fluid'], source: 'src/cards.ts:12' },
+        ],
+    });
+
+    it('analyzeStore annotates violations with owner {construct, behavior, source}', () => {
+        const report = analyzeStore(overflowStore(), { score: false });
+        const hit = report.violations.find((v) => v.rule === 'noOverflow');
+        expect(hit?.owner).toEqual({ construct: 'style', behavior: ['width: fluid'], source: 'src/cards.ts:12' });
+    });
+
+    it('verifyContract annotates too, and unmatched elements stay unowned', () => {
+        const contract = { name: 'x', version: 1, rules: [{ assert: 'noOverflow', args: {} }] };
+        const store = overflowStore();
+        const report = verifyContract(contract, store);
+        const hit = report.violations.find((v) => v.rule === 'noOverflow');
+        expect(hit?.owner?.construct).toBe('style');
+        expect(hit?.owner?.source).toBe('src/cards.ts:12');
+    });
+
+    it('attachOwnership is a no-op without a manifest', () => {
+        const violations = [{ rule: 'noOverflow', element: '.card[0]', width: 320, detail: 'x' }];
+        attachOwnership(violations, undefined);
+        expect(violations[0]).not.toHaveProperty('owner');
+    });
+});
 
 describe('finding 1 — a global-rules contract can never pass with zero checks', () => {
     const onlyNoOverflow = { name: 'x', version: 1, rules: [{ assert: 'noOverflow', args: {} }] };

@@ -75,15 +75,17 @@ export async function sweepSource(source: MeasurementSource, opts: SourceSweepOp
         await source.open(opts.url);
     }
 
+    let manifest: SnapshotStore['manifest'];
     for (const w of widths) {
         await source.setViewport(w, height);
         const snapshot = opts.scroll
             ? await measureWithScroll(source, opts.selectors, height, opts.scrollSteps ?? 3)
             : await source.measure(opts.selectors);
         snapshots.set(w, snapshot);
+        if (snapshot.manifest) manifest = snapshot.manifest;
     }
 
-    return { snapshots, widths, selectors: opts.selectors };
+    return { snapshots, widths, selectors: opts.selectors, ...(manifest ? { manifest } : {}) };
 }
 
 /** Incremental re-sweep: re-measure specific widths/selectors into an existing store. */

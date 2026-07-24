@@ -13,6 +13,7 @@ import { effect } from './signals.js';
 import { viewportWidth } from './viewport.js';
 import { resolveElements, type Target } from './apply.js';
 import type { ElementSource } from './value.js';
+import { registerProvenance } from './provenance.js';
 
 /** Cross-element domain for fluid(): the value follows this element's width. */
 export function fromElement(target: string | Element): ElementSource {
@@ -37,6 +38,11 @@ export function sync(target: Target, prop: 'height' | 'width' = 'height'): Cross
     // Pre-existing inline values are overridden while the sync is active
     // (that is the construct's job) but restored on dispose.
     const saved = new Map(elements.map((el) => [el, el.style.getPropertyValue(prop)]));
+    const unregister = registerProvenance({
+        construct: 'sync',
+        target: typeof target === 'string' ? target : `${elements.length} element(s)`,
+        behavior: [prop],
+    });
 
     const measure = (): void => {
         // Natural size: measure with our own constraint lifted.
@@ -56,6 +62,7 @@ export function sync(target: Target, prop: 'height' | 'width' = 'height'): Cross
         measure,
         dispose() {
             stop();
+            unregister();
             for (const el of elements) {
                 const previous = saved.get(el);
                 if (previous) el.style.setProperty(prop, previous);
@@ -79,6 +86,11 @@ export function ratio(a: string | Element, b: string | Element, bounds: RatioBou
     if (!elA || !elB) return inert;
 
     const savedWidth = elA.style.getPropertyValue('width');
+    const unregister = registerProvenance({
+        construct: 'ratio',
+        target: typeof a === 'string' ? a : 'element',
+        behavior: [`width vs ${typeof b === 'string' ? b : 'element'} in [${bounds.min ?? '-∞'}, ${bounds.max ?? '∞'}]`],
+    });
 
     const measure = (): void => {
         elA.style.removeProperty('width');
@@ -103,6 +115,7 @@ export function ratio(a: string | Element, b: string | Element, bounds: RatioBou
         measure,
         dispose() {
             stop();
+            unregister();
             if (savedWidth) elA.style.setProperty('width', savedWidth);
             else elA.style.removeProperty('width');
         },

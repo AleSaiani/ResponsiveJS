@@ -30,6 +30,8 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
     "violations": [ /* Violation[] — see below */ ],
     "fixes": [ /* Fix[] — flattened, apply-first list */ ],
     "scores": { "average": { "overall": 0.57, /* +17 metrics 0..1 */ }, "perWidth": {} },
+    "manifest": [ /* ProvenanceEntry[] — present when the page runs @responsivejs/runtime:
+                     {id, construct, target, behavior[], source?} — what controls the page */ ],
     "durationMs": 4200
 }
 ```
@@ -44,7 +46,12 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
     "detail": "right=496 > viewport=320",
     "severity": "error|warning|info",   // MISSING severity counts as error
     "expected": 320, "actual": 496,     // when numeric
-    "fix": { "selector": ".card", "property": "max-width", "value": "100%", "reason": "…" }
+    "fix": { "selector": ".card", "property": "max-width", "value": "100%", "reason": "…" },
+    "owner": {                     // PROVENANCE: the runtime construct that owns this element
+        "construct": "style",      // style | geometry | tokens | sync | ratio
+        "behavior": ["width: fluid"],
+        "source": "src/cards.ts:12"   // best-effort call site
+    }
 }
 ```
 
@@ -56,6 +63,10 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
    are HINTS, not patches: treat them like fix-less violations (step 3).
 3. For violations without an applicable `fix`: reason from `detail` + `expected/actual` (+ the
    rule's `ruleDescription` in contract mode — it states WHY the rule exists).
+   **If the violation has an `owner`, patch the CONSTRUCT, not the CSS**: the element is
+   controlled by a runtime construct at `owner.source` — editing its declaration (the fluid
+   range, the breakpoint value, the token) fixes the cause; blind CSS patches will be
+   overwritten by the runtime.
 4. Re-run. Stop at exit 0. Never claim success without the exit code.
 5. Contract mode, after an APPROVED visual change: `rjs record` re-pins baselines.
 

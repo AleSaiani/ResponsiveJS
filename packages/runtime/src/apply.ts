@@ -15,6 +15,7 @@ import { viewportWidth, containerWidth } from './viewport.js';
 import { configState } from './config.js';
 import { isResponsiveValue, type StyleMap, type StyleValue } from './value.js';
 import { emitCSS, injectStyle, removeStyle, toKebab, declarationValue } from './static.js';
+import { registerProvenance } from './provenance.js';
 
 export interface ResponsiveHandle {
     readonly elements: readonly HTMLElement[];
@@ -139,6 +140,14 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
     let fullMap = map;
     let currentMap = splitStatic(map);
 
+    const describeValue = (v: StyleValue): string =>
+        isResponsiveValue(v) ? v.kind : typeof v === 'function' ? 'custom' : 'literal';
+    let unregister = registerProvenance({
+        construct: 'style',
+        target: typeof target === 'string' ? target : elements.map(describeElement).join(', '),
+        behavior: Object.entries(map).map(([p, v]) => `${p}: ${describeValue(v)}`),
+    });
+
     let disposers: Disposer[] = [];
     let paused = false;
     /** Inline value present BEFORE our first write, per element × property. */
@@ -249,6 +258,12 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
         elements,
         update(next: StyleMap) {
             teardown();
+            unregister();
+            unregister = registerProvenance({
+                construct: 'style',
+                target: typeof target === 'string' ? target : elements.map(describeElement).join(', '),
+                behavior: Object.entries(next).map(([p, v]) => `${p}: ${describeValue(v)}`),
+            });
             fullMap = next;
             const nextDynamic = splitStatic(next);
             // Properties we owned that the new map no longer touches: restore.
@@ -272,6 +287,7 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
         },
         dispose() {
             teardown();
+            unregister();
             if (injectedCSS) removeStyle(styleKey);
             for (const [el, saved] of savedInline) {
                 for (const kebab of [...saved.keys()]) restoreProp(el, kebab);

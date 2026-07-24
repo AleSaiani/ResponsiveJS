@@ -169,6 +169,7 @@ export { analyze, type AnalyzeOptions } from './analyze/index.js';
 export {
     analyzeStore,
     mergeReports,
+    attachOwnership,
     type AnalyzeStoreOptions,
     type UnifiedReport,
     type ConstraintsConfig,

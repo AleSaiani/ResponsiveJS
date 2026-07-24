@@ -313,6 +313,13 @@ Same sources, same refcounting — a predicate and your effect share one ResizeO
 answer without any wiring: `r$.whenWraps().measure(el)`. A forced re-check after you mutated
 content: `handle.measure()`.
 
+**Provenance: the closed loop.** Every construct registers itself in a live manifest —
+`r$.manifest()` (also `window.__rjs_manifest`) lists what controls the page: construct kind,
+target, behavior, best-effort call site. When the validation side measures a page running the
+runtime, it ships the manifest with the measurements and annotates violations with their
+`owner` — so a report doesn't just say ".nav overflows at 320px", it says *which construct
+declared at src/navigation.ts:18 owns .nav* — and an agent patches the construct, not the CSS.
+
 **See what r$ is doing.** Three inspection points, all in plain devtools:
 
 - `r$.debug(true)` — logs every resolved value as it's applied (`[r$] .hero font-size @

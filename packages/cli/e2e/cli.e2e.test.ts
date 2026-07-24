@@ -51,6 +51,18 @@ describe('rjs against a real page (playwright driver)', () => {
         expect(report.sources.measurement).toBe('playwright');
         expect(report.summary).toBeDefined();
         expect(report.scores?.average?.overall).toBeGreaterThan(0);
+
+        // Provenance, end to end: the landing page runs @responsivejs/runtime,
+        // whose constructs publish window.__rjs_manifest; the collector ships
+        // it with the measurements and the report carries it — the closed loop.
+        expect(Array.isArray(report.manifest)).toBe(true);
+        const constructs = report.manifest.map((e: { construct: string }) => e.construct);
+        expect(constructs).toContain('geometry');
+        expect(constructs).toContain('tokens');
+        expect(constructs).toContain('style');
+        const geo = report.manifest.find((e: { construct: string }) => e.construct === 'geometry');
+        expect(geo.target).toBe('.site-nav');
+        expect(geo.behavior).toContain('data-wrapped');
     }, 120_000);
 
     it('record → verify round-trip: pinned baselines pass on the same page', async () => {
