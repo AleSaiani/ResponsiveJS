@@ -54,6 +54,21 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
         return resolved;
     };
 
+    // DOM-semantic interactivity — cursor alone misses native controls
+    // (a <button> often has cursor:auto): native tags, interactive roles,
+    // or tabindex >= 0, and not disabled.
+    const isInteractive = (el: Element): boolean => {
+        const tag = el.tagName.toLowerCase();
+        if ((el as HTMLButtonElement).disabled === true || el.getAttribute('aria-disabled') === 'true') return false;
+        if (tag === 'button' || tag === 'select' || tag === 'textarea' || tag === 'summary') return true;
+        if (tag === 'input') return (el as HTMLInputElement).type !== 'hidden';
+        if (tag === 'a' && el.hasAttribute('href')) return true;
+        const role = el.getAttribute('role');
+        if (role && ['button', 'link', 'checkbox', 'radio', 'switch', 'tab', 'menuitem', 'slider', 'combobox', 'textbox', 'option'].indexOf(role) !== -1) return true;
+        const tabindex = el.getAttribute('tabindex');
+        return tabindex !== null && parseInt(tabindex, 10) >= 0;
+    };
+
     const elements: [string, ElementSnapshotWire[]][] = [];
     const childRelations: [string, ChildRelationWire[]][] = [];
 
@@ -108,6 +123,8 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
                     textAlign: cs.textAlign,
                     whiteSpace: cs.whiteSpace,
                     cursor: cs.cursor,
+                    tagName: el.tagName.toLowerCase(),
+                    interactive: isInteractive(el),
                 },
             });
 

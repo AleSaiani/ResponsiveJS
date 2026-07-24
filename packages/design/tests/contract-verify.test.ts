@@ -49,11 +49,25 @@ describe('verifyContract — scoping and attribution', () => {
         expect(report.pass).toBe(true); // warning severity does not fail the contract
     });
 
-    it('empty ranges are reported skipped, never failing', () => {
+    it('empty ranges are reported skipped — but ALL-skipped means nothing was validated', () => {
         const c = contract().between(2000, 3000).assert('noOverflow', undefined, { id: 'ultra' }).build();
         const report = verifyContract(c, appStore());
         expect(report.rules[0].skipped).toBe(true);
-        expect(report.pass).toBe(true);
+        // 2026-07-24 review, finding 1: zero checks performed can never be a
+        // silent pass — the contract validated nothing.
+        expect(report.total).toBe(0);
+        expect(report.pass).toBe(false);
+        expect(report.violations.some((v) => v.rule === 'contract.noChecks')).toBe(true);
+    });
+
+    it('a skipped range next to a checking rule does not poison the pass', () => {
+        const c = contract()
+            .between(2000, 3000).assert('noOverflow', undefined, { id: 'ultra' })
+            .at('*').assert('visible', { selector: '.sidebar' }, { id: 'v' })
+            .build();
+        const report = verifyContract(c, appStore());
+        expect(report.total).toBeGreaterThan(0);
+        expect(report.violations.some((v) => v.rule === 'contract.noChecks')).toBe(false);
     });
 
     it('$aliases resolve through the selectors map', () => {

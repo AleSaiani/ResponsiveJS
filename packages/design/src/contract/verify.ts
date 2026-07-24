@@ -233,13 +233,30 @@ function verifyStore(input: DesignContract | object, store: SnapshotStore): Cont
         }
     }
 
-    const failed = allViolations.length;
+    // A contract that performed ZERO checks validated nothing — never a
+    // silent pass (a store without the rules' targets, or a fully-skipped
+    // rule set, must surface loudly).
+    if (totalChecks === 0 && rules.length > 0) {
+        allViolations.push({
+            rule: 'contract.noChecks',
+            element: 'contract',
+            width: 0,
+            detail:
+                'no rule performed any check — nothing was validated. ' +
+                'The measured store contains none of the contract\'s targets ' +
+                '(or every rule was width-scoped out).',
+            severity: 'error',
+            ruleId: 'contract-no-checks',
+        });
+    }
+
+    const failedChecks = new Set(allViolations.map((v) => `${v.ruleId ?? v.rule}|${v.element ?? ''}|${v.width}`)).size;
     return {
         contract: { name: parsed.name, version: parsed.version },
         pass: allViolations.every((v) => (v.severity ?? 'error') !== 'error'),
         total: totalChecks,
-        passed: totalChecks - failed,
-        failed,
+        passed: Math.max(0, totalChecks - failedChecks),
+        failed: failedChecks,
         rules: ruleResults,
         violations: allViolations,
         ...(scoreResults.length > 0 ? { score: scoreResults } : {}),
@@ -267,20 +284,40 @@ export function recordBaseline(contract: DesignContract | object, store: Snapsho
 
 // ─── page overload: derive the sweep from the contract itself ───────────
 
+/** Sweep targets for GLOBAL rules (noOverflow, breakpointSafe): rules with no
+ *  selector args must still measure something — a landmark-ish default set. */
+export const GLOBAL_RULE_SELECTORS = [
+    'main', 'header', 'footer', 'nav', 'aside', 'section', 'article',
+    'h1', 'h2', 'h3', 'p', 'ul', 'table', 'form', 'img',
+    'a[href]', 'button', 'input', 'select', 'textarea',
+];
+
 function collectSelectors(rules: ContractRule[], parsed: DesignContract): string[] {
     const selectors = new Set<string>();
+    let hasGlobalRule = false;
     for (const rule of rules) {
         const spec = CONSTRAINT_REGISTRY[rule.assert as ConstraintName];
+        let ruleHasSelector = false;
         for (const [name, paramSpec] of Object.entries(spec.params)) {
             const value = rule.args?.[name];
-            if (paramSpec.type === 'selector' && typeof value === 'string') selectors.add(value);
+            if (paramSpec.type === 'selector' && typeof value === 'string') {
+                selectors.add(value);
+                ruleHasSelector = true;
+            }
             if (paramSpec.type === 'selectorArray' && Array.isArray(value)) {
                 for (const v of value) if (typeof v === 'string') selectors.add(v);
+                ruleHasSelector = true;
             }
         }
+        if (!ruleHasSelector) hasGlobalRule = true;
     }
     for (const req of parsed.score ?? []) if (req.scope) selectors.add(req.scope);
     for (const spec of parsed.baselines ?? []) selectors.add(spec.selector);
+    // A contract of only global rules must not produce an empty sweep — that
+    // would "pass" while measuring nothing.
+    if (hasGlobalRule || (parsed.score ?? []).length > 0) {
+        for (const s of GLOBAL_RULE_SELECTORS) selectors.add(s);
+    }
     return [...selectors];
 }
 

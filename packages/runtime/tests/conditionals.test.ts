@@ -3,6 +3,26 @@ import { when, whenInRange, breakpoint } from '../src/conditionals.js';
 import { fluid, type StaticContext } from '../src/value.js';
 import { __resetConfig } from '../src/config.js';
 import { defineBreakpoints } from '../src/breakpoints.js';
+import { emitCSS } from '../src/static.js';
+
+describe('finding — breakpoint.below without fallback never leaks globally', () => {
+    it('emits ONLY a max-width block, no unguarded declaration', () => {
+        const { css, dynamicRest } = emitCSS('.x', { display: breakpoint.below(768, 'block') });
+        expect(Object.keys(dynamicRest)).toHaveLength(0);
+        expect(css).toContain('@media (max-width: 767px)');
+        expect(css).toContain('display: block;');
+        // the base (unguarded) rule must not carry the declaration
+        const baseRule = css.split('@media')[0];
+        expect(baseRule).not.toContain('display: block');
+    });
+
+    it('with a fallback the mobile-first split is unchanged', () => {
+        const { css } = emitCSS('.x', { display: breakpoint.below(768, 'none', 'flex') });
+        expect(css).toContain('display: none;');
+        expect(css).toContain('@media (min-width: 768px)');
+        expect(css).toContain('display: flex;');
+    });
+});
 
 afterEach(__resetConfig);
 

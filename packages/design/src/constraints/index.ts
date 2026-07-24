@@ -350,7 +350,12 @@ export class Asserter {
             if (w > 768) continue;
             const elements = snapshot.elements.get(selector) || [];
             for (const el of elements) {
-                if (el.computed.cursor !== 'pointer') continue;
+                // Interactive = DOM semantics when the collector provided them
+                // (native controls, roles, tabindex) OR cursor:pointer as the
+                // behavioral signal / fallback for synthetic stores.
+                const interactive = el.computed.interactive === true || el.computed.cursor === 'pointer';
+                if (!interactive) continue;
+                if (el.rect.width === 0 && el.rect.height === 0) continue; // not rendered
                 // WCAG 2.5.8 inline exception: targets that flow inside a line
                 // of text (links in prose) are exempt from the size minimum.
                 if (el.computed.display === 'inline') continue;
@@ -841,11 +846,14 @@ export class Asserter {
 
     /** Generate the validation report */
     report(): Report {
+        // One check can emit several violations (minSize can fail width AND
+        // height): failed counts CHECKS, so passed can never go negative.
+        const failedChecks = new Set(this.violations.map((v) => `${v.rule}|${v.element ?? ''}|${v.width}`)).size;
         return {
             pass: this.violations.length === 0,
             total: this.totalChecks,
-            passed: this.totalChecks - this.violations.length,
-            failed: this.violations.length,
+            passed: Math.max(0, this.totalChecks - failedChecks),
+            failed: failedChecks,
             violations: this.violations,
         };
     }

@@ -48,6 +48,11 @@ export interface ElementSnapshot {
         textAlign: string;
         whiteSpace: string;
         cursor: string;
+        /** Lowercase tag name (collector-provided; absent in synthetic stores). */
+        tagName?: string;
+        /** DOM-semantic interactivity: native controls (button/a[href]/input/…),
+         *  interactive roles, or tabindex >= 0 — and not disabled. */
+        interactive?: boolean;
     };
 }
 
@@ -100,8 +105,12 @@ export interface Violation {
 /** Report from constraint validation */
 export interface Report {
     pass: boolean;
+    /** Number of checks performed. */
     total: number;
+    /** Checks with no violation: total − failed. Never negative. */
     passed: number;
+    /** Number of FAILED CHECKS (one check can carry several violations —
+     *  e.g. minSize failing width AND height — so this can be < violations.length). */
     failed: number;
     violations: Violation[];
 }

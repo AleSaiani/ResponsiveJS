@@ -51,7 +51,8 @@ export class WidthQuery {
 
     /** Get a computed string property (display, color, etc.) */
     computedProp(selector: string, prop: keyof ElementSnapshot['computed']): string | undefined {
-        return this.element(selector)?.computed[prop];
+        const value = this.element(selector)?.computed[prop];
+        return value === undefined ? undefined : String(value);
     }
 
     /** Get all rects from all selectors at this width */
@@ -151,7 +152,9 @@ export class StoreQuery {
         for (const [w, snapshot] of this.store.snapshots) {
             const el = snapshot.elements.get(selector)?.[0];
             if (!el) continue;
-            curve.set(w, el.computed[prop]);
+            const value = el.computed[prop];
+            if (value === undefined) continue;
+            curve.set(w, String(value));
         }
         return curve;
     }

@@ -102,9 +102,14 @@ function switchValue(
             if (matched === null || (aboveOrEqual !== undefined && other === null)) return null;
             // Mobile-first: base = the value below the threshold, @media(min-width) = the other.
             if (op === 'below') {
+                if (other === null || aboveOrEqual === undefined) {
+                    // No fallback ⇒ the value must NOT leak above the threshold:
+                    // emit it max-width-guarded instead of as a global declaration.
+                    return { mediaBlocks: [{ max: w - 1, declaration: matched }] };
+                }
                 return {
                     declaration: matched,
-                    mediaBlocks: other !== null ? [{ min: w, declaration: other }] : [],
+                    mediaBlocks: [{ min: w, declaration: other }],
                 };
             }
             return {

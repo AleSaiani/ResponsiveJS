@@ -4,10 +4,17 @@ import { fromWire } from '../src/browser/wire.js';
 
 /** Minimal DOM stand-ins for evaluating the collector outside a browser. */
 function makeFakeDom() {
+    const domStub = {
+        tagName: 'DIV',
+        getAttribute: () => null,
+        hasAttribute: () => false,
+    };
     const fakeChild = {
+        ...domStub,
         getBoundingClientRect: () => ({ x: 12, y: 22, width: 40, height: 20 }),
     };
     const fakeEl = {
+        ...domStub,
         getBoundingClientRect: () => ({ x: 10, y: 20, width: 100, height: 50 }),
         children: [fakeChild],
     };
@@ -77,9 +84,10 @@ describe('collectPage source', () => {
 describe('collectPage — effective background', () => {
     function domWithAncestors(elBg: string, parentBg: string | null) {
         const styleFor = new Map<unknown, string>();
-        const grandparent = { getBoundingClientRect: () => ({ x: 0, y: 0, width: 0, height: 0 }), children: [], parentElement: null };
-        const parent = { getBoundingClientRect: () => ({ x: 0, y: 0, width: 0, height: 0 }), children: [], parentElement: grandparent };
-        const el = { getBoundingClientRect: () => ({ x: 0, y: 0, width: 100, height: 50 }), children: [], parentElement: parent };
+        const domStub = { tagName: 'DIV', getAttribute: () => null, hasAttribute: () => false };
+        const grandparent = { ...domStub, getBoundingClientRect: () => ({ x: 0, y: 0, width: 0, height: 0 }), children: [], parentElement: null };
+        const parent = { ...domStub, getBoundingClientRect: () => ({ x: 0, y: 0, width: 0, height: 0 }), children: [], parentElement: grandparent };
+        const el = { ...domStub, getBoundingClientRect: () => ({ x: 0, y: 0, width: 100, height: 50 }), children: [], parentElement: parent };
         styleFor.set(el, elBg);
         if (parentBg) styleFor.set(parent, parentBg);
         const base = makeFakeDom();
