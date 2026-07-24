@@ -10,6 +10,7 @@ import { resolveDriver, type DriverChoice, type ResolvedDriver } from './drivers
 import { runAnalyze } from './commands/analyze.js';
 import { runVerify } from './commands/verify.js';
 import { runRecord } from './commands/record.js';
+import { runDoctor } from './commands/doctor.js';
 
 export interface CliIo {
     stdout(text: string): void;
@@ -38,6 +39,7 @@ Commands:
                              (constraints + aesthetic score + a11y)
   verify <contract> <url>    Execute a design contract against a live page
   record <contract> <url>    Measure and pin baseline curves into the contract
+  doctor                     Check drivers and environment readiness
 
 Options:
   -d, --driver <name>        auto | playwright | agent-browser     [auto]
@@ -132,8 +134,10 @@ export async function main(argv: string[], io: CliIo = defaultIo()): Promise<num
                 requireArgs(args, 2, 'rjs record <contract> <url>');
                 return await runRecord(args[0], args[1], shared, io);
             }
+            case 'doctor':
+                return await runDoctor(io);
             default:
-                io.stderr(`r$ ✗ unknown command '${command}'. Commands: analyze, verify, record.`);
+                io.stderr(`r$ ✗ unknown command '${command}'. Commands: analyze, verify, record, doctor.`);
                 return 2;
         }
     } catch (e) {

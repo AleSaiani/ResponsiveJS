@@ -13,6 +13,7 @@ The binary is **`rjs`**. Exit codes: `0` pass, `1` violations, `2` usage/run err
 rjs analyze <url>              sweep + oracle (constraints + aesthetic score + a11y)
 rjs verify <contract> <url>    execute a design contract against a live page
 rjs record <contract> <url>    measure and pin baseline curves into the contract
+rjs doctor                     check drivers and environment readiness
 ```
 
 Output formats: branded console report, `--format json`, `--format sarif` (code scanning).

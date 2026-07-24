@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { analyzeStore, mergeReports, summarize } from '../src/analyze/core.js';
+import { analyzeStore, mergeReports, summarize, applicableFixes } from '../src/analyze/core.js';
 import type { Violation } from '@responsivejs/core/types';
 import { makeStore, makeEl, makeRect } from './f3-fixtures.js';
 
@@ -83,6 +83,27 @@ describe('UnifiedReport semantics', () => {
             expect(fix).toHaveProperty('selector');
             expect(fix).toHaveProperty('property');
         }
+    });
+
+    it('fixes[] carries only exact fixes, deduped by (selector, property) across widths', () => {
+        const v = (width: number, fix: Violation['fix']): Violation => ({
+            rule: 'r',
+            element: '.x[0]',
+            width,
+            detail: 'd',
+            severity: 'error',
+            fix,
+        });
+        const fixes = applicableFixes([
+            v(320, { selector: '.x', property: 'min-height', value: '24px', reason: 'a', kind: 'exact' }),
+            v(768, { selector: '.x', property: 'min-height', value: '24px', reason: 'a', kind: 'exact' }),
+            v(320, { selector: '.x', property: 'color', value: '(increase contrast)', reason: 'b', kind: 'heuristic' }),
+            v(320, { selector: '.y', property: 'min-height', value: '24px', reason: 'a', kind: 'exact' }),
+            v(320, undefined),
+        ]);
+        expect(fixes).toHaveLength(2);
+        expect(fixes.every((f) => f.kind === 'exact')).toBe(true);
+        expect(fixes.map((f) => f.selector).sort()).toEqual(['.x', '.y']);
     });
 
     it('mergeReports recomputes totals and summary', () => {

@@ -20,21 +20,32 @@ export class Asserter {
         this.query = new StoreQuery(store);
     }
 
-    /** No element exceeds viewport width at any measured width */
+    /** No element exceeds viewport width at any measured width.
+     *  Naked overflow (would bleed the page) = error. Overflow inside a
+     *  scroll region (overflow-x auto/scroll ancestor — a carousel, a data
+     *  table wrapper) or a clipping ancestor = warning: by design or at
+     *  least not breaking the page, but worth a look. */
     noOverflow(): this {
         for (const [w, snapshot] of this.store.snapshots) {
             for (const [selector, elements] of snapshot.elements) {
                 for (const el of elements) {
                     this.totalChecks++;
                     if (!rectMath.inViewport(el.rect, snapshot.width)) {
+                        const contained = el.computed.overflowContainment;
                         this.violations.push({
                             rule: 'noOverflow',
                             element: `${selector}[${el.index}]`,
                             width: w,
-                            detail: `right=${Math.round(el.rect.right)} > viewport=${snapshot.width}`,
+                            detail:
+                                `right=${Math.round(el.rect.right)} > viewport=${snapshot.width}` +
+                                (contained === 'scroll'
+                                    ? ' (inside a scrollable ancestor — scrolls, does not bleed the page)'
+                                    : contained === 'clip'
+                                      ? ' (clipped by an ancestor — content may be unreachable)'
+                                      : ''),
                             expected: snapshot.width,
                             actual: Math.round(el.rect.right),
-                            severity: 'error',
+                            severity: contained ? 'warning' : 'error',
                         });
                     }
                 }
@@ -370,7 +381,7 @@ export class Asserter {
                         actual: Math.min(Math.round(el.rect.width), Math.round(el.rect.height)),
                         severity: 'error',
                         suggestion: `Add min-height: ${min}px and min-width: ${min}px, or increase padding`,
-                        fix: { selector, property: 'min-height', value: `${min}px`, reason: 'touch target minimum' },
+                        fix: { selector, property: 'min-height', value: `${min}px`, reason: 'touch target minimum', kind: 'exact' },
                     });
                 }
             }
@@ -401,7 +412,7 @@ export class Asserter {
                         actual: fs,
                         severity: 'warning',
                         suggestion: 'Increase font-size to at least 14px for readability',
-                        fix: { selector, property: 'font-size', value: '14px', reason: 'Minimum readable font size' },
+                        fix: { selector, property: 'font-size', value: '14px', reason: 'Minimum readable font size', kind: 'exact' },
                     });
                 }
                 if (lh !== null && lh < 1.3) {
@@ -414,7 +425,7 @@ export class Asserter {
                         actual: lh,
                         severity: 'warning',
                         suggestion: 'Increase line-height to at least 1.3 for readability',
-                        fix: { selector, property: 'line-height', value: '1.4', reason: 'Minimum readable line height' },
+                        fix: { selector, property: 'line-height', value: '1.4', reason: 'Minimum readable line height', kind: 'exact' },
                     });
                 }
             }
@@ -452,7 +463,7 @@ export class Asserter {
                         actual: ratio,
                         severity: 'error',
                         suggestion: `Increase contrast ratio to at least ${required}:1 for WCAG ${level} compliance`,
-                        fix: { selector, property: 'color', value: '(increase contrast)', reason: `WCAG ${level} minimum ratio` },
+                        fix: { selector, property: 'color', value: '(increase contrast)', reason: `WCAG ${level} minimum ratio`, kind: 'heuristic' },
                     });
                 }
             }
@@ -486,7 +497,7 @@ export class Asserter {
                         actual: topSum,
                         severity: 'warning',
                         suggestion: 'Reduce border-radius so top-left + top-right does not exceed element width',
-                        fix: { selector, property: 'border-radius', value: '(reduce to fit element)', reason: 'Sum of radii exceeds element dimension' },
+                        fix: { selector, property: 'border-radius', value: '(reduce to fit element)', reason: 'Sum of radii exceeds element dimension', kind: 'heuristic' },
                     });
                 }
                 if (leftSum > elH) {
@@ -499,7 +510,7 @@ export class Asserter {
                         actual: leftSum,
                         severity: 'warning',
                         suggestion: 'Reduce border-radius so top-left + bottom-left does not exceed element height',
-                        fix: { selector, property: 'border-radius', value: '(reduce to fit element)', reason: 'Sum of radii exceeds element dimension' },
+                        fix: { selector, property: 'border-radius', value: '(reduce to fit element)', reason: 'Sum of radii exceeds element dimension', kind: 'heuristic' },
                     });
                 }
             }
@@ -529,7 +540,7 @@ export class Asserter {
                         actual: elA.styles.zIndex,
                         severity: 'warning',
                         suggestion: 'Adjust z-index values so stacking order matches visual intent',
-                        fix: { selector: selectors[i + 1], property: 'z-index', value: String(expected), reason: 'Must be above previous in stack' },
+                        fix: { selector: selectors[i + 1], property: 'z-index', value: String(expected), reason: 'Must be above previous in stack', kind: 'exact' },
                     });
                 }
             }
@@ -555,7 +566,7 @@ export class Asserter {
                     detail: `closest scale=${fit.closest} (ratio=${fit.ratio.toFixed(3)}) deviation=${fit.deviation.toFixed(3)}`,
                     severity: 'info',
                     suggestion: `Font sizes deviate from ${fit.closest} scale; consider aligning to a modular type scale`,
-                    fix: { selector, property: 'font-size', value: '(align to modular scale)', reason: 'Typography should follow a consistent scale' },
+                    fix: { selector, property: 'font-size', value: '(align to modular scale)', reason: 'Typography should follow a consistent scale', kind: 'heuristic' },
                 });
             }
         }
@@ -585,7 +596,7 @@ export class Asserter {
                         detail: `off-token values=[${result.outliers.map(v => Math.round(v)).join(',')}] tokens=[${tokens.join(',')}]`,
                         severity: 'info',
                         suggestion: 'Align spacing values to your design tokens for visual consistency',
-                        fix: { selector, property: '(gap or padding)', value: '(nearest token)', reason: 'Use design system spacing tokens' },
+                        fix: { selector, property: '(gap or padding)', value: '(nearest token)', reason: 'Use design system spacing tokens', kind: 'heuristic' },
                     });
                 }
             }
@@ -612,7 +623,7 @@ export class Asserter {
                         actual,
                         severity: 'warning',
                         suggestion: `Adjust dimensions to maintain ${ratio.toFixed(2)}:1 aspect ratio`,
-                        fix: { selector, property: 'aspect-ratio', value: String(ratio), reason: 'Maintain target aspect ratio' },
+                        fix: { selector, property: 'aspect-ratio', value: String(ratio), reason: 'Maintain target aspect ratio', kind: 'exact' },
                     });
                 }
             }
@@ -643,7 +654,9 @@ export class Asserter {
                         detail: `outlineWidth=${el.styles.outlineWidth}px at rest — verify :focus-visible state has visible indicator`,
                         severity: 'info',
                         suggestion: 'Verify focus ring via outline or box-shadow on :focus-visible (WCAG 2.4.7)',
-                        fix: { selector, property: 'outline', value: '2px solid currentColor', reason: 'Focus must be visible for keyboard users' },
+                        // heuristic: the honest fix targets :focus-visible, a state
+                        // this flat selector/property model cannot express.
+                        fix: { selector, property: 'outline', value: '2px solid currentColor', reason: 'Focus must be visible for keyboard users (apply on :focus-visible)', kind: 'heuristic' },
                     });
                 }
             }
@@ -674,7 +687,7 @@ export class Asserter {
                                 detail: `overflow:hidden clips child[${i}] — child extends beyond parent bounds`,
                                 severity: 'warning',
                                 suggestion: 'Content is clipped by overflow:hidden; consider overflow:auto or adjusting layout',
-                                fix: { selector, property: 'overflow', value: 'auto', reason: 'Content is clipped by overflow:hidden' },
+                                fix: { selector, property: 'overflow', value: 'auto', reason: 'Content is clipped by overflow:hidden', kind: 'exact' },
                             });
                         }
                     }
@@ -704,7 +717,7 @@ export class Asserter {
                         detail: `position (${Math.round(el.rect.x)},${Math.round(el.rect.y)}) not aligned to ${gridSize}px grid (offsets: x=${xOff.toFixed(1)} y=${yOff.toFixed(1)})`,
                         severity: 'info',
                         suggestion: `Snap element positions to the ${gridSize}px grid`,
-                        fix: { selector, property: 'margin-left', value: '(align to grid)', reason: 'Position should align to grid' },
+                        fix: { selector, property: 'margin-left', value: '(align to grid)', reason: 'Position should align to grid', kind: 'heuristic' },
                     });
                 }
             }
@@ -731,7 +744,7 @@ export class Asserter {
                                 detail: `zero height at breakpoint boundary ${bp}px (measured at ${w}px)`,
                                 severity: 'error',
                                 suggestion: `Element collapses near the ${bp}px breakpoint; check media query transitions`,
-                                fix: { selector: '(element)', property: 'min-height', value: '1px', reason: 'Element collapses at breakpoint' },
+                                fix: { selector, property: 'min-height', value: '1px', reason: 'Element collapses at breakpoint — find the media query that zeroes it', kind: 'heuristic' },
                             });
                         }
                         if (el.rect.width < 0) {
@@ -742,7 +755,7 @@ export class Asserter {
                                 detail: `negative width=${Math.round(el.rect.width)}px at breakpoint boundary ${bp}px (measured at ${w}px)`,
                                 severity: 'error',
                                 suggestion: `Element has negative width near the ${bp}px breakpoint; check sizing constraints`,
-                                fix: { selector: '(element)', property: 'min-height', value: '1px', reason: 'Element collapses at breakpoint' },
+                                fix: { selector, property: 'min-width', value: '0', reason: 'Element collapses at breakpoint — find the sizing rule that goes negative', kind: 'heuristic' },
                             });
                         }
                     }
@@ -783,7 +796,10 @@ export class Asserter {
                             actual: Math.round(edgeGap),
                             severity: 'warning',
                             suggestion: `Increase spacing between interactive elements to at least ${minGap}px to prevent mis-taps`,
-                            fix: { selector, property: 'margin', value: `${minGap}px`, reason: 'Interactive elements need spacing for usability' },
+                            // heuristic: margin on the shared selector separates the
+                            // pair but touches every match — gap on the container is
+                            // the real fix, and we cannot name the container.
+                            fix: { selector, property: 'margin', value: `${minGap}px`, reason: 'Interactive elements need spacing for usability', kind: 'heuristic' },
                         });
                     }
                 }
@@ -837,7 +853,7 @@ export class Asserter {
                     width: w,
                     detail: `expected hidden but rendered (${Math.round(rendered[0].rect.width)}×${Math.round(rendered[0].rect.height)})`,
                     severity: 'error',
-                    fix: { selector, property: 'display', value: 'none', reason: 'contract requires this element hidden at this width' },
+                    fix: { selector, property: 'display', value: 'none', reason: 'contract requires this element hidden at this width', kind: 'exact' },
                 });
             }
         }

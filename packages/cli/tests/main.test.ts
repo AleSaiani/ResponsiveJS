@@ -99,10 +99,15 @@ describe('rjs main', () => {
         expect(report.rules.some((r: { assert: string }) => r.assert === 'noOverflow')).toBe(true);
     });
 
-    it('verify -f sarif fails loudly instead of silently falling back to console', async () => {
-        const { io, err } = makeIo({ 'home.json': CONTRACT });
-        expect(await main(['verify', 'home.json', 'http://x', '-f', 'sarif'], io)).toBe(2);
-        expect(err.join('\n')).toContain('console|json');
+    it('verify -f sarif emits SARIF with the contract rule ids', async () => {
+        const { io, out } = makeIo({ 'home.json': CONTRACT });
+        expect(await main(['verify', 'home.json', 'http://x', '-f', 'sarif'], io)).toBe(1);
+        const sarif = JSON.parse(out.join('\n'));
+        expect(sarif.version).toBe('2.1.0');
+        const results = sarif.runs[0].results as { ruleId: string; message: { text: string } }[];
+        expect(results.length).toBeGreaterThan(0);
+        expect(results[0].ruleId).toContain('noOverflow'); // auto id rule-1-noOverflow
+        expect(results[0].message.text).toContain('[home]');
     });
 
     it('verify surfaces loader errors (did-you-mean) with exit 2', async () => {

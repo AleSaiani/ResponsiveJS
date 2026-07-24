@@ -102,16 +102,17 @@ The `UnifiedReport` adds structure worth knowing:
     "clean": false,      // no violations at all — your polish gate
     "summary": { "errors": 2, "warnings": 3, "info": 0, "byRule": {…}, "byWidth": {…} },
     "violations": [ /* every one, with severity */ ],
-    "fixes": [ { "selector": ".cta", "property": "min-height", "value": "44px", "reason": "…" } ],
+    "fixes": [ { "selector": ".cta", "property": "min-height", "value": "44px", "reason": "…", "kind": "exact" } ],
     "scores": { "average": { "overall": 0.62, /* +17 metrics */ } },
     "sources": { "measurement": "playwright", "a11y": "axe" }
 }
 ```
 
 Two gates on purpose: **`pass`** ignores warnings (loop on it — fix errors first), **`clean`**
-is zero-anything (chase it when polishing). `fixes` is the flattened apply-first list — every
-violation that has an honest mechanical fix carries one; the rest give you
-`detail` + `expected/actual` to reason from.
+is zero-anything (chase it when polishing). `fixes` is the apply-verbatim list: only
+`kind: "exact"` fixes (concrete CSS that mechanically resolves the measured violation),
+deduped across widths. Heuristic fixes — a direction, like *increase contrast* — stay on
+their violations, alongside `detail` + `expected/actual` to reason from.
 
 `sources.a11y` tells you whether axe actually ran (`'axe'`), was skipped, or was unavailable —
 the report never silently pretends.
@@ -244,6 +245,9 @@ A report that is mostly noise teaches people to ignore it. Four levers, in order
   real-world pages.
 - Contrast is computed from **measured effective backgrounds** (transparent ancestors
   resolved to the color actually painted), so what it flags is what users see.
+- `noOverflow` distinguishes **naked** overflow (would bleed the page — error) from overflow
+  **inside a scroll region** (an `overflow-x: auto` carousel or table wrapper — warning): a
+  data table that scrolls by design stops failing your build.
 - Touch targets default to WCAG 2.5.8's 24px floor and **exempt inline prose links**; raise
   to platform guidance (`44`/`48`) per rule, per run, or via a design-system profile.
 - Gate on `pass` (errors only) in loops and CI; chase `clean` (zero anything) when polishing.

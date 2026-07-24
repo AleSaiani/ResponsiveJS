@@ -37,7 +37,8 @@ export async function resolveDriver(choice: DriverChoice, opts: { headed?: boole
     throw new Error(
         'no driver available. Install one of:\n' +
             '  npm i -D playwright && npx playwright install chromium\n' +
-            '  npm i -g agent-browser && agent-browser install',
+            '  npm i -g agent-browser && agent-browser install\n' +
+            "(run 'rjs doctor' to check your environment)",
     );
 }
 

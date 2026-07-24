@@ -69,6 +69,27 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
         return tabindex !== null && parseInt(tabindex, 10) >= 0;
     };
 
+    // Nearest ancestor that contains horizontal overflow. html/body are
+    // excluded on purpose: overflow-x:hidden there hides the scrollbar but
+    // the layout is still broken — that must stay a NAKED overflow.
+    const containCache = new Map<Element, 'scroll' | 'clip' | null>();
+    const overflowContainment = (start: Element): 'scroll' | 'clip' | null => {
+        const chain: Element[] = [];
+        let node: Element | null = start.parentElement;
+        let found: 'scroll' | 'clip' | null = null;
+        while (node && node !== document.body && node !== document.documentElement) {
+            const hit = containCache.get(node);
+            if (hit !== undefined) { found = hit; break; }
+            chain.push(node);
+            const ox = getComputedStyle(node).overflowX;
+            if (ox === 'auto' || ox === 'scroll') { found = 'scroll'; break; }
+            if (ox === 'hidden' || ox === 'clip') { found = 'clip'; break; }
+            node = node.parentElement;
+        }
+        for (const n of chain) containCache.set(n, found);
+        return found;
+    };
+
     const elements: [string, ElementSnapshotWire[]][] = [];
     const childRelations: [string, ChildRelationWire[]][] = [];
 
@@ -125,6 +146,7 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
                     cursor: cs.cursor,
                     tagName: el.tagName.toLowerCase(),
                     interactive: isInteractive(el),
+                    overflowContainment: overflowContainment(el) ?? undefined,
                 },
             });
 

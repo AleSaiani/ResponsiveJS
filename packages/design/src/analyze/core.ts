@@ -35,7 +35,9 @@ export interface UnifiedReport extends Report {
     /** pass = zero error-severity violations; clean = zero violations at all. */
     clean: boolean;
     scores?: ScoreResult;
-    /** Flattened non-null fixes — the agent-loop surface. */
+    /** Apply-verbatim surface: only kind:'exact' fixes, deduped by
+     *  (selector, property) across widths. Heuristic fixes stay on the
+     *  violations they belong to. */
     fixes: FixSuggestion[];
     widths: number[];
     url?: string;
@@ -152,6 +154,22 @@ interface FinalizeExtras {
     manifest?: ProvenanceEntry[];
 }
 
+/** The same violation at 320 and 768 yields the same patch — one entry.
+ *  Only exact fixes qualify: an agent can apply this list without judgment. */
+export function applicableFixes(violations: Violation[]): FixSuggestion[] {
+    const seen = new Set<string>();
+    const fixes: FixSuggestion[] = [];
+    for (const v of violations) {
+        const f = v.fix;
+        if (!f || f.kind !== 'exact') continue;
+        const key = `${f.selector}|${f.property}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        fixes.push(f);
+    }
+    return fixes;
+}
+
 /** Assemble a UnifiedReport from a base Report and context. */
 export function finalizeReport(base: Report, extras: FinalizeExtras): UnifiedReport {
     const summary = summarize(base.violations);
@@ -160,7 +178,7 @@ export function finalizeReport(base: Report, extras: FinalizeExtras): UnifiedRep
         pass: summary.errors === 0,
         clean: base.violations.length === 0,
         scores: extras.scores,
-        fixes: base.violations.map((v) => v.fix).filter((f): f is FixSuggestion => f !== undefined),
+        fixes: applicableFixes(base.violations),
         widths: extras.widths,
         url: extras.url,
         sources: { measurement: extras.measurement, a11y: extras.a11y },

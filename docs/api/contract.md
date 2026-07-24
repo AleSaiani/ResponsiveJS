@@ -102,5 +102,6 @@ surface.
 
 1. `verifyContract` → report.
 2. For each violation: `ruleId` → look up the rule → read `description` (intent) and the
-   violation's `fix` (`{ selector, property, value, reason }`).
+   violation's `fix` (`{ selector, property, value, reason, kind }` — `kind: 'exact'` is
+   apply-verbatim; `'heuristic'` is a direction that needs judgment).
 3. Patch, re-verify. `recordBaseline` after an approved visual change re-pins the curves.

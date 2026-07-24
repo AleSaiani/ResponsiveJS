@@ -46,12 +46,19 @@ export function formatConsole(report: Report): string {
             (byRule.get(v.rule) ?? byRule.set(v.rule, []).get(v.rule)!).push(v);
         }
         for (const [rule, violations] of byRule) {
-            lines.push(`  ${rule} (${violations.length})`);
-            for (const v of violations.slice(0, 5)) {
+            // Same element failing at several widths is ONE problem: one line,
+            // widths aggregated — real-world pages stay readable.
+            const byElement = new Map<string, Violation[]>();
+            for (const v of violations) {
                 const el = v.element || v.elements?.join(' + ') || '?';
-                lines.push(`    @${v.width}px ${el} — ${v.detail}`);
+                (byElement.get(el) ?? byElement.set(el, []).get(el)!).push(v);
             }
-            if (violations.length > 5) lines.push(`    … and ${violations.length - 5} more`);
+            lines.push(`  ${rule} (${violations.length} across ${byElement.size} element${byElement.size === 1 ? '' : 's'})`);
+            for (const [el, vs] of [...byElement].slice(0, 5)) {
+                const widths = [...new Set(vs.map((v) => v.width))].sort((a, b) => a - b);
+                lines.push(`    ${el} @${widths.join(',')}px — ${vs[0].detail}`);
+            }
+            if (byElement.size > 5) lines.push(`    … and ${byElement.size - 5} more elements`);
         }
     }
 
@@ -153,9 +160,12 @@ export function formatContractCompact(report: ContractReport): string {
 
 const SARIF_LEVEL: Record<string, string> = { error: 'error', warning: 'warning', info: 'note' };
 
-/** Format a unified report as SARIF 2.1.0 (CI/code-scanning ecosystems). */
-export function formatSARIF(report: UnifiedReport, opts: { toolVersion?: string } = {}): string {
-    const ruleIds = [...new Set(report.violations.map((v) => v.rule))];
+interface SarifRule {
+    id: string;
+    shortDescription?: { text: string };
+}
+
+function sarifDoc(rules: SarifRule[], results: unknown[], toolVersion: string): string {
     const sarif = {
         $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
         version: '2.1.0',
@@ -165,28 +175,59 @@ export function formatSARIF(report: UnifiedReport, opts: { toolVersion?: string 
                     driver: {
                         name: 'responsivejs-design',
                         informationUri: 'https://github.com/AleSaiani/ResponsiveJS',
-                        version: opts.toolVersion ?? '0.0.0',
-                        rules: ruleIds.map((id) => ({ id })),
+                        version: toolVersion,
+                        rules,
                     },
                 },
-                results: report.violations.map((v) => ({
-                    ruleId: v.rule,
-                    level: SARIF_LEVEL[v.severity ?? 'error'],
-                    message: {
-                        text: `@${v.width}px: ${v.detail}${v.suggestion ? ` — ${v.suggestion}` : ''}`,
-                    },
-                    locations: [
-                        {
-                            logicalLocations: [
-                                {
-                                    fullyQualifiedName: v.element ?? v.elements?.join(' + ') ?? 'page',
-                                },
-                            ],
-                        },
-                    ],
-                })),
+                results,
             },
         ],
     };
     return JSON.stringify(sarif, null, 2);
+}
+
+function sarifResult(ruleId: string, v: Violation, messagePrefix = ''): unknown {
+    return {
+        ruleId,
+        level: SARIF_LEVEL[v.severity ?? 'error'],
+        message: {
+            text: `${messagePrefix}@${v.width}px: ${v.detail}${v.suggestion ? ` — ${v.suggestion}` : ''}`,
+        },
+        locations: [
+            {
+                logicalLocations: [
+                    {
+                        fullyQualifiedName: v.element ?? v.elements?.join(' + ') ?? 'page',
+                    },
+                ],
+            },
+        ],
+    };
+}
+
+/** Format a unified report as SARIF 2.1.0 (CI/code-scanning ecosystems). */
+export function formatSARIF(report: UnifiedReport, opts: { toolVersion?: string } = {}): string {
+    const ruleIds = [...new Set(report.violations.map((v) => v.rule))];
+    return sarifDoc(
+        ruleIds.map((id) => ({ id })),
+        report.violations.map((v) => sarifResult(v.rule, v)),
+        opts.toolVersion ?? '0.0.0',
+    );
+}
+
+/** Format a contract report as SARIF 2.1.0. Rule ids are the contract's own
+ *  rule ids; the authored intent (description) rides as the rule's
+ *  shortDescription — code-scanning UIs show WHY the rule exists. */
+export function formatContractSARIF(report: ContractReport, opts: { toolVersion?: string } = {}): string {
+    const rules = new Map<string, SarifRule>();
+    for (const v of report.violations) {
+        const id = v.ruleId ?? v.rule;
+        if (!rules.has(id)) {
+            rules.set(id, { id, ...(v.ruleDescription ? { shortDescription: { text: v.ruleDescription } } : {}) });
+        }
+    }
+    const results = report.violations.map((v) =>
+        sarifResult(v.ruleId ?? v.rule, v, report.contract.name ? `[${report.contract.name}] ` : ''),
+    );
+    return sarifDoc([...rules.values()], results, opts.toolVersion ?? '0.0.0');
 }

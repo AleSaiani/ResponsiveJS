@@ -8,6 +8,7 @@ agent-loop-ready: `0` pass, `1` violations, `2` usage/run error.
 rjs analyze <url>              sweep + oracle (constraints + score + a11y)
 rjs verify <contract> <url>    execute a design contract against a live page
 rjs record <contract> <url>    measure and pin baseline curves into the contract
+rjs doctor                     check drivers and environment readiness
 ```
 
 ## Options
@@ -17,7 +18,7 @@ rjs record <contract> <url>    measure and pin baseline curves into the contract
 | `-d, --driver` | `auto` \| `playwright` \| `agent-browser` | `auto` |
 | `-w, --widths` | comma-separated widths (`320,768,1280`) | contract / built-in sweep |
 | `-s, --selectors` | comma-separated selectors (analyze) | landmark set |
-| `-f, --format` | `console` \| `json` \| `sarif` (`sarif`: analyze only — `verify -f sarif` exits 2) | `console` |
+| `-f, --format` | `console` \| `json` \| `sarif` (contract SARIF carries each rule's authored intent) | `console` |
 | `-o, --out` | write the report (or recorded contract) to a file | stdout |
 | `--height` | viewport height | `900` |
 | `--touch-min` | touch-target minimum px (analyze) | `24` (WCAG AA; platform is 44–48) |
@@ -35,6 +36,10 @@ rjs record <contract> <url>    measure and pin baseline curves into the contract
   the oracle runs through the CLI's `eval`, with oversized injections (axe) chunked
   automatically. The driver uses an isolated `--session`.
 - **`auto`** — playwright if installed, else agent-browser, else a clear install hint.
+
+`rjs doctor` probes all of the above — node version, playwright + chromium, agent-browser —
+one line per check with the exact install command for anything missing, and tells you which
+driver `auto` will pick. Exit `0` = at least one driver usable, `1` = none.
 
 ## `verify` and `record`
 

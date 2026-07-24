@@ -11,6 +11,7 @@ rjs analyze <url>  [-d auto|playwright|agent-browser] [-w 320,768,1280] [-s "mai
                    [--touch-min 24] [--height 900]
 rjs verify  <contract.json> <url>  [same driver/format/out flags]
 rjs record  <contract.json> <url>  [-o other.json]
+rjs doctor                         # environment readiness: exit 0 = a driver is usable
 ```
 
 Exit codes — gate on these: `0` pass · `1` violations · `2` usage/run error (bad args, missing
@@ -28,7 +29,8 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
     "sources": { "measurement": "playwright|agent-browser|eval|cdp|store", "a11y": "axe|skipped|unavailable" },
     "summary": { "errors": 7, "warnings": 0, "info": 0, "byRule": {"noOverflow": 1}, "byWidth": {"320": 3} },
     "violations": [ /* Violation[] — see below */ ],
-    "fixes": [ /* Fix[] — flattened, apply-first list */ ],
+    "fixes": [ /* Fix[] — ONLY kind:'exact' entries, deduped by (selector, property)
+                  across widths. Safe to apply verbatim, no parsing needed. */ ],
     "scores": { "average": { "overall": 0.57, /* +17 metrics 0..1 */ }, "perWidth": {} },
     "manifest": [ /* ProvenanceEntry[] — present when the page runs @responsivejs/runtime:
                      {id, construct, target, behavior[], source?} — what controls the page */ ],
@@ -46,7 +48,9 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
     "detail": "right=496 > viewport=320",
     "severity": "error|warning|info",   // MISSING severity counts as error
     "expected": 320, "actual": 496,     // when numeric
-    "fix": { "selector": ".card", "property": "max-width", "value": "100%", "reason": "…" },
+    "fix": { "selector": ".card", "property": "max-width", "value": "100%", "reason": "…",
+             "kind": "exact" },     // exact = apply `selector { property: value }` verbatim;
+                                    // heuristic = direction only (value may be a placeholder)
     "owner": {                     // PROVENANCE: the runtime construct that owns this element
         "construct": "style",      // style | geometry | tokens | sync | ratio
         "behavior": ["width: fluid"],
@@ -58,10 +62,10 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
 ### Agent loop
 
 1. `rjs analyze <url> -f json` (or `verify` against a contract).
-2. Apply `fixes[]` entries whose `value` is a concrete CSS value (e.g. `"44px"`) verbatim.
-   Entries with parenthesized placeholders — `"(increase contrast)"`, `"(gap or padding)"` —
-   are HINTS, not patches: treat them like fix-less violations (step 3).
-3. For violations without an applicable `fix`: reason from `detail` + `expected/actual` (+ the
+2. Apply every `fixes[]` entry verbatim as `selector { property: value }` — the list carries
+   only `kind: "exact"` fixes, already deduped. No value parsing, no judgment needed.
+3. For everything else — violations with `fix.kind: "heuristic"` (a direction, not a patch)
+   or no `fix` at all: reason from `detail` + `expected/actual` (+ the
    rule's `ruleDescription` in contract mode — it states WHY the rule exists).
    **If the violation has an `owner`, patch the CONSTRUCT, not the CSS**: the element is
    controlled by a runtime construct at `owner.source` — editing its declaration (the fluid
@@ -114,7 +118,7 @@ checks never passes: it fails with a `contract.noChecks` error violation. Treat 
 
 | assert | args | meaning |
 | --- | --- | --- |
-| `noOverflow` | — | No element exceeds the viewport width at any measured width. |
+| `noOverflow` | — | No element exceeds the viewport width at any measured width. Naked overflow = error; inside a scrollable/clipping ancestor = warning (detail says which). |
 | `contains` | parent:selector, child:selector | Child rects stay inside the parent rect. |
 | `sameHeight` | a:selector, b:selector, tolerance?:number | Two elements keep equal heights. |
 | `sameLine` | a:selector, b:selector | Two elements share the same visual row. |

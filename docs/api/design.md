@@ -59,7 +59,8 @@ on every analyzed selector. `ConstraintsConfig` toggles each and adds `textReada
 `focusVisible`, or anything via `custom(assert)`.
 
 **`UnifiedReport`** extends `Report` with: `clean` (zero violations of any kind — `pass` fails
-only on `error` severity), `scores`, `fixes` (flattened `FixSuggestion[]` — the agent surface),
+only on `error` severity), `scores`, `fixes` (`FixSuggestion[]` — only `kind: 'exact'`
+entries, deduped by selector+property across widths: the apply-verbatim agent surface),
 `widths`, `url`, `sources` (`{ measurement, a11y: 'axe' | 'skipped' | 'unavailable' }`),
 `summary` (`errors/warnings/info`, `byRule`, `byWidth`), `durationMs`.
 
@@ -117,8 +118,9 @@ self-contained in-page collector and its injectable expression) · `fromWire`/`t
 
 `formatConsole` · `formatJSON` (serializes score maps correctly) · `formatCompact` (adds
 `E/W/I` counts for unified reports) · `formatSARIF(unified, { toolVersion? })` — SARIF 2.1.0
-for code-scanning CI · `formatContractConsole` / `formatContractCompact` (see
-[contract](contract.md)) · `toSerializable`.
+for code-scanning CI · `formatContractConsole` / `formatContractCompact` /
+`formatContractSARIF` (contract rule ids become SARIF rule ids; the authored `description`
+rides as each rule's `shortDescription` — see [contract](contract.md)) · `toSerializable`.
 
 ## Design systems
 

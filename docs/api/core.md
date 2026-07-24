@@ -94,7 +94,8 @@ Ngo, Teo & Byrne (2003), *Modelling interface aesthetics*, and Birkhoff (1933), 
 
 `ElementSnapshot` (selector, index, `Rect`, numeric `styles`, string `computed`) ·
 `ViewportSnapshot` (one width) · `SnapshotStore` (all widths) · `Violation` (rule, element,
-width, detail, expected/actual, severity, suggestion, `fix`) · `FixSuggestion`
+width, detail, expected/actual, severity, suggestion, `fix`) · `FixSuggestion` (with
+`kind: 'exact' | 'heuristic'` — verbatim-applicable vs directional)
 (`{ selector, property, value, reason }`) · `Report` · `SweepOptions` · `InteractionSnapshot` ·
 `DEFAULT_WIDTHS` = `[320, 375, 390, 768, 1024, 1280, 1440, 1920, 2560]`.
 

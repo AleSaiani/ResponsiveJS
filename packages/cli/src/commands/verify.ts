@@ -6,6 +6,7 @@
 import {
     contractSweepPlan,
     formatContractConsole,
+    formatContractSARIF,
     sweepSource,
     verifyContract,
     parseContract,
@@ -30,11 +31,6 @@ export async function loadContract(path: string, io: CliIo): Promise<object> {
 }
 
 export async function runVerify(contractPath: string, url: string, opts: SharedOptions, io: CliIo): Promise<number> {
-    if (opts.format === 'sarif') {
-        // Silent fallback to console would betray the -f contract (review finding).
-        io.stderr('r$ ✗ verify supports -f console|json (SARIF covers analyze reports only, for now)');
-        return 2;
-    }
     const contract = await loadContract(contractPath, io);
     const plan = contractSweepPlan(contract);
 
@@ -52,7 +48,12 @@ export async function runVerify(contractPath: string, url: string, opts: SharedO
         await driver.close();
     }
 
-    const text = opts.format === 'json' ? JSON.stringify(report, null, 2) : formatContractConsole(report);
+    const text =
+        opts.format === 'json'
+            ? JSON.stringify(report, null, 2)
+            : opts.format === 'sarif'
+              ? formatContractSARIF(report)
+              : formatContractConsole(report);
     if (opts.out) {
         await io.writeFile(opts.out, text);
         io.stdout(`r$ report → ${opts.out}`);

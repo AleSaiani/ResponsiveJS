@@ -189,6 +189,7 @@ export {
     toSerializable,
     formatContractConsole,
     formatContractCompact,
+    formatContractSARIF,
 } from './report/reporter.js';
 export { Asserter } from './constraints/index.js';
 

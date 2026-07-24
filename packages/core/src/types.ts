@@ -53,6 +53,11 @@ export interface ElementSnapshot {
         /** DOM-semantic interactivity: native controls (button/a[href]/input/…),
          *  interactive roles, or tabindex >= 0 — and not disabled. */
         interactive?: boolean;
+        /** Nearest ancestor (html/body excluded) that contains horizontal
+         *  overflow: 'scroll' (overflow-x auto/scroll — a scroll region by
+         *  design) or 'clip' (hidden/clip). Absent = overflow would bleed
+         *  the page (naked). Collector-provided. */
+        overflowContainment?: 'scroll' | 'clip';
     };
 }
 
@@ -102,12 +107,16 @@ export interface SnapshotStore {
     manifest?: ProvenanceEntry[];
 }
 
-/** Machine-readable fix suggestion for agentic consumers. */
+/** Machine-readable fix suggestion for agentic consumers.
+ *  kind is the apply-contract: 'exact' fixes are safe to apply verbatim as
+ *  `selector { property: value }`; 'heuristic' fixes point in a direction
+ *  (value may be a placeholder) and need judgment before applying. */
 export interface FixSuggestion {
     selector: string;
     property: string;
     value: string;
     reason: string;
+    kind: 'exact' | 'heuristic';
 }
 
 /** A constraint violation */

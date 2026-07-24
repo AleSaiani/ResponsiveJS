@@ -39,6 +39,44 @@ describe('provenance — violations trace back to the owning construct', () => {
     });
 });
 
+describe('noOverflow — naked vs contained (Wikipedia navbox finding)', () => {
+    const wideRect = makeRect(0, 0, 480, 100); // right=480 > viewport=320
+
+    it('naked overflow stays an error', () => {
+        const store = makeStore([320], ['.naked'], () => [makeEl('.naked', { rect: wideRect })]);
+        const v = new Asserter(store).noOverflow().report().violations[0];
+        expect(v.severity).toBe('error');
+        expect(v.detail).not.toContain('ancestor');
+    });
+
+    it('overflow inside a scrollable ancestor downgrades to warning', () => {
+        const store = makeStore([320], ['.navbox td'], () => [
+            makeEl('.navbox td', { rect: wideRect, computed: { overflowContainment: 'scroll' } }),
+        ]);
+        const v = new Asserter(store).noOverflow().report().violations[0];
+        expect(v.severity).toBe('warning');
+        expect(v.detail).toContain('scrollable ancestor');
+    });
+
+    it('overflow clipped by an ancestor downgrades to warning with a distinct detail', () => {
+        const store = makeStore([320], ['.clipped'], () => [
+            makeEl('.clipped', { rect: wideRect, computed: { overflowContainment: 'clip' } }),
+        ]);
+        const v = new Asserter(store).noOverflow().report().violations[0];
+        expect(v.severity).toBe('warning');
+        expect(v.detail).toContain('clipped by an ancestor');
+    });
+
+    it('contained overflow no longer fails the pass gate', () => {
+        const store = makeStore([320], ['.scroller'], () => [
+            makeEl('.scroller', { rect: wideRect, computed: { overflowContainment: 'scroll' } }),
+        ]);
+        const report = analyzeStore(store, { score: false, constraints: { contrast: false, touchTarget: false } });
+        expect(report.pass).toBe(true);
+        expect(report.clean).toBe(false);
+    });
+});
+
 describe('finding 1 — a global-rules contract can never pass with zero checks', () => {
     const onlyNoOverflow = { name: 'x', version: 1, rules: [{ assert: 'noOverflow', args: {} }] };
 
