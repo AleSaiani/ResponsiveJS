@@ -103,8 +103,11 @@ lock-in. See the [agents guide](docs/guides/agents.md).
 
 ## Roadmap
 
-**Available now (alpha)**: the shared math (`core`), the authoring runtime (`runtime`), the
-validation oracle with a11y and aesthetic scoring (`design`), and the contract DSL (`contract`).
+**Available now (alpha)**: the shared math (`core`); the authoring runtime (`runtime`) with
+geometry predicates (`whenWraps`, `whenStuck`, …), fluid design tokens, cross-element
+dependencies and typed breakpoints; the validation oracle with a11y and aesthetic scoring
+(`design`); the contract DSL (`contract`); and the `rjs` CLI. See the
+[fluid landing example](examples/landing) for every runtime construct on one page.
 
 **Next**:
 

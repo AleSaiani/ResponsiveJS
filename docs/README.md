@@ -13,6 +13,12 @@
 - [@responsivejs/contract](api/contract.md) — the contract format, registry, builder, loader, `verifyContract`
 - [@responsivejs/cli](api/cli.md) — the `rjs` command line: analyze / verify / record, driver-pluggable
 
+**Examples**
+
+- [Fluid landing](../examples/landing) — every runtime construct on one real page, each
+  documented as "the hack it replaces vs the construct" (wrap-driven burger, stuck shadow,
+  fluid tokens, equal-height cards, cross-element type, typed breakpoints)
+
 **Guides**
 
 - [Responsive regression in CI](guides/ci.md) — assertions → oracle → contracts, SARIF, baselines

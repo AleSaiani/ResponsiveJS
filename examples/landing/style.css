@@ -1,0 +1,127 @@
+/* The CSS half of "JS detects, CSS styles": all styling lives here — the
+ * runtime only maintains data-attributes and custom properties. */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    font-size: var(--font-body, 16px);
+    color: #16181d;
+    background: #fff;
+}
+
+main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 320px);
+    gap: var(--space-l, 40px);
+    padding: var(--space-l, 40px);
+}
+
+/* ── header + nav: the wrap-driven burger ─────────────────────────────── */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-m, 20px);
+    padding: var(--space-s, 10px) var(--space-m, 20px);
+    background: #fff;
+}
+
+/* whenStuck() → shadow only while actually pinned */
+.site-header[data-stuck] {
+    box-shadow: 0 2px 12px rgb(0 0 0 / 0.12);
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 1.4em;
+}
+
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-m, 20px);
+}
+
+.site-nav a {
+    text-decoration: none;
+    color: inherit;
+    padding: 4px 0;
+}
+
+.menu-button {
+    display: none;
+    margin-left: auto;
+    font-size: 1.3em;
+    background: none;
+    border: 1px solid #d0d3da;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+/* whenWraps() → the burger appears exactly when the links stop fitting.
+ * The old way: a hand-tuned @media breakpoint that drifts out of date the
+ * moment a nav item is added, renamed, or translated. */
+.site-nav[data-wrapped] {
+    display: none;
+}
+
+.site-nav[data-wrapped] ~ .menu-button,
+.site-nav[data-wrapped] + .menu-button {
+    display: block;
+}
+
+/* ── hero ─────────────────────────────────────────────────────────────── */
+
+.hero h1 {
+    font-size: var(--font-hero, 40px);
+    line-height: 1.1;
+    margin: 0 0 var(--space-m, 20px);
+    max-width: 16ch;
+}
+
+.cta {
+    min-height: 44px;
+    padding: 10px var(--space-m, 20px);
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    background: #2848c8;
+}
+
+/* ── cards: sync('.card h3') equalizes heading heights ────────────────── */
+
+.cards {
+    display: grid;
+    gap: var(--space-m, 20px);
+    margin-top: var(--space-l, 40px);
+}
+
+.card {
+    border: 1px solid #e3e5ea;
+    border-radius: 12px;
+    padding: var(--space-m, 20px);
+}
+
+.card h3 {
+    margin: 0 0 var(--space-s, 10px);
+}
+
+/* ── sidebar ──────────────────────────────────────────────────────────── */
+
+.sidebar {
+    border-left: 2px solid #e3e5ea;
+    padding-left: var(--space-m, 20px);
+}
+
+@media (max-width: 767px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+}

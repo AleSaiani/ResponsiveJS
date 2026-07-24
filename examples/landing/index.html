@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>r$ example — fluid landing</title>
+        <link rel="stylesheet" href="./style.css" />
+    </head>
+    <body>
+        <header class="site-header">
+            <span class="logo">r$</span>
+            <nav class="site-nav">
+                <a href="#model">Model</a>
+                <a href="#authoring">Authoring</a>
+                <a href="#validation">Validation</a>
+                <a href="#contracts">Contracts</a>
+                <a href="#agents">Agents</a>
+                <a href="#docs">Docs</a>
+            </nav>
+            <button class="menu-button" aria-label="Menu">☰</button>
+        </header>
+
+        <main>
+            <section class="hero">
+                <h1>The screen is a parametric Cartesian plane</h1>
+                <p class="tagline">
+                    Every layout property is a function of width. Author the function, validate it,
+                    ship it.
+                </p>
+                <button class="cta">Get started</button>
+            </section>
+
+            <section class="cards">
+                <article class="card">
+                    <h3>Author</h3>
+                    <p>Fluid values, curves, container-aware. CSS-first: linear math ships as clamp().</p>
+                </article>
+                <article class="card">
+                    <h3>Validate — with a longer title that wraps</h3>
+                    <p>Constraints, aesthetic score, a11y. Machine-readable reports.</p>
+                </article>
+                <article class="card">
+                    <h3>Fix</h3>
+                    <p>Every violation carries a structured fix an agent can apply.</p>
+                </article>
+            </section>
+
+            <aside class="sidebar">
+                <h2>On this page</h2>
+                <p class="sidebar-note">This sidebar drives the main column's type size via fromElement().</p>
+            </aside>
+        </main>
+
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>
