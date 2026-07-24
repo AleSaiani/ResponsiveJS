@@ -2,7 +2,8 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { emitCSS, toKebab, declarationValue, UNITLESS } from '../src/static.js';
 import { fluid, custom } from '../src/value.js';
 import { breakpoint, when, whenInRange } from '../src/conditionals.js';
-import { configure, defineBreakpoints, __resetConfig } from '../src/config.js';
+import { configure, __resetConfig } from '../src/config.js';
+import { defineBreakpoints } from '../src/breakpoints.js';
 
 afterEach(__resetConfig);
 

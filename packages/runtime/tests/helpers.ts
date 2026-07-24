@@ -61,7 +61,13 @@ export function installMatchMediaStub(initialWidth = 1024) {
     };
 }
 
-type ROCallback = (entries: { target: Element; contentRect: { width: number }; contentBoxSize?: { inlineSize: number }[] }[]) => void;
+type ROCallback = (
+    entries: {
+        target: Element;
+        contentRect: { width: number; height?: number };
+        contentBoxSize?: { inlineSize: number; blockSize?: number }[];
+    }[],
+) => void;
 
 export function installResizeObserverStub() {
     const observers = new Set<{ cb: ROCallback; elements: Set<Element> }>();
@@ -86,10 +92,16 @@ export function installResizeObserverStub() {
     };
 
     return {
-        resize(el: Element, width: number) {
+        resize(el: Element, width: number, height = 0) {
             for (const { cb, elements } of observers) {
                 if (elements.has(el)) {
-                    cb([{ target: el, contentRect: { width }, contentBoxSize: [{ inlineSize: width }] }]);
+                    cb([
+                        {
+                            target: el,
+                            contentRect: { width, height },
+                            contentBoxSize: [{ inlineSize: width, blockSize: height }],
+                        },
+                    ]);
                 }
             }
         },

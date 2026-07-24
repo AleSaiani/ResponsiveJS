@@ -59,11 +59,6 @@ export function configure(partial: Partial<RuntimeConfig>): void {
     configState.set(resolveConfig(partial, configState.get()));
 }
 
-/** Define (or replace) named breakpoints: responsive.breakpoints({mobile: 320, …}). */
-export function defineBreakpoints(map: Record<string, number>): void {
-    configure({ breakpoints: map });
-}
-
 /** Resolve a breakpoint reference (name or raw px) to a width. */
 export function bpWidth(ref: string | number): number {
     if (typeof ref === 'number') return ref;

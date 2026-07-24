@@ -2,7 +2,8 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { fluid, custom, combine, isResponsiveValue, fluidClamp, type StaticContext } from '../src/value.js';
 import { linear, exponential, easeInOut, cubic } from '../src/curves.js';
 import { scale, rotate, translate } from '../src/transforms.js';
-import { configure, defineBreakpoints, __resetConfig } from '../src/config.js';
+import { configure, __resetConfig } from '../src/config.js';
+import { defineBreakpoints } from '../src/breakpoints.js';
 
 afterEach(__resetConfig);
 

@@ -7,7 +7,8 @@
  */
 
 import { applyResponsive, staticCSS, flush, type Target, type ResponsiveHandle } from './apply.js';
-import { configure, defineBreakpoints, type RuntimeConfig } from './config.js';
+import { configure, type RuntimeConfig } from './config.js';
+import { defineBreakpoints } from './breakpoints.js';
 import { template, applyUtilities } from './template.js';
 import { lazy, memo, batch, debug } from './perf.js';
 import type { StyleMap } from './value.js';
@@ -21,7 +22,7 @@ interface ResponsiveFn {
     (strings: TemplateStringsArray, ...values: unknown[]): { dispose(): void };
 
     config(partial: Partial<RuntimeConfig>): void;
-    breakpoints(map: Record<string, number>): void;
+    breakpoints: typeof defineBreakpoints;
     /** Static-only compilation; throws if anything requires JS. */
     static(selector: string, map: StyleMap): string;
     /** Apply without the static-CSS split (everything JS-driven). */
@@ -76,15 +77,23 @@ export { grid, space } from './layout.js';
 export { typography } from './typography.js';
 export type { TypeScale, TypeScaleOptions } from './typography.js';
 
+// ─── geometry predicates (also under ./geometry) ────────────────────────
+
+export { geometry, whenWraps, whenOverflows, whenTruncated, whenStuck, linesOf, whenCollides } from './geometry.js';
+export type { GeometryPredicate, GeometryHandle, GeometryOptions, PredicateInput } from './geometry.js';
+
 // ─── reactivity (also under ./signals) ──────────────────────────────────
 
 export { state, computed, effect, subscribe, untrack } from './signals.js';
 export type { State, Computed, Signal, Disposer } from './signals.js';
-export { viewportWidth, mediaQuery, breakpointSignal, containerWidth } from './viewport.js';
+export { viewportWidth, mediaQuery, breakpointSignal, containerWidth, elementSize, scrollTick } from './viewport.js';
+export type { ElementSize } from './viewport.js';
 
 // ─── config & emission ──────────────────────────────────────────────────
 
-export { configure, defineBreakpoints, domain, bpWidth } from './config.js';
+export { configure, domain, bpWidth } from './config.js';
+export { defineBreakpoints } from './breakpoints.js';
+export type { TypedBreakpoints } from './breakpoints.js';
 export type { RuntimeConfig } from './config.js';
 export { emitCSS, injectStyle, removeStyle } from './static.js';
 export type { ResponsiveHandle, Target } from './apply.js';

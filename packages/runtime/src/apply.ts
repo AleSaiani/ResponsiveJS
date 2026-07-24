@@ -61,7 +61,7 @@ export function flush(): void {
 
 export type Target = string | Element | Element[] | NodeListOf<Element>;
 
-function resolveElements(target: Target): HTMLElement[] {
+export function resolveElements(target: Target): HTMLElement[] {
     if (typeof target === 'string') {
         if (typeof document === 'undefined') return [];
         return [...document.querySelectorAll<HTMLElement>(target)];

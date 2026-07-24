@@ -1,7 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { when, whenInRange, breakpoint } from '../src/conditionals.js';
 import { fluid, type StaticContext } from '../src/value.js';
-import { defineBreakpoints, __resetConfig } from '../src/config.js';
+import { __resetConfig } from '../src/config.js';
+import { defineBreakpoints } from '../src/breakpoints.js';
 
 afterEach(__resetConfig);
 

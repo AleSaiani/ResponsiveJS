@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { viewportWidth, mediaQuery, breakpointSignal, containerWidth, __resetViewportHub } from '../src/viewport.js';
-import { configure, defineBreakpoints, bpWidth, domain, __resetConfig } from '../src/config.js';
+import { configure, bpWidth, domain, __resetConfig } from '../src/config.js';
+import { defineBreakpoints } from '../src/breakpoints.js';
 import { installMatchMediaStub, installResizeObserverStub, tick } from './helpers.js';
 
 afterEach(() => {
