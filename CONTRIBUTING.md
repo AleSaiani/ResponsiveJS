@@ -27,7 +27,7 @@ development.
 
 ## Making a change
 
-1. Fork and branch from `master`.
+1. Fork and branch from `main`.
 2. Make your change; add or update tests. CI runs lint + typecheck + tests on Linux and Windows.
 3. If the change affects published packages, add a changeset:
 
@@ -50,4 +50,4 @@ development.
 ## Releases
 
 Releases are automated with [changesets](https://github.com/changesets/changesets): merging the
-"chore: version packages" PR on `master` publishes to npm with provenance.
+"chore: version packages" PR on `main` publishes to npm with provenance.

@@ -70,6 +70,6 @@ viewport (a shared `ResizeObserver`; static emission switches `vw` → `cqi`).
 
 ## Documentation
 
-Full API reference: [docs/api/runtime.md](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/api/runtime.md) · [concepts](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/concepts.md)
+Full API reference: [docs/api/runtime.md](https://github.com/AleSaiani/ResponsiveJS/blob/main/docs/api/runtime.md) · [concepts](https://github.com/AleSaiani/ResponsiveJS/blob/main/docs/concepts.md)
 
 Licensed under [MPL-2.0](LICENSE).

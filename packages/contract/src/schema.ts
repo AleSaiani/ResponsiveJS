@@ -7,7 +7,7 @@
 import { CONSTRAINT_REGISTRY, type ParamSpec } from './registry.js';
 
 const SCHEMA_ID =
-    'https://raw.githubusercontent.com/AleSaiani/ResponsiveJS/master/packages/contract/schema/design-contract.v1.json';
+    'https://raw.githubusercontent.com/AleSaiani/ResponsiveJS/main/packages/contract/schema/design-contract.v1.json';
 
 function paramToSchema(spec: ParamSpec): Record<string, unknown> {
     switch (spec.type) {

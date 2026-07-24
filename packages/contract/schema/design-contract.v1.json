@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/AleSaiani/ResponsiveJS/master/packages/contract/schema/design-contract.v1.json",
+  "$id": "https://raw.githubusercontent.com/AleSaiani/ResponsiveJS/main/packages/contract/schema/design-contract.v1.json",
   "title": "ResponsiveJS Design Contract v1",
   "type": "object",
   "properties": {

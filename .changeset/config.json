@@ -3,7 +3,7 @@
     "changelog": ["@changesets/changelog-github", { "repo": "AleSaiani/ResponsiveJS" }],
     "commit": false,
     "access": "public",
-    "baseBranch": "master",
+    "baseBranch": "main",
     "updateInternalDependencies": "patch",
     "ignore": []
 }

@@ -111,7 +111,7 @@ visual regression without screenshots.
 Add the schema for autocomplete and inline validation of contract files:
 
 ```json
-{ "$schema": "https://raw.githubusercontent.com/AleSaiani/ResponsiveJS/master/packages/contract/schema/design-contract.v1.json" }
+{ "$schema": "https://raw.githubusercontent.com/AleSaiani/ResponsiveJS/main/packages/contract/schema/design-contract.v1.json" }
 ```
 
 ## Browser installation in CI

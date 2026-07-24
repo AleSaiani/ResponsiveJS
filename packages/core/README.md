@@ -40,6 +40,6 @@ meetsAA(contrastRatio('#333', '#fff'), 16, 400); // → true
 
 ## Documentation
 
-Full API reference: [docs/api/core.md](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/api/core.md) · [concepts](https://github.com/AleSaiani/ResponsiveJS/blob/master/docs/concepts.md)
+Full API reference: [docs/api/core.md](https://github.com/AleSaiani/ResponsiveJS/blob/main/docs/api/core.md) · [concepts](https://github.com/AleSaiani/ResponsiveJS/blob/main/docs/concepts.md)
 
 Licensed under [MPL-2.0](LICENSE).
