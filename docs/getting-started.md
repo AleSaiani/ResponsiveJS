@@ -72,7 +72,9 @@ const report = await r$(page).sweep({ ... }).then((r) => r.analyze());
 // UnifiedReport: { pass, violations, fixes, scores, summary, … }
 ```
 
-→ [API: design](api/design.md) · [guide: CI](guides/ci.md)
+→ **[the design guide](guides/validation.md)** (long-form: measure → model → judge) ·
+[validation cookbook](guides/validation-cookbook.md) · [API: design](api/design.md) ·
+[guide: CI](guides/ci.md)
 
 ## Zero-driver
 

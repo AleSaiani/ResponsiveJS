@@ -1,6 +1,8 @@
 # Validation cookbook — from zero to CI gate
 
-Task-first recipes for `@responsivejs/design` and the `rjs` CLI. Full reference:
+Task-first recipes for `@responsivejs/design` and the `rjs` CLI. New to validation? Read
+[the design guide](validation.md) first — it explains the measure → model → judge pipeline
+and every API's purpose. Full reference:
 [design API](../api/design.md) · [CLI](../api/cli.md) · [CI guide](ci.md).
 
 ## Audit any URL right now (zero setup)

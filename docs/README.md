@@ -23,6 +23,8 @@
 
 - **[The runtime guide](guides/runtime.md)** — using `r$` in JS/TS: the mental model, every
   construct explained with its purpose and gradual examples. Start here for authoring.
+- **[The design guide](guides/validation.md)** — validating with `r$(page)`: measure → model
+  → judge, the Asserter, `analyze()`, scores, contracts, drivers. Start here for validation.
 - [Runtime cookbook](guides/runtime-cookbook.md) — one recipe per construct: fluid tokens,
   wrap-driven burger, stuck shadow, truncation, equal heights, cross-element, typed breakpoints
 - [Validation cookbook](guides/validation-cookbook.md) — zero-setup audit → CI gate →

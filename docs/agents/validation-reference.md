@@ -1,7 +1,7 @@
 # Agent reference — validation I/O
 
 Exact shapes and decision rules for driving r$ programmatically. Human-oriented docs:
-[validation cookbook](../guides/validation-cookbook.md).
+[design guide](../guides/validation.md) · [cookbook](../guides/validation-cookbook.md).
 
 ## Commands
 
