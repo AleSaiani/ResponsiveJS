@@ -7,6 +7,9 @@ import type { SnapshotStore, SweepOptions, ViewportSnapshot } from '@responsivej
 import { DEFAULT_WIDTHS } from '@responsivejs/core/types';
 import type { MeasurementSource } from './types.js';
 
+/** Source-level sweeps may omit `url` (pre-navigated / attached sources). */
+export type SourceSweepOptions = Omit<SweepOptions, 'url'> & { url?: string };
+
 /** Resolve sweep options to a concrete sorted list of widths. */
 export function resolveWidths(opts: Pick<SweepOptions, 'widths' | 'from' | 'to' | 'step'>): number[] {
     if (opts.widths) return [...opts.widths].sort((a, b) => a - b);
@@ -62,7 +65,7 @@ async function measureWithScroll(
 }
 
 /** Sweep a source across widths, producing a SnapshotStore. */
-export async function sweepSource(source: MeasurementSource, opts: SweepOptions): Promise<SnapshotStore> {
+export async function sweepSource(source: MeasurementSource, opts: SourceSweepOptions): Promise<SnapshotStore> {
     const widths = resolveWidths(opts);
     const height = opts.height || 900;
     const snapshots = new Map<number, ViewportSnapshot>();

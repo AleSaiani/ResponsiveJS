@@ -42,9 +42,32 @@ const report = await analyze({
 Under the hood the collector is injected as a string via `Runtime.evaluate` — the same collector
 every driver uses, so measurements are identical across Playwright, CDP, and in-page runs.
 
-### Raw injection (no adapter at all)
+### Driving from a bare `eval` primitive
 
-If all you have is an `eval` primitive:
+If all you have is a way to evaluate a JS string in the page — agent-browser's eval, a browser
+extension, a REPL over a live tab — `EvalSource` turns it into a full driver:
+
+```typescript
+import { EvalSource, analyze } from '@responsivejs/design';
+
+const source = new EvalSource((expr) => yourEval(expr), {
+    // optional: wire these when your environment can resize/navigate
+    setViewport: (w, h) => yourResize(w, h),
+    open: (url) => yourNavigate(url),
+});
+
+// Viewport not controllable? Analyze honestly at the live width:
+const report = await analyze({
+    source,
+    selectors: ['main', 'nav', '.card', 'button'],
+    widths: [await source.currentWidth()],
+});
+```
+
+Without a `setViewport` callback the source refuses widths that don't match the real viewport —
+measurements never lie. Text transports that return JSON strings are parsed automatically.
+
+For fully manual control the raw pieces are also exported:
 
 ```typescript
 import { buildCollectExpression, fromWire, analyzeStore } from '@responsivejs/design/browser';

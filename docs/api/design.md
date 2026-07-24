@@ -88,8 +88,15 @@ interface MeasurementSource {
 - **`CdpSource(client, { height?, settleMs?, loadTimeoutMs? })`** — takes any structural
   `{ send(method, params) }` (chrome-remote-interface, Playwright `CDPSession`, agent-browser).
   Measures by injecting the collector via `Runtime.evaluate` (`returnByValue` + `awaitPromise`).
+- **`EvalSource(evalFn, { setViewport?, open?, settleMs?, widthTolerance? })`** — the
+  lowest-friction adapter: wraps a bare `(expression: string) => Promise<unknown>` primitive
+  (agent-browser, extensions, bookmarklet hosts). `setViewport`/`open` are optional callbacks;
+  without a viewport setter the source verifies the live width instead of lying about it —
+  `currentWidth()` gives you the natural sweep width. String results from text transports are
+  JSON-parsed in `measure()`.
 - **`sweepSource(source, opts)` / `resweepSource(source, store, opts)`** — the driver-neutral
-  sweep loop (scroll support requires the `evaluate` seam).
+  sweep loop (scroll support requires the `evaluate` seam). `SourceSweepOptions` makes `url`
+  optional: omit it for pre-navigated/attached sources.
 
 ## `/browser` — zero-driver
 
