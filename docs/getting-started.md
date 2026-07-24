@@ -30,22 +30,25 @@ for any live URL with nothing installed). `verify`/`record` run the contract flo
 
 ## Authoring
 
+One import, the whole surface behind your editor's autocomplete:
+
 ```typescript
-import { responsive, fluid, geometry, whenWraps, defineBreakpoints } from '@responsivejs/runtime';
+import { r$ } from '@responsivejs/runtime';
 
-const bp = defineBreakpoints({ mobile: 320, tablet: 768, desktop: 1024 } as const);
+const bp = r$.breakpoints({ mobile: 320, tablet: 768, desktop: 1024 } as const);
 
-responsive.tokens({ '--space-m': fluid(16, 24), '--font-hero': fluid(28, 64) });  // clamp() on :root
-geometry('.site-nav', { wrapped: whenWraps });        // CSS: .site-nav[data-wrapped] { … }
-responsive('.cards', { gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)') });
+r$.tokens({ '--space-m': r$.fluid(16, 24), '--font-hero': r$.fluid(28, 64) });  // clamp() on :root
+r$.geometry('.site-nav', { wrapped: r$.whenWraps });   // CSS: .site-nav[data-wrapped] { … }
+r$('.cards', { gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)') });
 ```
 
-`responsive()` is CSS-first: everything expressible as `clamp()`/`@media` becomes one injected
-stylesheet; JS drives only what CSS cannot — non-linear curves, **geometry state** (wrap,
-overflow, sticky, truncation), **cross-element dependencies** (`fromElement`, `sync`, `ratio`).
-Add `{ container: true }` to bind a value to the nearest container instead of the viewport.
+r$ is CSS-first: everything expressible as `clamp()`/`@media` becomes one injected stylesheet;
+JS drives only what CSS cannot — non-linear curves, **geometry state** (wrap, overflow,
+sticky, truncation), **cross-element dependencies** (`fromElement`, `sync`, `ratio`). Add
+`{ container: true }` to bind a value to the nearest container instead of the viewport.
 
-→ [runtime cookbook](guides/runtime-cookbook.md) (task-first recipes) ·
+→ **[the runtime guide](guides/runtime.md)** (long-form: purposes, gradual examples, the
+mental model) · [cookbook](guides/runtime-cookbook.md) (paste-ready recipes) ·
 [API: runtime](api/runtime.md) · [live example](../examples/landing)
 
 ## Validation

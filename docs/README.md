@@ -19,8 +19,10 @@
   documented as "the hack it replaces vs the construct" (wrap-driven burger, stuck shadow,
   fluid tokens, equal-height cards, cross-element type, typed breakpoints)
 
-**Guides (task-first)**
+**Guides**
 
+- **[The runtime guide](guides/runtime.md)** — using `r$` in JS/TS: the mental model, every
+  construct explained with its purpose and gradual examples. Start here for authoring.
 - [Runtime cookbook](guides/runtime-cookbook.md) — one recipe per construct: fluid tokens,
   wrap-driven burger, stuck shadow, truncation, equal heights, cross-element, typed breakpoints
 - [Validation cookbook](guides/validation-cookbook.md) — zero-setup audit → CI gate →

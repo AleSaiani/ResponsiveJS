@@ -4,11 +4,17 @@ The authoring half: reactive `value = f(width)`, CSS-first. Depends only on
 `@responsivejs/core`. Subpaths: `/signals`, `/curves`, `/layout`, `/typography`, `/geometry`
 (everything is also re-exported from the root).
 
-## `responsive()` — apply styles
+**The entry point is `r$`** — one callable namespace carrying the whole surface
+(`r$.fluid`, `r$.tokens`, `r$.geometry`, `r$.whenWraps`, `r$.breakpoints`, …), so the editor's
+autocomplete is the API browser. `responsive` is the same object under its historical name,
+and every member is also a named export for tree-shaking-sensitive code. New to the runtime?
+Start from the [guide](../guides/runtime.md), not this reference.
+
+## `r$()` — apply styles
 
 ```typescript
-responsive(target, map): ResponsiveHandle
-responsive`selector { prop: ${fluid(14, 24)}px }`   // tagged-template form
+r$(target, map): ResponsiveHandle
+r$`selector { prop: ${r$.fluid(14, 24)}px }`   // tagged-template form
 ```
 
 - `target`: selector string, `Element`, `Element[]`, or `NodeList`.

@@ -12,32 +12,60 @@ import { defineBreakpoints } from './breakpoints.js';
 import { template, applyUtilities } from './template.js';
 import { lazy, memo, batch, debug } from './perf.js';
 import { tokens } from './tokens.js';
-import type { StyleMap } from './value.js';
+import { fluid, custom, combine, type StyleMap } from './value.js';
+import { when, whenInRange, breakpoint } from './conditionals.js';
+import { fromElement, sync, ratio } from './cross.js';
+import { geometry, whenWraps, whenOverflows, whenTruncated, whenStuck, linesOf, whenCollides } from './geometry.js';
 
-// ─── the responsive() namespace ─────────────────────────────────────────
+// ─── r$ — the whole authoring surface behind one autocompletable name ───
 
 interface ResponsiveFn {
     /** Apply a responsive style map to elements (CSS-first split). */
     (target: Target, map: StyleMap): ResponsiveHandle;
-    /** Tagged template form: responsive`.el { font-size: ${fluid(14, 24)}px }` */
+    /** Tagged template form: r$`.el { font-size: ${fluid(14, 24)}px }` */
     (strings: TemplateStringsArray, ...values: unknown[]): { dispose(): void };
 
+    // values
+    fluid: typeof fluid;
+    custom: typeof custom;
+    combine: typeof combine;
+    when: typeof when;
+    whenInRange: typeof whenInRange;
+    breakpoint: typeof breakpoint;
+
+    // geometry — JS detects, CSS styles
+    geometry: typeof geometry;
+    whenWraps: typeof whenWraps;
+    whenOverflows: typeof whenOverflows;
+    whenTruncated: typeof whenTruncated;
+    whenStuck: typeof whenStuck;
+    linesOf: typeof linesOf;
+    whenCollides: typeof whenCollides;
+
+    // cross-element
+    fromElement: typeof fromElement;
+    sync: typeof sync;
+    ratio: typeof ratio;
+
+    // configuration & emission
     config(partial: Partial<RuntimeConfig>): void;
     breakpoints: typeof defineBreakpoints;
     /** Static-only compilation; throws if anything requires JS. */
     static(selector: string, map: StyleMap): string;
     /** Apply without the static-CSS split (everything JS-driven). */
     dynamic(target: Target, map: StyleMap): ResponsiveHandle;
+    /** Token bridge: fluid values as custom properties on :root (clamp where linear). */
+    tokens: typeof tokens;
+
+    // performance & tooling
     lazy: typeof lazy;
     batch: typeof batch;
     memo: typeof memo;
     debug: typeof debug;
     /** Synchronously drain pending style writes (tests, imperative code). */
     flush(): void;
-    /** Utility grammar: responsive.apply('.el', 'text-fluid-sm-xl p-fluid-2-8'). */
+    /** Utility grammar: r$.apply('.el', 'text-fluid-sm-xl p-fluid-2-8'). */
     apply(target: string | Element, spec: string): ResponsiveHandle;
-    /** Token bridge: fluid values as custom properties on :root (clamp where linear). */
-    tokens: typeof tokens;
 }
 
 function responsiveBase(
@@ -50,19 +78,43 @@ function responsiveBase(
     return applyResponsive(first as Target, rest[0] as StyleMap);
 }
 
-export const responsive: ResponsiveFn = Object.assign(responsiveBase as ResponsiveFn, {
+/**
+ * The r$ namespace — type `r$.` and discover the whole surface. Named exports
+ * remain available for tree-shaking-sensitive code; they are the same
+ * functions.
+ */
+export const r$: ResponsiveFn = Object.assign(responsiveBase as ResponsiveFn, {
+    fluid,
+    custom,
+    combine,
+    when,
+    whenInRange,
+    breakpoint,
+    geometry,
+    whenWraps,
+    whenOverflows,
+    whenTruncated,
+    whenStuck,
+    linesOf,
+    whenCollides,
+    fromElement,
+    sync,
+    ratio,
     config: configure,
     breakpoints: defineBreakpoints,
     static: staticCSS,
     dynamic: (target: Target, map: StyleMap) => applyResponsive(target, map, { cssFirst: false }),
+    tokens,
     lazy,
     batch,
     memo,
     debug,
     flush,
     apply: applyUtilities,
-    tokens,
 });
+
+/** Alias of r$ — the historical name. */
+export const responsive: ResponsiveFn = r$;
 
 // ─── values ─────────────────────────────────────────────────────────────
 

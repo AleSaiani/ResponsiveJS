@@ -1,8 +1,12 @@
 # Runtime cookbook — task-first recipes
 
-Every recipe: the problem, the paste-ready construct, the gotcha if there is one. Full
-signatures in the [runtime API](../api/runtime.md); all constructs live on one page in the
-[landing example](../../examples/landing).
+Every recipe: the problem, the paste-ready construct, the gotcha if there is one. New to the
+runtime? Read [the guide](runtime.md) first — it explains the model and every API's purpose.
+Full signatures in the [runtime API](../api/runtime.md); all constructs live on one page in
+the [landing example](../../examples/landing).
+
+Recipes use named imports; every function is also available on the `r$` namespace
+(`import { r$ } …` → `r$.fluid`, `r$.geometry`, `r$.tokens`, …) — same objects.
 
 ## A fluid type & spacing scale (no breakpoints)
 

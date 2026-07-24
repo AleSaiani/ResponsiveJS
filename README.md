@@ -40,6 +40,20 @@ rjs verify home.contract.json https://pr-42.example.com     # regressions fail t
 Driver-pluggable: Playwright when installed, [agent-browser](https://github.com/vercel-labs/agent-browser)
 for zero-setup audits of any live URL. See the [CLI reference](docs/api/cli.md).
 
+## Quick start — author fluid behavior (runtime)
+
+```typescript
+import { r$ } from '@responsivejs/runtime';
+
+const bp = r$.breakpoints({ mobile: 320, tablet: 768, desktop: 1280 } as const);
+r$.tokens({ '--space-m': r$.fluid(16, 24), '--font-hero': r$.fluid(28, 64) }); // clamp() on :root
+r$.geometry('.site-nav', { wrapped: r$.whenWraps });  // CSS: .site-nav[data-wrapped] { … }
+r$('.cards', { gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)') });
+```
+
+CSS-first: linear math ships as static CSS; JS drives only what CSS cannot (curves, geometry
+state, cross-element). See [the runtime guide](docs/guides/runtime.md).
+
 ## Quick start — validate a layout (Playwright)
 
 ```typescript
