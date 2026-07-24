@@ -200,6 +200,25 @@ You care about this when validating where Playwright can't go: a logged-in sessi
 browser, an embedded webview, an agent's browser tool. Same collector, same math — identical
 measurements everywhere.
 
+### agent-browser: audits with nothing installed in the project
+
+[Vercel's agent-browser](https://github.com/vercel-labs/agent-browser) deserves its own note,
+because it changes *when* you can reach for r$. It's a standalone browser CLI (`npm i -g
+agent-browser`) — so the audit needs **no Playwright, no npm install, no config in the target
+project**. That unlocks workflows Playwright-in-the-repo can't do:
+
+- **Audit a page you don't have the repo for** — production, a legacy property, a CMS page
+  marketing just shipped: `rjs analyze https://example.com -d agent-browser`.
+- **Check the competition** — measure any live site's responsive behavior the same way you
+  measure yours (mind their terms of service).
+- **Try r$ before adopting it** — one global install, one command, a full report; nothing to
+  undo if you walk away.
+- **A shared browser session** — agent-browser keeps a persistent session (`--session`), so
+  repeated audits reuse the same browser instead of cold-starting one per run.
+
+Playwright stays the CI driver (deterministic, versioned with the repo); agent-browser is the
+zero-footprint field tool. `-d auto` picks whichever is available.
+
 For no driver at all, the `/browser` subpath runs inside any live DOM:
 `scoreDOM(['main', '.card'])`, `analyzeStore(collectStore([...]))` — usable from a devtools
 console or injected by tooling.

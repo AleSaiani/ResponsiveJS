@@ -155,6 +155,10 @@ page at many widths and judges it — overflow, touch targets, contrast, continu
 npx @responsivejs/cli analyze http://localhost:5173 -w 320,768,1280
 ```
 
+(No Playwright in this project? With [agent-browser](https://github.com/vercel-labs/agent-browser)
+installed globally, add `-d agent-browser` — the audit needs nothing installed here at all.
+It also means you can point the same command at any LIVE url, not just localhost.)
+
 Exit `0` = pass, `1` = violations, each with the exact element, width, measured numbers, and
 — where honest — a machine-applicable fix. And because your page runs the runtime, the report
 carries **provenance**: each violation on an element a construct controls names that
