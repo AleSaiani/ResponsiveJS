@@ -5,35 +5,48 @@ that matches what you want to do:
 
 | I want to…                                             | Install                                | Start here |
 | ------------------------------------------------------ | -------------------------------------- | ---------- |
-| Author responsive behavior (fluid values, breakpoints) | `npm i @responsivejs/runtime`          | [§ Authoring](#authoring) |
+| Audit a URL right now, zero setup                      | nothing — `npx @responsivejs/cli`      | [§ Audit](#audit-cli) |
+| Author responsive behavior (fluid, geometry, tokens)   | `npm i @responsivejs/runtime`          | [§ Authoring](#authoring) |
 | Validate/score a page in CI                            | `npm i -D @responsivejs/design @playwright/test` | [§ Validation](#validation) |
 | Score a live DOM without any driver                    | `npm i @responsivejs/design`           | [§ Zero-driver](#zero-driver) |
 | Pin a layout down as a verifiable contract             | `npm i -D @responsivejs/contract`      | [§ Contracts](#contracts) |
 | Just the math (curves, geometry, WCAG, aesthetics)     | `npm i @responsivejs/core`             | [API: core](api/core.md) |
+| Drive r$ as an AI agent                                | —                                      | [agents docs](agents/validation-reference.md) |
 
 All packages are ESM-only, zero runtime dependencies (Playwright and axe-core are optional
 peers of `design`), Node ≥ 20.19, MPL-2.0.
 
+## Audit (CLI)
+
+```bash
+npx @responsivejs/cli analyze https://example.com -w 320,768,1280
+# constraints + aesthetic score + a11y · exit 0 pass / 1 violations · -f json|sarif
+```
+
+Driver-pluggable (Playwright, or [agent-browser](https://github.com/vercel-labs/agent-browser)
+for any live URL with nothing installed). `verify`/`record` run the contract flow.
+
+→ [CLI reference](api/cli.md) · [validation cookbook](guides/validation-cookbook.md)
+
 ## Authoring
 
 ```typescript
-import { responsive, fluid, breakpoint } from '@responsivejs/runtime';
+import { responsive, fluid, geometry, whenWraps, defineBreakpoints } from '@responsivejs/runtime';
 
-responsive.breakpoints({ mobile: 320, tablet: 768, desktop: 1024, wide: 1440 });
+const bp = defineBreakpoints({ mobile: 320, tablet: 768, desktop: 1024 } as const);
 
-responsive('.hero', {
-    fontSize: fluid(16, 32),                              // → static CSS clamp()
-    padding: fluid(8, 32, { curve: 'ease-in' }),          // → JS-driven (non-linear)
-    display: breakpoint.below('tablet', 'none', 'flex'),  // → static @media
-});
+responsive.tokens({ '--space-m': fluid(16, 24), '--font-hero': fluid(28, 64) });  // clamp() on :root
+geometry('.site-nav', { wrapped: whenWraps });        // CSS: .site-nav[data-wrapped] { … }
+responsive('.cards', { gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)') });
 ```
 
 `responsive()` is CSS-first: everything expressible as `clamp()`/`@media` becomes one injected
-stylesheet; only the rest is driven by JavaScript through a single shared resize listener,
-coalesced to one style write per frame. Add `{ container: true }` to any value to bind it to the
-nearest container instead of the viewport.
+stylesheet; JS drives only what CSS cannot — non-linear curves, **geometry state** (wrap,
+overflow, sticky, truncation), **cross-element dependencies** (`fromElement`, `sync`, `ratio`).
+Add `{ container: true }` to bind a value to the nearest container instead of the viewport.
 
-→ [API: runtime](api/runtime.md) · [concepts](concepts.md)
+→ [runtime cookbook](guides/runtime-cookbook.md) (task-first recipes) ·
+[API: runtime](api/runtime.md) · [live example](../examples/landing)
 
 ## Validation
 

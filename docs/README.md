@@ -19,10 +19,22 @@
   documented as "the hack it replaces vs the construct" (wrap-driven burger, stuck shadow,
   fluid tokens, equal-height cards, cross-element type, typed breakpoints)
 
-**Guides**
+**Guides (task-first)**
 
+- [Runtime cookbook](guides/runtime-cookbook.md) — one recipe per construct: fluid tokens,
+  wrap-driven burger, stuck shadow, truncation, equal heights, cross-element, typed breakpoints
+- [Validation cookbook](guides/validation-cookbook.md) — zero-setup audit → CI gate →
+  contract record/verify, reading scores, cutting false positives
 - [Responsive regression in CI](guides/ci.md) — assertions → oracle → contracts, SARIF, baselines
-- [r$ for AI agents](guides/agents.md) — the fix loop, CDP/eval drivers, contracts as instructions
+
+**For AI agents** (compact, exact I/O)
+
+- [Validation reference](agents/validation-reference.md) — commands, exit codes, report JSON
+  shapes, the 27 constraints, contract skeleton, the fix loop
+- [Authoring reference](agents/authoring-reference.md) — invariants, signatures, construct
+  chooser, the minimal correct pattern
+- [r$ for AI agents](guides/agents.md) — the narrative guide: drivers (CDP/eval/agent-browser),
+  contracts as instructions
 
 The aesthetic score is grounded in Ngo, Teo & Byrne (2003), *Modelling interface aesthetics*,
 and Birkhoff (1933), *Aesthetic Measure* — see [api/core.md](api/core.md#aesthetics--the-17-metric-score).

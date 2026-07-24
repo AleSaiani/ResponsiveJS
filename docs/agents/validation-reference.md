@@ -1,0 +1,140 @@
+# Agent reference — validation I/O
+
+Exact shapes and decision rules for driving r$ programmatically. Human-oriented docs:
+[validation cookbook](../guides/validation-cookbook.md).
+
+## Commands
+
+```
+rjs analyze <url>  [-d auto|playwright|agent-browser] [-w 320,768,1280] [-s "main,.card"]
+                   [-f console|json|sarif] [-o file] [--no-a11y] [--strict] [--scroll]
+                   [--touch-min 24] [--height 900]
+rjs verify  <contract.json> <url>  [same driver/format/out flags]
+rjs record  <contract.json> <url>  [-o other.json]
+```
+
+Exit codes — gate on these: `0` pass · `1` violations · `2` usage/run error (bad args, missing
+driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
+
+## UnifiedReport (analyze -f json)
+
+```jsonc
+{
+    "pass": false,          // no ERROR-severity violations (loop gate)
+    "clean": false,         // no violations at all (polish gate)
+    "total": 46, "passed": 39, "failed": 7,
+    "widths": [320, 1280],
+    "sources": { "measurement": "playwright|agent-browser|eval|cdp|store", "a11y": "axe|skipped|unavailable" },
+    "summary": { "errors": 7, "warnings": 0, "info": 0, "byRule": {"noOverflow": 1}, "byWidth": {"320": 3} },
+    "violations": [ /* Violation[] — see below */ ],
+    "fixes": [ /* Fix[] — flattened, apply-first list */ ],
+    "scores": { "average": { "overall": 0.57, /* +17 metrics 0..1 */ }, "perWidth": {} },
+    "durationMs": 4200
+}
+```
+
+### Violation
+
+```jsonc
+{
+    "rule": "noOverflow",          // or "axe:<id>", "score.<metric>", "baseline"
+    "element": ".card[0]",         // selector[index]
+    "width": 320,                  // px where it was measured
+    "detail": "right=496 > viewport=320",
+    "severity": "error|warning|info",   // MISSING severity counts as error
+    "expected": 320, "actual": 496,     // when numeric
+    "fix": { "selector": ".card", "property": "max-width", "value": "100%", "reason": "…" }
+}
+```
+
+### Agent loop
+
+1. `rjs analyze <url> -f json` (or `verify` against a contract).
+2. Apply every `fixes[]` entry verbatim (selector → property: value).
+3. For violations without a `fix`: reason from `detail` + `expected/actual` (+ the rule's
+   `ruleDescription` in contract mode — it states WHY the rule exists).
+4. Re-run. Stop at exit 0. Never claim success without the exit code.
+5. Contract mode, after an APPROVED visual change: `rjs record` re-pins baselines.
+
+## ContractReport (verify -f json)
+
+```jsonc
+{
+    "contract": { "name": "home", "version": 1 },
+    "pass": true, "total": 6, "passed": 6, "failed": 0,
+    "rules": [ { "ruleId": "no-bleed", "assert": "noOverflow", "pass": true, "checks": 3,
+                 "skipped": false, "violations": [] } ],
+    "violations": [ /* Violation + ruleId + ruleDescription */ ],
+    "score": [ /* {metric, min, actual, pass, width?} */ ],
+    "baselines": [ /* {selector, prop, pass, unrecorded?, deviations[]} */ ]
+}
+```
+
+## Contract skeleton
+
+```jsonc
+{
+    "name": "home", "version": 1,
+    "viewport": { "widths": [320, 768, 1280] },          // or {from,to,step}
+    "selectors": { "sidebar": ".app-sidebar" },          // $sidebar aliases in args
+    "designSystem": { "profile": "material-design-3" },  // apple-hig | fluent-ui-2 | inline config
+    "rules": [
+        { "assert": "noOverflow", "description": "why this matters", "severity": "error",
+          "when": { "max": 767 }, "id": "stable-id" }
+    ],
+    "score": [{ "min": 0.6 }],
+    "baselines": [{ "selector": "h1", "prop": "fontSize", "tolerance": { "px": 2 } }]
+}
+```
+
+JSON Schema (validate before use):
+[`design-contract.v1.json`](../../packages/contract/schema/design-contract.v1.json).
+Unknown assert names / args fail at load with did-you-mean suggestions.
+
+## The 27 constraints
+
+| assert | args | meaning |
+| --- | --- | --- |
+| `noOverflow` | — | No element exceeds the viewport width at any measured width. |
+| `contains` | parent:selector, child:selector | Child rects stay inside the parent rect. |
+| `sameHeight` | a:selector, b:selector, tolerance?:number | Two elements keep equal heights. |
+| `sameLine` | a:selector, b:selector | Two elements share the same visual row. |
+| `minSize` | selector, min:{width?,height?} | Elements meet minimum dimensions. |
+| `gapUniform` | selector, threshold?:number | Spacing between children is uniform. |
+| `monotonic` | selector, prop:enum, direction?:enum | A property never moves against the direction as width grows. |
+| `continuous` | selector, prop:enum, maxJump:number | No sudden jumps in a property across widths. |
+| `proportion` | a, b, bounds:{min,max} | Width ratio a/b stays within bounds. |
+| `childrenContained` | selector, tolerance?:number | Direct children stay inside their container. |
+| `childrenEqualWidth` | selector, tolerance?:number | Direct children keep equal widths. |
+| `noZeroHeight` | selector | Elements never collapse to zero height while having width. |
+| `touchTarget` | selector, min?:number | Touch targets ≥ min at mobile widths (default 24, WCAG 2.5.8 AA; inline prose links exempt). |
+| `textReadable` | selector | Font size and line-height stay readable. |
+| `contrastRatio` | selector, level?:'AA'\|'AAA' | WCAG contrast, measured effective backgrounds. |
+| `borderRadiusValid` | selector | Border radii stay consistent with element size. |
+| `zStackOrder` | selectors:selector[] | z-index ordering matches the given selector order. |
+| `typographyScale` | selector | Font sizes fit a modular scale. |
+| `spacingTokens` | selector, tokens:number[] | Spacing values come from the token set. |
+| `aspectRatio` | selector, ratio:number, tolerance?:number | Elements keep the given aspect ratio. |
+| `focusVisible` | selector | Focusable elements have a visible focus affordance. |
+| `noHiddenOverflow` | selector | Content is not silently clipped by overflow:hidden. |
+| `alignedToGrid` | selector, gridSize:number | Element positions align to a px grid. |
+| `breakpointSafe` | breakpoints:number[] | Layout holds just below and above each breakpoint (bp±1 sampled automatically). |
+| `interactiveSpacing` | selector, minGap?:number | Interactive elements keep a minimum gap. |
+| `visible` | selector | Present and rendered (display/visibility/area). |
+| `hidden` | selector | Absent or not rendered. |
+
+## Library-level (custom loops)
+
+```typescript
+import { EvalSource, chunkedEval, analyze, verifyContract, contractSweepPlan } from '@responsivejs/design';
+```
+
+- `EvalSource(evalFn, { setViewport?, open? })` — any string-eval primitive becomes a driver;
+  wrap `chunkedEval(evalFn)` when the transport caps argument length (Windows ~32K).
+- Without `setViewport` the source REFUSES widths that don't match the live viewport
+  (`currentWidth()` gives the honest one). Measurements never lie.
+- `analyze({ source, url?, selectors, widths, a11y?, constraints? })` → UnifiedReport.
+- `contractSweepPlan(contract)` → `{selectors, widths, height?}` to sweep any source, then
+  `verifyContract(contract, store)`.
+- Determinism: same store in → same report out. Scores and contrast are computed from measured
+  values, never sampled.

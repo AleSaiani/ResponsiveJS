@@ -38,12 +38,16 @@ Fix what has a `fix`; for the rest, reason from `detail` + `expected/actual` + t
 `description`. Stop when `pass` is true. After an approved visual change, `record` re-pins the
 baseline curves so the next verify has a fresh reference.
 
-## Library-level control
+## Exact I/O and deeper control
 
-For custom loops (partial sweeps, cached stores, in-page scoring) use
-`@responsivejs/design` directly — `analyze()`, `EvalSource` over any eval primitive,
-`verifyContract`, `analyzeStore` on JSON-transported measurements. Read the
-[agents guide](docs/guides/agents.md).
+- [docs/agents/validation-reference.md](docs/agents/validation-reference.md) — the compact
+  contract: commands, exit codes, exact report JSON shapes, all 27 constraint names/args,
+  contract skeleton. **Read this before parsing any report.**
+- [docs/agents/authoring-reference.md](docs/agents/authoring-reference.md) — writing runtime
+  code: invariants (e.g. never `display:none` what a predicate measures), signatures, and a
+  construct chooser table.
+- [docs/guides/agents.md](docs/guides/agents.md) — narrative guide: custom loops with
+  `EvalSource` over any eval primitive, CDP drivers, contracts as instructions.
 
 ## Working on this repo
 
