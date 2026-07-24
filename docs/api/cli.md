@@ -8,6 +8,7 @@ agent-loop-ready: `0` pass, `1` violations, `2` usage/run error.
 rjs analyze <url>              sweep + oracle (constraints + score + a11y)
 rjs verify <contract> <url>    execute a design contract against a live page
 rjs record <contract> <url>    measure and pin baseline curves into the contract
+rjs init <url>                 generate a contract from the page's r$ constructs
 rjs doctor                     check drivers and environment readiness
 ```
 
@@ -40,6 +41,17 @@ rjs doctor                     check drivers and environment readiness
 `rjs doctor` probes all of the above — node version, playwright + chromium, agent-browser —
 one line per check with the exact install command for anything missing, and tells you which
 driver `auto` will pick. Exit `0` = at least one driver usable, `1` = none.
+
+## `init` — the free regression net
+
+On a page that runs `@responsivejs/runtime`, the constructs *declare* their behavior in the
+provenance manifest. `rjs init <url> -o app.contract.json` turns those declarations into
+rules the oracle verifies: numeric `fluid` on a measurable prop → `monotonic` + `continuous`
++ a baseline; `ratio` bounds → `proportion`; the page's `r$.breakpoints` → the viewport
+widths — plus the `noOverflow` default. What can't be expressed yet (geometry, sync, tokens,
+element-driven fluids) is listed on stderr, never dropped silently. Then `rjs record` pins
+today's curves and `rjs verify` in CI holds the page to its own declarations. Exits 2 when
+the page has no manifest.
 
 ## `verify` and `record`
 

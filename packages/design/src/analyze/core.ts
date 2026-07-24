@@ -94,20 +94,74 @@ function applyDefaultConstraints(assert: Asserter, selectors: string[], cfg: Con
     cfg.custom?.(assert);
 }
 
+type Owner = NonNullable<Violation['owner']>;
+
+/** '.site-nav a' is a descendant selector of '.site-nav' (space/child combinator). */
+function isDescendantSelector(selector: string, target: string): boolean {
+    if (!selector.startsWith(target)) return false;
+    const rest = selector.slice(target.length);
+    return /^\s|^\s*>/.test(rest);
+}
+
+function ownerOf(entry: NonNullable<SnapshotStore['manifest']>[number], via?: string): Owner {
+    return {
+        construct: entry.construct,
+        behavior: entry.behavior,
+        ...(entry.source ? { source: entry.source } : {}),
+        ...(via ? { via } : {}),
+    };
+}
+
+const toKebabProp = (p: string): string => p.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+
+/** When the owning construct controls the very property a fix would patch,
+ *  a CSS patch is a lie (the runtime overwrites inline styles): rewrite the
+ *  fix as a runtime-patch pointing at the construct declaration. */
+function toRuntimePatch(v: Violation, entry: NonNullable<SnapshotStore['manifest']>[number]): void {
+    if (!v.fix || v.fix.kind === 'runtime-patch' || !entry.config) return;
+    const wanted = toKebabProp(v.fix.property);
+    const key = Object.keys(entry.config).find((k) => toKebabProp(k) === wanted);
+    if (key === undefined) return;
+    v.fix = {
+        ...v.fix,
+        kind: 'runtime-patch',
+        construct: entry.construct,
+        ...(entry.source ? { source: entry.source } : {}),
+        change: { property: key, current: entry.config[key], suggested: v.fix.value },
+        reason: `'${v.fix.property}' is controlled by the ${entry.construct} construct${entry.source ? ` at ${entry.source}` : ''} — patch its declaration, a CSS patch would be overwritten`,
+    };
+}
+
 /**
- * Provenance: annotate violations with the runtime construct that owns the
+ * Provenance: annotate violations with the runtime construct(s) that own the
  * element (from the manifest the collector shipped with the measurements).
- * The closed loop's read side — an agent can patch the CONSTRUCT, not the CSS.
+ * Exact target match first; then ancestors by descendant-selector syntax
+ * ('.site-nav a' is owned by the construct on '.site-nav'). The closed
+ * loop's read side — an agent can patch the CONSTRUCT, not the CSS.
  */
 export function attachOwnership(violations: Violation[], manifest: SnapshotStore['manifest']): void {
     if (!manifest || manifest.length === 0) return;
-    const bySelector = new Map(manifest.map((e) => [e.target, e]));
     for (const v of violations) {
         if (!v.element || v.owner) continue;
         const selector = v.element.replace(/\[\d+\]$/, '');
-        const entry = bySelector.get(selector);
-        if (entry) {
-            v.owner = { construct: entry.construct, behavior: entry.behavior, ...(entry.source ? { source: entry.source } : {}) };
+        const exact = manifest.filter((e) => e.target === selector || e.target === v.element);
+        const ancestors = manifest
+            .filter((e) => e.target !== selector && isDescendantSelector(selector, e.target))
+            // most specific (longest) ancestor target first
+            .sort((a, b) => b.target.length - a.target.length);
+
+        const matched = [
+            ...exact.map((e) => ({ entry: e, via: undefined as string | undefined })),
+            ...ancestors.map((e) => ({ entry: e, via: e.target })),
+        ];
+        if (matched.length === 0) continue;
+
+        v.owner = ownerOf(matched[0].entry, matched[0].via);
+        if (matched.length > 1) v.owners = matched.map((m) => ownerOf(m.entry, m.via));
+        // the first owner whose config covers the fix's property claims it
+        for (const m of matched) {
+            toRuntimePatch(v, m.entry);
+            if (v.fix?.kind === 'runtime-patch') break;
         }
     }
 }

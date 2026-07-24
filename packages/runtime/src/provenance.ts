@@ -10,6 +10,21 @@
  */
 
 import type { ProvenanceEntry } from '@responsivejs/core/types';
+import { isResponsiveValue, type StyleMap } from './value.js';
+
+/** Serializable config of a style/tokens map: each entry's meta descriptor. */
+export function describeMap(map: StyleMap): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(map).map(([prop, v]) => [
+            prop,
+            isResponsiveValue(v)
+                ? (v.meta ?? { value: v.kind })
+                : typeof v === 'function'
+                  ? { value: 'custom' }
+                  : { value: 'literal', literal: v },
+        ]),
+    );
+}
 
 let nextId = 0;
 const entries = new Map<number, ProvenanceEntry>();

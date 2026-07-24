@@ -11,6 +11,7 @@ rjs analyze <url>  [-d auto|playwright|agent-browser] [-w 320,768,1280] [-s "mai
                    [--touch-min 24] [--height 900]
 rjs verify  <contract.json> <url>  [same driver/format/out flags]
 rjs record  <contract.json> <url>  [-o other.json]
+rjs init    <url>  [-o contract.json]   # generate a contract FROM the page's constructs
 rjs doctor                         # environment readiness: exit 0 = a driver is usable
 ```
 
@@ -33,7 +34,10 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
                   across widths. Safe to apply verbatim, no parsing needed. */ ],
     "scores": { "average": { "overall": 0.57, /* +17 metrics 0..1 */ }, "perWidth": {} },
     "manifest": [ /* ProvenanceEntry[] — present when the page runs @responsivejs/runtime:
-                     {id, construct, target, behavior[], source?} — what controls the page */ ],
+                     {id, construct, target, behavior[], source?, config?} — what controls the
+                     page. config is the SERIALIZED declaration (e.g. {fontSize: {value:'fluid',
+                     min:16, max:32, curve:'exponential'}}) — everything needed to regenerate
+                     the construct call. */ ],
     "durationMs": 4200
 }
 ```
@@ -50,29 +54,64 @@ driver, invalid contract). `--strict` makes analyze exit 1 on warnings/info too.
     "expected": 320, "actual": 496,     // when numeric
     "fix": { "selector": ".card", "property": "max-width", "value": "100%", "reason": "…",
              "kind": "exact" },     // exact = apply `selector { property: value }` verbatim;
-                                    // heuristic = direction only (value may be a placeholder)
+                                    // heuristic = direction only (value may be a placeholder);
+                                    // runtime-patch = see below
     "owner": {                     // PROVENANCE: the runtime construct that owns this element
-        "construct": "style",      // style | geometry | tokens | sync | ratio
+        "construct": "style",      // style | geometry | tokens | sync | ratio | breakpoints
         "behavior": ["width: fluid"],
-        "source": "src/cards.ts:12"   // best-effort call site
-    }
+        "source": "src/cards.ts:12",  // best-effort call site
+        "via": ".site-nav"            // only when the construct owns an ANCESTOR: the manifest
+                                      // target that matched (element ".site-nav a[3]" is owned
+                                      // through its ".site-nav" construct)
+    },
+    "owners": [ /* present when SEVERAL constructs own the element — same shape,
+                   most specific first; `owner` is always owners[0] */ ]
 }
 ```
+
+### The runtime-patch fix
+
+When the owning construct controls the very property a fix would patch, the fix arrives as
+`kind: "runtime-patch"` instead — a CSS patch there would be overwritten by the runtime:
+
+```jsonc
+{
+    "kind": "runtime-patch",
+    "selector": ".hero", "property": "font-size", "value": "14px",
+    "construct": "style",
+    "source": "src/hero.ts:3",
+    "change": {
+        "property": "fontSize",
+        "current": { "value": "fluid", "min": 10, "max": 28 },  // the declaration as written
+        "suggested": "14px"                                     // CSS value that satisfies the constraint
+    },
+    "reason": "'font-size' is controlled by the style construct at src/hero.ts:3 — …"
+}
+```
+
+Mechanical recipe: open `source`, find the construct call, recompute its parameters so the
+declaration satisfies `suggested` (here: raise the fluid `min` from 10 to 14). Never patch the
+CSS for these.
 
 ### Agent loop
 
 1. `rjs analyze <url> -f json` (or `verify` against a contract).
 2. Apply every `fixes[]` entry verbatim as `selector { property: value }` — the list carries
    only `kind: "exact"` fixes, already deduped. No value parsing, no judgment needed.
-3. For everything else — violations with `fix.kind: "heuristic"` (a direction, not a patch)
+3. For `fix.kind: "runtime-patch"`: edit the construct declaration at `fix.source` using
+   `fix.change` (current config + the CSS value that would satisfy the constraint). Never
+   patch the CSS for these — the runtime would overwrite it.
+4. For everything else — violations with `fix.kind: "heuristic"` (a direction, not a patch)
    or no `fix` at all: reason from `detail` + `expected/actual` (+ the
    rule's `ruleDescription` in contract mode — it states WHY the rule exists).
-   **If the violation has an `owner`, patch the CONSTRUCT, not the CSS**: the element is
-   controlled by a runtime construct at `owner.source` — editing its declaration (the fluid
-   range, the breakpoint value, the token) fixes the cause; blind CSS patches will be
-   overwritten by the runtime.
-4. Re-run. Stop at exit 0. Never claim success without the exit code.
-5. Contract mode, after an APPROVED visual change: `rjs record` re-pins baselines.
+   **If the violation has an `owner`, patch the CONSTRUCT, not the CSS** — same logic as
+   runtime-patch, without the precomputed change.
+5. Re-run. Stop at exit 0. Never claim success without the exit code.
+6. Contract mode, after an APPROVED visual change: `rjs record` re-pins baselines.
+7. On a page with constructs but NO contract yet: `rjs init <url> -o app.contract.json`
+   generates one FROM the manifest (fluid → monotonic+continuous+baseline, ratio →
+   proportion, breakpoints → viewport widths; stderr lists what could not be expressed),
+   then `rjs record` pins the curves.
 
 ## ContractReport (verify -f json)
 

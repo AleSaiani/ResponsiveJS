@@ -333,10 +333,17 @@ content: `handle.measure()`.
 
 **Provenance: the closed loop.** Every construct registers itself in a live manifest —
 `r$.manifest()` (also `window.__rjs_manifest`) lists what controls the page: construct kind,
-target, behavior, best-effort call site. When the validation side measures a page running the
-runtime, it ships the manifest with the measurements and annotates violations with their
-`owner` — so a report doesn't just say ".nav overflows at 320px", it says *which construct
-declared at src/navigation.ts:18 owns .nav* — and an agent patches the construct, not the CSS.
+target, behavior, best-effort call site, and the **serialized declaration itself** (a
+`fluid(16, 32, { curve: 'exponential' })` ships as
+`{value:'fluid', min:16, max:32, curve:'exponential'}`). When the validation side measures a
+page running the runtime, it ships the manifest with the measurements and annotates
+violations with their `owner` — so a report doesn't just say ".nav overflows at 320px", it
+says *which construct declared at src/navigation.ts:18 owns .nav*, and when the construct
+controls the violating property the fix arrives as a **runtime-patch** (current declaration +
+the value that would satisfy the constraint) — an agent patches the construct, not the CSS.
+The declarations also power `rjs init <url>`: it generates a design contract *from* your
+constructs (fluid → monotonic + continuous + baseline, ratio → proportion, your breakpoints →
+the sweep widths) — a regression net you didn't have to write.
 
 **See what r$ is doing.** Three inspection points, all in plain devtools:
 

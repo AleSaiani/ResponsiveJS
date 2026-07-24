@@ -198,6 +198,10 @@ rjs verify landing.contract.json http://localhost:5173   # 0 = holds; drift exit
 into the contract; `verify` re-measures and compares within tolerance. Commit the contract;
 wire `rjs verify` into CI; your fluid hero can never silently regress again.
 
+(You also could have started with `rjs init http://localhost:5173 -o landing.contract.json` —
+because your page runs r$, its constructs *declare* their curves, and `init` turns those
+declarations into rules automatically. Hand-written rules and generated ones mix freely.)
+
 ---
 
 ## What you built

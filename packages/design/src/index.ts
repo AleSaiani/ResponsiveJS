@@ -195,6 +195,7 @@ export { Asserter } from './constraints/index.js';
 
 // ─── F5: design-contract execution ──────────────────────────────────────
 export { verifyContract, recordBaseline, contractSweepPlan, type ContractSweepPlan } from './contract/verify.js';
+export { contractFromManifest, type InitResult } from './contract/init.js';
 export { designSystemRules } from './contract/design-system-rules.js';
 export { compileRule } from './contract/dispatch.js';
 export {

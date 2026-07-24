@@ -35,6 +35,7 @@ export function colorFluid(from: string, to: string, opts?: FluidOpts): Responsi
     return makeValue({
         kind: 'color',
         container: opts?.container,
+        meta: { value: 'fluid', from, to, ...(opts?.curve && opts.curve !== 'linear' ? { curve: opts.curve } : {}) },
         resolve(width) {
             const t = tMap(progress(width, domainOf(opts)));
             return formatRgb(mixOklab(a, b, t));

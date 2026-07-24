@@ -184,6 +184,12 @@ When you outgrow the builder, write the JSON directly — the published
 [schema](../../packages/contract/schema/design-contract.v1.json) validates it, and unknown
 names fail at load with did-you-mean suggestions.
 
+And if the page runs the r$ runtime, you don't have to start from a blank file:
+`rjs init <url> -o app.contract.json` generates the contract **from your constructs** — each
+numeric fluid becomes `monotonic` + `continuous` + a baseline, each `ratio` a `proportion`,
+your `r$.breakpoints` the sweep widths. What isn't expressible yet is listed on stderr.
+`rjs record` then pins today's curves: the page is held to what it declares.
+
 ## Drivers: the seam under everything
 
 `sweep` needs three capabilities: set a viewport, measure, (optionally) evaluate JS. That's

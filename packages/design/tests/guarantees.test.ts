@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { verifyContract, contractSweepPlan } from '../src/contract/verify.js';
 import { Asserter } from '../src/constraints/index.js';
 import { analyzeStore, attachOwnership } from '../src/analyze/core.js';
+import type { Violation } from '@responsivejs/core/types';
 import { makeStore, makeEl, makeRect } from './f3-fixtures.js';
 
 describe('provenance — violations trace back to the owning construct', () => {
@@ -36,6 +37,77 @@ describe('provenance — violations trace back to the owning construct', () => {
         const violations = [{ rule: 'noOverflow', element: '.card[0]', width: 320, detail: 'x' }];
         attachOwnership(violations, undefined);
         expect(violations[0]).not.toHaveProperty('owner');
+    });
+
+    it('descendant selectors match the ancestor construct, with via', () => {
+        const violations: Violation[] = [
+            { rule: 'touchTarget', element: '.site-nav a[3]', width: 320, detail: 'x' },
+            { rule: 'touchTarget', element: '.site-nav2 a[0]', width: 320, detail: 'x' },
+        ];
+        attachOwnership(violations, [
+            { id: 1, construct: 'geometry', target: '.site-nav', behavior: ['data-wrapped'] },
+        ]);
+        expect(violations[0].owner).toEqual({ construct: 'geometry', behavior: ['data-wrapped'], via: '.site-nav' });
+        expect(violations[1].owner).toBeUndefined(); // '.site-nav2' is NOT a descendant
+    });
+
+    it('multiple constructs on one element → owners[], most specific first', () => {
+        const violations: Violation[] = [{ rule: 'noOverflow', element: '.nav a[0]', width: 320, detail: 'x' }];
+        attachOwnership(violations, [
+            { id: 1, construct: 'geometry', target: '.nav', behavior: ['data-wrapped'] },
+            { id: 2, construct: 'style', target: '.nav a', behavior: ['fontSize: fluid'] },
+        ]);
+        expect(violations[0].owner?.construct).toBe('style'); // exact match wins
+        expect(violations[0].owners?.map((o) => o.construct)).toEqual(['style', 'geometry']);
+        expect(violations[0].owners?.[1].via).toBe('.nav');
+    });
+
+    it('a fix on a construct-controlled property becomes a runtime-patch (and leaves fixes[])', () => {
+        const store = {
+            ...makeStore([320], ['.hero'], () => [makeEl('.hero', { rect: makeRect(0, 0, 100, 40), styles: { fontSize: 10 } })]),
+            manifest: [
+                {
+                    id: 1,
+                    construct: 'style',
+                    target: '.hero',
+                    behavior: ['fontSize: fluid'],
+                    source: 'src/hero.ts:3',
+                    config: { fontSize: { value: 'fluid', min: 10, max: 28 } },
+                },
+            ],
+        };
+        const report = analyzeStore(store, {
+            score: false,
+            constraints: { noOverflow: false, contrast: false, touchTarget: false, textReadable: ['.hero'] },
+        });
+        const v = report.violations.find((x) => x.rule === 'textReadable' && x.detail.includes('fontSize'));
+        expect(v?.fix?.kind).toBe('runtime-patch');
+        expect(v?.fix?.construct).toBe('style');
+        expect(v?.fix?.source).toBe('src/hero.ts:3');
+        expect(v?.fix?.change).toEqual({
+            property: 'fontSize',
+            current: { value: 'fluid', min: 10, max: 28 },
+            suggested: '14px',
+        });
+        // runtime-patches are NOT in the apply-verbatim list
+        expect(report.fixes.every((f) => f.kind === 'exact')).toBe(true);
+    });
+
+    it('a fix on a property the construct does NOT control keeps its CSS kind', () => {
+        const violations: Violation[] = [
+            {
+                rule: 'touchTarget',
+                element: '.hero[0]',
+                width: 320,
+                detail: 'x',
+                fix: { selector: '.hero', property: 'min-height', value: '24px', reason: 'r', kind: 'exact' },
+            },
+        ];
+        attachOwnership(violations, [
+            { id: 1, construct: 'style', target: '.hero', behavior: ['fontSize: fluid'], config: { fontSize: { value: 'fluid', min: 10, max: 28 } } },
+        ]);
+        expect(violations[0].owner?.construct).toBe('style');
+        expect(violations[0].fix?.kind).toBe('exact');
     });
 });
 

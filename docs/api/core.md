@@ -94,10 +94,12 @@ Ngo, Teo & Byrne (2003), *Modelling interface aesthetics*, and Birkhoff (1933), 
 
 `ElementSnapshot` (selector, index, `Rect`, numeric `styles`, string `computed`) ·
 `ViewportSnapshot` (one width) · `SnapshotStore` (all widths) · `Violation` (rule, element,
-width, detail, expected/actual, severity, suggestion, `fix`) · `FixSuggestion` (with
-`kind: 'exact' | 'heuristic'` — verbatim-applicable vs directional)
-(`{ selector, property, value, reason }`) · `Report` · `SweepOptions` · `InteractionSnapshot` ·
-`DEFAULT_WIDTHS` = `[320, 375, 390, 768, 1024, 1280, 1440, 1920, 2560]`.
+width, detail, expected/actual, severity, suggestion, `fix`, `owner`/`owners`) ·
+`FixSuggestion` (`{ selector, property, value, reason, kind }` with
+`kind: 'exact' | 'heuristic' | 'runtime-patch'` — verbatim-applicable, directional, or
+patch-the-construct with `construct`/`source`/`change`) · `ProvenanceEntry` (construct,
+target, behavior, source, serializable `config`) · `Report` · `SweepOptions` ·
+`InteractionSnapshot` · `DEFAULT_WIDTHS` = `[320, 375, 390, 768, 1024, 1280, 1440, 1920, 2560]`.
 
 ## `/snapshot` — querying stores
 

@@ -69,7 +69,7 @@ export interface ElementSnapshot {
  */
 export interface ProvenanceEntry {
     id: number;
-    /** Which construct: 'style' (r$ apply), 'geometry', 'tokens', 'sync', 'ratio'. */
+    /** Which construct: 'style' (r$ apply), 'geometry', 'tokens', 'sync', 'ratio', 'breakpoints'. */
     construct: string;
     /** The selector (or element description) the construct controls. */
     target: string;
@@ -77,6 +77,13 @@ export interface ProvenanceEntry {
     behavior: string[];
     /** Best-effort call site (file:line from the creation stack). */
     source?: string;
+    /** Serializable declaration, keyed by what the construct controls
+     *  (property, token, attribute): enough to regenerate the construct call.
+     *  Shapes per construct — style/tokens: {prop: {value:'fluid', min, max, …}
+     *  | {value:'literal', literal} | {value:'custom'}}; geometry:
+     *  {attr: predicateName}; sync: {property}; ratio: {of, min, max};
+     *  breakpoints: {name: px}. */
+    config?: Record<string, unknown>;
 }
 
 /** Parent with its direct children rects */
@@ -110,13 +117,24 @@ export interface SnapshotStore {
 /** Machine-readable fix suggestion for agentic consumers.
  *  kind is the apply-contract: 'exact' fixes are safe to apply verbatim as
  *  `selector { property: value }`; 'heuristic' fixes point in a direction
- *  (value may be a placeholder) and need judgment before applying. */
+ *  (value may be a placeholder) and need judgment before applying;
+ *  'runtime-patch' fixes say the property is CONTROLLED BY A RUNTIME
+ *  CONSTRUCT — patch the construct declaration at `source`, not the CSS
+ *  (a CSS patch would be overwritten). */
 export interface FixSuggestion {
     selector: string;
     property: string;
     value: string;
     reason: string;
-    kind: 'exact' | 'heuristic';
+    kind: 'exact' | 'heuristic' | 'runtime-patch';
+    /** runtime-patch only: the owning construct ('style', 'tokens', …). */
+    construct?: string;
+    /** runtime-patch only: best-effort call site of the construct. */
+    source?: string;
+    /** runtime-patch only: { property, current, suggested? } — the current
+     *  serialized declaration plus the CSS-level value that would satisfy
+     *  the constraint, for recomputing the construct's parameters. */
+    change?: { property: string; current: unknown; suggested?: string };
 }
 
 /** A constraint violation */
@@ -136,7 +154,13 @@ export interface Violation {
         construct: string;
         behavior: string[];
         source?: string;
+        /** The manifest target that matched, when it differs from the element's
+         *  own selector (e.g. the construct owns an ancestor: '.site-nav' for a
+         *  violation on '.site-nav a'). */
+        via?: string;
     };
+    /** All matching constructs when more than one owns the element (owner = the most specific). */
+    owners?: NonNullable<Violation['owner']>[];
 }
 
 /** Report from constraint validation */

@@ -45,6 +45,9 @@ export interface ResponsiveValue {
     /** Bind to a specific element's width (fromElement) — always JS-driven. */
     readonly source?: ElementSource;
     readonly unit?: string;
+    /** Serializable declaration — what the provenance manifest ships so an
+     *  agent (or `rjs init`) can regenerate the construct call. Plain JSON. */
+    readonly meta?: Record<string, unknown>;
     resolve(width: number): string | number;
     /** null → the value must stay JS-driven. */
     toStatic(ctx: StaticContext): StaticEmission | null;
@@ -139,6 +142,17 @@ function numericFluid(min: number, max: number, opts: FluidOpts): ResponsiveValu
         container: opts.container,
         source: opts.domain,
         unit: opts.unit,
+        meta: {
+            value: 'fluid',
+            min,
+            max,
+            ...(curve !== 'linear' ? { curve } : {}),
+            ...(opts.unit ? { unit: opts.unit } : {}),
+            ...(opts.from !== undefined ? { from: opts.from } : {}),
+            ...(opts.to !== undefined ? { to: opts.to } : {}),
+            ...(opts.container ? { container: true } : {}),
+            ...(opts.domain && typeof opts.domain.target === 'string' ? { follows: opts.domain.target } : {}),
+        },
         resolve(width) {
             return buildWidthFn(min, max, curve, domainOf(opts))(width);
         },
@@ -179,6 +193,12 @@ function arrayFluid(values: number[], opts?: FluidOpts): ResponsiveValue {
         kind: 'fluid',
         container: opts?.container,
         unit: opts?.unit,
+        meta: {
+            value: 'fluid',
+            values,
+            ...(opts?.curve && opts.curve !== 'linear' ? { curve: opts.curve } : {}),
+            ...(opts?.unit ? { unit: opts.unit } : {}),
+        },
         resolve(width) {
             return interp.piecewise(points(), easing)(width);
         },
@@ -208,6 +228,7 @@ export function custom(fn: (width: number) => string | number, opts?: Pick<Fluid
         kind: 'custom',
         container: opts?.container,
         unit: opts?.unit,
+        meta: { value: 'custom' },
         resolve: (width) => fn(width),
         toStatic: () => null,
     });
@@ -218,6 +239,7 @@ export function combine(parts: (ResponsiveValue | string | number)[]): Responsiv
     return makeValue({
         kind: 'combined',
         container: parts.some((p) => isResponsiveValue(p) && p.container),
+        meta: { value: 'combined', parts: parts.map((p) => (isResponsiveValue(p) ? (p.meta ?? { value: p.kind }) : p)) },
         resolve(width) {
             return parts.map((p) => (isResponsiveValue(p) ? p.resolve(width) : p)).join(' ');
         },

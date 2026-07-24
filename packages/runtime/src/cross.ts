@@ -42,6 +42,7 @@ export function sync(target: Target, prop: 'height' | 'width' = 'height'): Cross
         construct: 'sync',
         target: typeof target === 'string' ? target : `${elements.length} element(s)`,
         behavior: [prop],
+        config: { property: prop },
     });
 
     const measure = (): void => {
@@ -90,6 +91,11 @@ export function ratio(a: string | Element, b: string | Element, bounds: RatioBou
         construct: 'ratio',
         target: typeof a === 'string' ? a : 'element',
         behavior: [`width vs ${typeof b === 'string' ? b : 'element'} in [${bounds.min ?? '-∞'}, ${bounds.max ?? '∞'}]`],
+        config: {
+            of: typeof b === 'string' ? b : 'element',
+            ...(bounds.min !== undefined ? { min: bounds.min } : {}),
+            ...(bounds.max !== undefined ? { max: bounds.max } : {}),
+        },
     });
 
     const measure = (): void => {

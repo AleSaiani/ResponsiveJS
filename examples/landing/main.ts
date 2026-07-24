@@ -32,7 +32,13 @@ r$('.hero .tagline', {
     fontSize: r$.fluid(14, 18, { domain: r$.fromElement('.sidebar'), from: 200, to: 400 }),
 });
 
-// ── 5. Conditional layout with the typed names ──────────────────────────
+// ── 5. Fluid type on the CTA — and the free regression net ──────────────
+// A numeric fluid DECLARES its curve; `rjs init <url>` reads that
+// declaration from the provenance manifest and generates the contract
+// rules (monotonic + continuous + baseline) that pin it forever.
+r$('.cta', { fontSize: r$.fluid(15, 18) });
+
+// ── 6. Conditional layout with the typed names ──────────────────────────
 r$('.cards', {
     gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)'),
 });

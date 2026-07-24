@@ -20,6 +20,14 @@ function resolveBranch(v: StyleValue | undefined, width: number): string | numbe
     return v;
 }
 
+/** Serializable description of a branch value (for provenance meta). */
+function branchMeta(v: StyleValue | undefined): unknown {
+    if (v === undefined) return undefined;
+    if (isResponsiveValue(v)) return v.meta ?? { value: v.kind };
+    if (typeof v === 'function') return { value: 'custom' };
+    return v;
+}
+
 /** Only plain primitives can be inlined into static CSS declarations. */
 function staticBranch(v: StyleValue | undefined, unit: string): string | null {
     if (v === undefined) return null;
@@ -46,6 +54,7 @@ export function when(
     return makeValue({
         kind: 'conditional',
         container: cases.some(([, v]) => isResponsiveValue(v) && v.container),
+        meta: { value: 'when' }, // predicates are lambdas — not serializable
         resolve(width) {
             for (const [pred, value] of cases) {
                 if (pred(width)) return resolveBranch(value, width);
@@ -66,6 +75,13 @@ export function whenInRange(
     return makeValue({
         kind: 'conditional',
         container: [value, otherwise].some((v) => isResponsiveValue(v) && v.container),
+        meta: {
+            value: 'whenInRange',
+            min,
+            max,
+            match: branchMeta(value),
+            ...(otherwise !== undefined ? { otherwise: branchMeta(otherwise) } : {}),
+        },
         resolve(width) {
             return width >= min && width <= max ? resolveBranch(value, width) : resolveBranch(otherwise, width);
         },
@@ -90,6 +106,13 @@ function switchValue(
     return makeValue({
         kind: 'conditional',
         container: [below, aboveOrEqual].some((v) => isResponsiveValue(v) && v.container),
+        meta: {
+            value: 'breakpoint',
+            op,
+            at: threshold,
+            match: branchMeta(below),
+            ...(aboveOrEqual !== undefined ? { otherwise: branchMeta(aboveOrEqual) } : {}),
+        },
         resolve(width) {
             const w = bpWidth(threshold);
             const matches = op === 'below' ? width < w : width >= w;
@@ -136,6 +159,14 @@ export const breakpoint = {
         return makeValue({
             kind: 'conditional',
             container: [value, otherwise].some((v) => isResponsiveValue(v) && v.container),
+            meta: {
+                value: 'breakpoint',
+                op: 'between',
+                from: lo,
+                to: hi,
+                match: branchMeta(value),
+                ...(otherwise !== undefined ? { otherwise: branchMeta(otherwise) } : {}),
+            },
             resolve(width) {
                 const min = bpWidth(lo);
                 const max = bpWidth(hi);
@@ -163,6 +194,11 @@ export const breakpoint = {
         return makeValue({
             kind: 'conditional',
             container: names.some((n) => isResponsiveValue(map[n]) && (map[n] as ResponsiveValue).container),
+            meta: {
+                value: 'breakpoint',
+                op: 'match',
+                cases: Object.fromEntries(names.map((n) => [n, branchMeta(map[n])])),
+            },
             resolve(width) {
                 const entries = sorted();
                 let chosen = entries[0][0];

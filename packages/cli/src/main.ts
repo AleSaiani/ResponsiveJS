@@ -11,6 +11,7 @@ import { runAnalyze } from './commands/analyze.js';
 import { runVerify } from './commands/verify.js';
 import { runRecord } from './commands/record.js';
 import { runDoctor } from './commands/doctor.js';
+import { runInit } from './commands/init.js';
 
 export interface CliIo {
     stdout(text: string): void;
@@ -39,6 +40,7 @@ Commands:
                              (constraints + aesthetic score + a11y)
   verify <contract> <url>    Execute a design contract against a live page
   record <contract> <url>    Measure and pin baseline curves into the contract
+  init <url>                 Generate a contract from the page's r$ constructs
   doctor                     Check drivers and environment readiness
 
 Options:
@@ -134,10 +136,14 @@ export async function main(argv: string[], io: CliIo = defaultIo()): Promise<num
                 requireArgs(args, 2, 'rjs record <contract> <url>');
                 return await runRecord(args[0], args[1], shared, io);
             }
+            case 'init': {
+                requireArgs(args, 1, 'rjs init <url> [-o contract.json]');
+                return await runInit(args[0], shared, io);
+            }
             case 'doctor':
                 return await runDoctor(io);
             default:
-                io.stderr(`r$ ✗ unknown command '${command}'. Commands: analyze, verify, record, doctor.`);
+                io.stderr(`r$ ✗ unknown command '${command}'. Commands: analyze, verify, record, init, doctor.`);
                 return 2;
         }
     } catch (e) {

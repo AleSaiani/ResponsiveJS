@@ -25,6 +25,8 @@ export interface GeometryPredicate {
     measure(el: Element): boolean | number;
     /** True ⇒ re-measure on scroll as well (sticky, collisions). */
     scroll?: boolean;
+    /** Built-in predicate name for the provenance manifest ('wraps', 'stuck', …). */
+    name?: string;
 }
 
 // ─── the predicates ─────────────────────────────────────────────────────
@@ -32,6 +34,7 @@ export interface GeometryPredicate {
 /** Children flow on more than one row (a second child starts below the first's bottom). */
 export function whenWraps(): GeometryPredicate {
     return {
+        name: 'wraps',
         measure(el) {
             const children = el.children;
             if (children.length < 2) return false;
@@ -47,6 +50,7 @@ export function whenWraps(): GeometryPredicate {
 /** Content exceeds the box on the given axis (scroll size vs client size). */
 export function whenOverflows(axis: 'x' | 'y' | 'both' = 'x'): GeometryPredicate {
     return {
+        name: `overflows-${axis}`,
         measure(el) {
             const x = el.scrollWidth > el.clientWidth + 1;
             const y = el.scrollHeight > el.clientHeight + 1;
@@ -59,6 +63,7 @@ export function whenOverflows(axis: 'x' | 'y' | 'both' = 'x'): GeometryPredicate
  *  (single-line ellipsis and -webkit-line-clamp both measure this way). */
 export function whenTruncated(): GeometryPredicate {
     return {
+        name: 'truncated',
         measure(el) {
             const cs = getComputedStyle(el);
             const clippedX = cs.overflowX === 'hidden' || cs.overflowX === 'clip';
@@ -75,6 +80,7 @@ export function whenTruncated(): GeometryPredicate {
  *  (the IntersectionObserver-sentinel hack, without the sentinel). */
 export function whenStuck(): GeometryPredicate {
     return {
+        name: 'stuck',
         scroll: true,
         measure(el) {
             const cs = getComputedStyle(el);
@@ -99,6 +105,7 @@ export function whenStuck(): GeometryPredicate {
 /** Number of rendered text lines (content height / line height). */
 export function linesOf(): GeometryPredicate {
     return {
+        name: 'lines',
         measure(el) {
             const cs = getComputedStyle(el);
             let lineHeight = parseFloat(cs.lineHeight);
@@ -114,6 +121,7 @@ export function linesOf(): GeometryPredicate {
 /** The element's rect overlaps another element's rect. */
 export function whenCollides(other: string | Element): GeometryPredicate {
     return {
+        name: typeof other === 'string' ? `collides:${other}` : 'collides',
         scroll: true,
         measure(el) {
             const target = typeof other === 'string' ? document.querySelector(other) : other;
@@ -170,6 +178,7 @@ export function geometry(
             construct: 'geometry',
             target: typeof target === 'string' ? target : `${elements.length} element(s)`,
             behavior: predicates.map(([attr]) => attr),
+            config: Object.fromEntries(predicates.map(([attr, p]) => [attr, p.name ?? 'custom'])),
         }),
     );
 

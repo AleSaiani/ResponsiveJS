@@ -117,6 +117,29 @@ describe('rjs main', () => {
         expect(err.join('\n')).toContain('noOverflow'); // suggestion
     });
 
+    it('init generates a contract from the page manifest and writes it', async () => {
+        const { io, out, written } = makeIo();
+        const manifest = [
+            { id: 1, construct: 'style', target: 'h1', behavior: ['fontSize: fluid'], config: { fontSize: { value: 'fluid', min: 16, max: 32 } } },
+            { id: 2, construct: 'breakpoints', target: ':root', behavior: [], config: { m: 320, d: 1280 } },
+        ];
+        const source = new FakeSource((width, selectors) => ({ ...makeSnapshot(width, new Map(selectors.map((s) => [s, [makeEl(s)]]))), manifest }));
+        (io.resolveDriver as ReturnType<typeof vi.fn>).mockResolvedValue({ kind: 'fake', source, close: async () => {} });
+
+        expect(await main(['init', 'http://x', '-o', 'gen.json'], io)).toBe(0);
+        const contract = JSON.parse(written['gen.json']);
+        expect(contract.viewport.widths).toEqual([320, 1280]);
+        expect(contract.rules.map((r: { assert: string }) => r.assert)).toEqual(['noOverflow', 'monotonic', 'continuous']);
+        expect(contract.baselines).toEqual([{ selector: 'h1', prop: 'fontSize' }]);
+        expect(out.join('\n')).toContain('rjs record gen.json'); // points to the next step
+    });
+
+    it('init without a manifest fails loudly with exit 2', async () => {
+        const { io, err } = makeIo();
+        expect(await main(['init', 'http://x'], io)).toBe(2);
+        expect(err.join('\n')).toContain('no provenance manifest');
+    });
+
     it('record measures baselines and writes the contract back', async () => {
         const { io, written, out } = makeIo({ 'home.json': CONTRACT });
         const code = await main(['record', 'home.json', 'http://x'], io);

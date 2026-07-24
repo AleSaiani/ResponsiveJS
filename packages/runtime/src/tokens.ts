@@ -14,7 +14,7 @@ import { viewportWidth } from './viewport.js';
 import { configState } from './config.js';
 import { emitCSS, injectStyle, removeStyle, declarationValue } from './static.js';
 import { isResponsiveValue, type StyleMap, type StyleValue } from './value.js';
-import { registerProvenance } from './provenance.js';
+import { registerProvenance, describeMap } from './provenance.js';
 
 export type TokenName = `--${string}`;
 export type TokensMap = Record<TokenName, StyleValue>;
@@ -60,6 +60,7 @@ export function tokens(map: TokensMap): TokensHandle {
             behavior: (Object.keys(map) as TokenName[]).map(
                 (n) => `${n}: ${dynamicNames.includes(n) ? 'dynamic' : 'static clamp'}`,
             ),
+            config: describeMap(map as StyleMap),
         }),
     );
     /** Inline :root values present before our first write — restored on dispose. */

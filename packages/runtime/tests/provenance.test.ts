@@ -88,6 +88,53 @@ describe('the provenance manifest', () => {
         h.dispose();
     });
 
+    it('ships a serializable config: the fluid declaration is regenerable', () => {
+        el('hero');
+        const h = r$('.hero', {
+            fontSize: fluid(16, 32, { curve: 'exponential' }),
+            padding: fluid(8, 24, { unit: 'px', from: 400, to: 1200 }),
+            color: 'red',
+        });
+        const cfg = manifest()[0].config as Record<string, unknown>;
+        expect(cfg.fontSize).toEqual({ value: 'fluid', min: 16, max: 32, curve: 'exponential' });
+        expect(cfg.padding).toEqual({ value: 'fluid', min: 8, max: 24, unit: 'px', from: 400, to: 1200 });
+        expect(cfg.color).toEqual({ value: 'literal', literal: 'red' });
+        // the whole manifest survives JSON (it crosses the wire to the oracle)
+        expect(JSON.parse(JSON.stringify(manifest()))).toEqual(manifest());
+        h.dispose();
+    });
+
+    it('geometry config names the built-in predicates', () => {
+        el('nav');
+        const h = r$.geometry('.nav', { wrapped: r$.whenWraps, stuck: r$.whenStuck() });
+        expect(manifest()[0].config).toEqual({ 'data-wrapped': 'wraps', 'data-stuck': 'stuck' });
+        h.dispose();
+    });
+
+    it('sync and ratio carry their relation config', () => {
+        const a = el('card');
+        const b = el('card');
+        a.getBoundingClientRect = () => ({ height: 10 }) as DOMRect;
+        b.getBoundingClientRect = () => ({ height: 20 }) as DOMRect;
+        el('side');
+        el('main-col');
+
+        const hs = r$.sync('.card', 'height');
+        const hr = r$.ratio('.side', '.main-col', { min: 0.2, max: 0.33 });
+        expect(manifest().find((e) => e.construct === 'sync')?.config).toEqual({ property: 'height' });
+        expect(manifest().find((e) => e.construct === 'ratio')?.config).toEqual({ of: '.main-col', min: 0.2, max: 0.33 });
+        hs.dispose();
+        hr.dispose();
+    });
+
+    it('defineBreakpoints registers ONE replaceable entry with the named widths', () => {
+        r$.breakpoints({ mobile: 320, desktop: 1280 });
+        r$.breakpoints({ mobile: 360, desktop: 1440 });
+        const bps = manifest().filter((e) => e.construct === 'breakpoints');
+        expect(bps).toHaveLength(1);
+        expect(bps[0].config).toEqual({ mobile: 360, desktop: 1440 });
+    });
+
     it('update() re-registers with the new behavior', () => {
         const target = el('u');
         const h = r$.dynamic(target, { margin: 4 });

@@ -65,6 +65,27 @@ describe('rjs against a real page (playwright driver)', () => {
         expect(geo.behavior).toContain('data-wrapped');
     }, 120_000);
 
+    it('init → record → verify: the contract GENERATED from the constructs holds', async () => {
+        const gen = makeIo();
+        expect(await main(['init', url, '-d', 'playwright', '-o', 'gen.json'], gen.io)).toBe(0);
+        const contract = JSON.parse(gen.written['gen.json']);
+
+        // widths from the page's own r$.breakpoints declaration
+        expect(contract.viewport.widths).toEqual([320, 768, 1280]);
+        const asserts = contract.rules.map((r: { assert: string }) => r.assert);
+        expect(asserts).toContain('noOverflow');
+        expect(asserts).toContain('monotonic'); // from the .cta fluid fontSize
+        expect(contract.baselines).toEqual([{ selector: '.cta', prop: 'fontSize' }]);
+        // honest coverage: geometry/sync/tokens and the element-driven fluid are reported
+        expect(gen.err.join('\n')).toContain('not expressible');
+
+        const rec = makeIo({ 'gen.json': gen.written['gen.json'] });
+        expect(await main(['record', 'gen.json', url, '-d', 'playwright'], rec.io)).toBe(0);
+
+        const ver = makeIo({ 'gen.json': rec.written['gen.json'] });
+        expect(await main(['verify', 'gen.json', url, '-d', 'playwright'], ver.io)).toBe(0);
+    }, 240_000);
+
     it('record → verify round-trip: pinned baselines pass on the same page', async () => {
         const contract = JSON.stringify({
             name: 'landing',

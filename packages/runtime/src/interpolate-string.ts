@@ -106,6 +106,7 @@ export function stringFluid(from: string, to: string, opts?: FluidOpts): Respons
     return makeValue({
         kind: 'string',
         container: opts?.container,
+        meta: { value: 'fluid', from, to, ...(opts?.curve && opts.curve !== 'linear' ? { curve: opts.curve } : {}) },
         resolve(width) {
             const t = tMap(progress(width, domainOf(opts)));
             let out = '';

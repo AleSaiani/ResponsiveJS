@@ -77,7 +77,13 @@ Zero dependencies — the validator is hand-rolled from the registry, not ajv.
 verifyContract(contract, store): ContractReport               // sync, driver-free
 verifyContract(contract, page, { height? }): Promise<...>     // sweeps first
 recordBaseline(contract, store): DesignContract               // fills baselines[].curve
+contractFromManifest(manifest, { name? }): { contract, skipped }  // constructs → contract
 ```
+
+`contractFromManifest` is the pure half of `rjs init`: a provenance manifest in, a
+loader-valid contract out (fluid → `monotonic` + `continuous` + baseline, ratio →
+`proportion`, breakpoints → `viewport.widths`, plus the `noOverflow` default). `skipped`
+lists every construct/prop that could not become a rule — report it, never swallow it.
 
 Semantics:
 

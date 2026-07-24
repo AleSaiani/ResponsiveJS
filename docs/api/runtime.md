@@ -49,7 +49,7 @@ the container; with `r$.static()` alone, declaring the container is on you).
 | `r$.debug(bool)` | Log resolved values on change. |
 | `r$.flush()` | Synchronously drain pending style writes (tests). |
 | `r$.apply(target, 'text-fluid-sm-xl p-fluid-2-8')` | Utility micro-grammar (`{text\|p\|m\|gap\|bg\|color}-fluid-{from}-{to}`). |
-| `r$.manifest()` | The live provenance manifest: every active construct with target, behavior and call site (also published on `window.__rjs_manifest` for the validation oracle — violations trace back to their owning construct). |
+| `r$.manifest()` | The live provenance manifest: every active construct with target, behavior, call site and its serialized declaration (`config`) — also published on `window.__rjs_manifest` for the validation oracle: violations trace back to their owning construct, and `rjs init` generates contracts from it. |
 
 ## Values
 
