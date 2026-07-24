@@ -342,8 +342,9 @@ export class Asserter {
 
     // ── New constraints ─────────────────────────────────────────────────
 
-    /** At mobile widths (<=768), interactive elements must be >= 44x44px (WCAG touch target) */
-    touchTarget(selector: string): this {
+    /** At mobile widths (<=768), interactive elements meet a minimum size.
+     *  Default 44px (platform/AAA guidance); WCAG 2.5.8 AA minimum is 24. */
+    touchTarget(selector: string, min = 44): this {
         for (const [w, snapshot] of this.store.snapshots) {
             if (w > 768) continue;
             const elements = snapshot.elements.get(selector) || [];
@@ -353,17 +354,17 @@ export class Asserter {
                 // of text (links in prose) are exempt from the size minimum.
                 if (el.computed.display === 'inline') continue;
                 this.totalChecks++;
-                if (el.rect.width < 44 || el.rect.height < 44) {
+                if (el.rect.width < min || el.rect.height < min) {
                     this.violations.push({
                         rule: 'touchTarget',
                         element: `${selector}[${el.index}]`,
                         width: w,
-                        detail: `${Math.round(el.rect.width)}x${Math.round(el.rect.height)}px < 44x44px`,
-                        expected: 44,
+                        detail: `${Math.round(el.rect.width)}x${Math.round(el.rect.height)}px < ${min}x${min}px`,
+                        expected: min,
                         actual: Math.min(Math.round(el.rect.width), Math.round(el.rect.height)),
                         severity: 'error',
-                        suggestion: 'Add min-height: 44px and min-width: 44px, or increase padding',
-                        fix: { selector, property: 'min-height', value: '44px', reason: 'WCAG touch target minimum' },
+                        suggestion: `Add min-height: ${min}px and min-width: ${min}px, or increase padding`,
+                        fix: { selector, property: 'min-height', value: `${min}px`, reason: 'touch target minimum' },
                     });
                 }
             }

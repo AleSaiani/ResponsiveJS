@@ -157,6 +157,19 @@ describe('design-system unification', () => {
         const c = contract().use('bootstrap').assert('noOverflow').build();
         expect(() => verifyContract(c, makeStore([320], ['.a']))).toThrow(/apple-hig/);
     });
+
+    it('the profile touchTarget.min reaches the constraint (MD3 checks 48, not 44)', () => {
+        // 46x46 pointer target: passes the 44 default, fails MD3's declared 48.
+        const store = makeStore([320], ['button'], () => [
+            makeEl('button', { rect: makeRect(0, 0, 46, 46), computed: { cursor: 'pointer', display: 'inline-block' } }),
+        ]);
+        const strict: DesignSystemConfig = { accessibility: { touchTarget: { min: 48 } } };
+        const asserter = new Asserter(store);
+        for (const rule of designSystemRules(strict, { interactive: ['button'] })) compileRule(asserter, rule);
+        const hits = asserter.report().violations.filter((v) => v.rule === 'touchTarget');
+        expect(hits).toHaveLength(1);
+        expect(hits[0].expected).toBe(48);
+    });
 });
 
 describe('contract reporter', () => {

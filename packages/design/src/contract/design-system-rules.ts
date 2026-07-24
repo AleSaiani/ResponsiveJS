@@ -19,12 +19,12 @@ export function designSystemRules(ds: DesignSystemConfig, selectors: ValidationS
     };
 
     // ── Accessibility ──
-    // TODO: ds.accessibility.touchTarget.min is not applied — touchTarget()
-    // has no min parameter and always checks the WCAG 44px default.
     const contrastLevel = (ds.accessibility?.contrast as 'AA' | 'AAA') || 'AA';
+    const touchMin = ds.accessibility?.touchTarget?.min;
+    const touchArgs = (s: string): Record<string, unknown> => ({ selector: s, ...(touchMin !== undefined ? { min: touchMin } : {}) });
 
-    for (const s of sel.interactive || []) add(`ds.touchTarget.${s}`, 'touchTarget', { selector: s });
-    for (const s of sel.inputs || []) add(`ds.touchTarget.${s}`, 'touchTarget', { selector: s });
+    for (const s of sel.interactive || []) add(`ds.touchTarget.${s}`, 'touchTarget', touchArgs(s));
+    for (const s of sel.inputs || []) add(`ds.touchTarget.${s}`, 'touchTarget', touchArgs(s));
 
     for (const s of [...(sel.interactive || []), ...(sel.text || [])]) {
         add(`ds.contrast.${s}`, 'contrastRatio', { selector: s, level: contrastLevel });

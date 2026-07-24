@@ -794,7 +794,7 @@
           },
           {
             "type": "object",
-            "description": "WCAG touch target ≥ 44×44px at mobile widths.",
+            "description": "Touch targets meet a minimum size at mobile widths (default 44×44px).",
             "properties": {
               "id": {
                 "type": "string",
@@ -809,6 +809,10 @@
                   "selector": {
                     "type": "string",
                     "description": "CSS selector (or $alias)"
+                  },
+                  "min": {
+                    "type": "number",
+                    "description": "px, default 44 (platform/AAA; WCAG 2.5.8 AA minimum is 24)"
                   }
                 },
                 "required": [
