@@ -37,6 +37,7 @@ export async function runAnalyze(url: string, opts: SharedOptions, io: CliIo): P
             height: opts.height,
             scroll: opts.scroll,
             ...(opts.a11y ? {} : { a11y: false as const }),
+            ...(opts.touchMin !== undefined ? { constraints: { touchTarget: { min: opts.touchMin } } } : {}),
         });
     } finally {
         await driver.close();

@@ -46,6 +46,7 @@ Options:
   -f, --format <fmt>         console | json | sarif                [console]
   -o, --out <file>           Write the report (or recorded contract) to a file
       --height <px>          Viewport height                       [900]
+      --touch-min <px>       Touch-target minimum (analyze)        [24 = WCAG AA; 44/48 = platform]
       --scroll               Scroll-sweep below-the-fold content
       --no-a11y              Skip axe (analyze)
       --strict               Fail on warnings too (analyze)
@@ -65,6 +66,7 @@ const OPTIONS = {
     format: { type: 'string', short: 'f', default: 'console' },
     out: { type: 'string', short: 'o' },
     height: { type: 'string' },
+    'touch-min': { type: 'string' },
     scroll: { type: 'boolean', default: false },
     'no-a11y': { type: 'boolean', default: false },
     strict: { type: 'boolean', default: false },
@@ -80,6 +82,7 @@ export interface SharedOptions {
     format: 'console' | 'json' | 'sarif';
     out?: string;
     height?: number;
+    touchMin?: number;
     scroll: boolean;
     a11y: boolean;
     strict: boolean;
@@ -159,6 +162,7 @@ function normalizeOptions(values: Record<string, unknown>): SharedOptions {
         format: format as SharedOptions['format'],
         out: values.out as string | undefined,
         height: values.height ? parseNumber(values.height as string, 'height') : undefined,
+        touchMin: values['touch-min'] ? parseNumber(values['touch-min'] as string, 'touch-min') : undefined,
         scroll: values.scroll as boolean,
         a11y: !(values['no-a11y'] as boolean),
         strict: values.strict as boolean,

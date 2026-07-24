@@ -794,7 +794,7 @@
           },
           {
             "type": "object",
-            "description": "Touch targets meet a minimum size at mobile widths (default 44×44px).",
+            "description": "Touch targets meet a minimum size at mobile widths (default 24×24px, WCAG 2.5.8 AA).",
             "properties": {
               "id": {
                 "type": "string",
@@ -812,7 +812,7 @@
                   },
                   "min": {
                     "type": "number",
-                    "description": "px, default 44 (platform/AAA; WCAG 2.5.8 AA minimum is 24)"
+                    "description": "px, default 24 (WCAG 2.5.8 AA floor); platform guidance is 44–48"
                   }
                 },
                 "required": [

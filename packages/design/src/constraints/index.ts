@@ -343,8 +343,9 @@ export class Asserter {
     // ── New constraints ─────────────────────────────────────────────────
 
     /** At mobile widths (<=768), interactive elements meet a minimum size.
-     *  Default 44px (platform/AAA guidance); WCAG 2.5.8 AA minimum is 24. */
-    touchTarget(selector: string, min = 44): this {
+     *  Default 24px — the WCAG 2.5.8 (AA) floor, low-false-positive by design.
+     *  Raise to platform guidance via `min` (Apple/Fluent 44, Material 48). */
+    touchTarget(selector: string, min = 24): this {
         for (const [w, snapshot] of this.store.snapshots) {
             if (w > 768) continue;
             const elements = snapshot.elements.get(selector) || [];

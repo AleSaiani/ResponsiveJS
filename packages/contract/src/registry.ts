@@ -98,9 +98,9 @@ export const CONSTRAINT_REGISTRY = {
         doc: 'Elements never collapse to zero height while having width.',
     },
     touchTarget: {
-        params: { selector: sel(), min: num(false, 'px, default 44 (platform/AAA; WCAG 2.5.8 AA minimum is 24)') },
+        params: { selector: sel(), min: num(false, 'px, default 24 (WCAG 2.5.8 AA floor); platform guidance is 44–48') },
         argOrder: ['selector', 'min'],
-        doc: 'Touch targets meet a minimum size at mobile widths (default 44×44px).',
+        doc: 'Touch targets meet a minimum size at mobile widths (default 24×24px, WCAG 2.5.8 AA).',
     },
     textReadable: {
         params: { selector: sel() },

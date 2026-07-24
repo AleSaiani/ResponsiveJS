@@ -16,7 +16,7 @@ Every `Violation` carries `rule`, `element` (selector), `width`, `detail`, `seve
 where an honest one exists — a structured `fix`:
 
 ```json
-{ "selector": ".cta", "property": "min-height", "value": "44px", "reason": "WCAG touch target" }
+{ "selector": ".cta", "property": "min-height", "value": "24px", "reason": "touch target minimum" }
 ```
 
 `UnifiedReport.fixes` is the flattened list. Apply, re-measure, converge.

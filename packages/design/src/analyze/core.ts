@@ -14,8 +14,8 @@ export interface ConstraintsConfig {
     noOverflow?: boolean;
     /** Default: AA on every analyzed selector. false disables. */
     contrast?: { selectors?: string[]; level?: 'AA' | 'AAA' } | false;
-    /** Default: every analyzed selector. false disables. */
-    touchTarget?: string[] | false;
+    /** Default: every analyzed selector at the 24px WCAG floor. false disables. */
+    touchTarget?: { selectors?: string[]; min?: number } | false;
     textReadable?: string[];
     focusVisible?: string[];
     /** Escape hatch: the full 24-constraint Asserter surface. */
@@ -80,7 +80,8 @@ function applyDefaultConstraints(assert: Asserter, selectors: string[], cfg: Con
     }
 
     if (cfg.touchTarget !== false) {
-        for (const sel of cfg.touchTarget ?? selectors) assert.touchTarget(sel);
+        const min = cfg.touchTarget?.min;
+        for (const sel of cfg.touchTarget?.selectors ?? selectors) assert.touchTarget(sel, min);
     }
 
     for (const sel of cfg.textReadable ?? []) assert.textReadable(sel);

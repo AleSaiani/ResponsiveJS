@@ -20,6 +20,7 @@ rjs record <contract> <url>    measure and pin baseline curves into the contract
 | `-f, --format` | `console` \| `json` \| `sarif` | `console` |
 | `-o, --out` | write the report (or recorded contract) to a file | stdout |
 | `--height` | viewport height | `900` |
+| `--touch-min` | touch-target minimum px (analyze) | `24` (WCAG AA; platform is 44–48) |
 | `--scroll` | scroll-sweep below-the-fold content | off |
 | `--no-a11y` | skip axe (analyze) | axe runs when available |
 | `--strict` | fail on warnings too (analyze) | errors only |
