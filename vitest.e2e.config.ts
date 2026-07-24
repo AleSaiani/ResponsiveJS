@@ -14,12 +14,22 @@ export default defineConfig({
                 find: /^@responsivejs\/core\/(.*)$/,
                 replacement: resolve(import.meta.dirname, 'packages/core/src/$1.ts'),
             },
+            {
+                find: /^@responsivejs\/contract$/,
+                replacement: resolve(import.meta.dirname, 'packages/contract/src/index.ts'),
+            },
+            {
+                find: /^@responsivejs\/design$/,
+                replacement: resolve(import.meta.dirname, 'packages/design/src/index.ts'),
+            },
         ],
     },
     test: {
         environment: 'node',
         include: ['packages/*/e2e/**/*.e2e.test.ts'],
         testTimeout: 60_000,
-        hookTimeout: 60_000,
+        hookTimeout: 120_000,
+        // e2e files share the landing fixture build and a real browser: serial.
+        fileParallelism: false,
     },
 });

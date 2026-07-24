@@ -45,6 +45,7 @@
         "@responsivejs/core": "workspace:^"
     },
     "devDependencies": {
+        "@playwright/test": "^1.61.1",
         "typescript": "^5.7.0"
     },
     "publishConfig": {
