@@ -13,6 +13,7 @@ import { runRecord } from './commands/record.js';
 import { runDoctor } from './commands/doctor.js';
 import { runInit } from './commands/init.js';
 import { runAudit } from './commands/audit.js';
+import { runSnippet } from './commands/snippet.js';
 
 export interface CliIo {
     stdout(text: string): void;
@@ -46,6 +47,8 @@ Commands:
   verify <contract> <url>    Execute a design contract against a live page
   record <contract> <url>    Measure and pin baseline curves into the contract
   init <url>                 Generate a contract from the page's r$ constructs
+  snippet                    Emit the injectable browser bundle
+                             (<script> block, or --bookmarklet URL)
   doctor                     Check drivers and environment readiness
 
 Options:
@@ -64,6 +67,7 @@ Options:
       --crawl                Follow same-origin links (audit)
       --max-pages <n>        Crawl limit                           [5]
       --screenshots <dir>    Also write the per-width PNGs to a directory (audit)
+      --bookmarklet          Emit a javascript: URL instead of a <script> block (snippet)
   -h, --help                 Show this help
   -v, --version              Show version
 
@@ -88,6 +92,7 @@ const OPTIONS = {
     crawl: { type: 'boolean', default: false },
     'max-pages': { type: 'string' },
     screenshots: { type: 'string' },
+    bookmarklet: { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
     version: { type: 'boolean', short: 'v', default: false },
 } as const;
@@ -161,10 +166,12 @@ export async function main(argv: string[], io: CliIo = defaultIo()): Promise<num
                 requireArgs(args, 1, 'rjs init <url> [-o contract.json]');
                 return await runInit(args[0], shared, io);
             }
+            case 'snippet':
+                return await runSnippet({ ...shared, bookmarklet: values.bookmarklet as boolean }, io);
             case 'doctor':
                 return await runDoctor(io);
             default:
-                io.stderr(`r$ ✗ unknown command '${command}'. Commands: analyze, audit, verify, record, init, doctor.`);
+                io.stderr(`r$ ✗ unknown command '${command}'. Commands: analyze, audit, verify, record, init, snippet, doctor.`);
                 return 2;
         }
     } catch (e) {

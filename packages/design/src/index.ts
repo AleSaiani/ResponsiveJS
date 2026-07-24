@@ -170,6 +170,8 @@ export {
     analyzeStore,
     mergeReports,
     attachOwnership,
+    applicableFixes,
+    LANDMARK_SELECTORS,
     type AnalyzeStoreOptions,
     type UnifiedReport,
     type ConstraintsConfig,

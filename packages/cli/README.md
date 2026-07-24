@@ -16,6 +16,7 @@ rjs audit <url>                one-shot self-contained HTML report with screensh
 rjs verify <contract> <url>    execute a design contract against a live page
 rjs record <contract> <url>    measure and pin baseline curves into the contract
 rjs init <url>                 generate a contract from the page's r$ constructs
+rjs snippet                    emit the injectable browser bundle (--bookmarklet)
 rjs doctor                     check drivers and environment readiness
 ```
 

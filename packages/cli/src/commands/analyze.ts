@@ -2,28 +2,11 @@
  * rjs analyze <url> — sweep + unified oracle, driver-pluggable.
  */
 
-import { analyze, formatConsole, formatJSON, formatSARIF, type UnifiedReport } from '@responsivejs/design';
+import { analyze, formatConsole, formatJSON, formatSARIF, LANDMARK_SELECTORS, type UnifiedReport } from '@responsivejs/design';
 import type { CliIo, SharedOptions } from '../main.js';
 
-/** Landmark-ish defaults: broad coverage without page-specific knowledge. */
-export const DEFAULT_SELECTORS = [
-    'main',
-    'header',
-    'footer',
-    'nav',
-    'section',
-    'article',
-    'h1',
-    'h2',
-    'h3',
-    'p',
-    'a[href]',
-    'button',
-    'input',
-    'select',
-    'textarea',
-    'img',
-];
+/** Landmark-ish defaults — the shared list from the design package. */
+export const DEFAULT_SELECTORS = LANDMARK_SELECTORS;
 
 export async function runAnalyze(url: string, opts: SharedOptions, io: CliIo): Promise<number> {
     const driver = await io.resolveDriver(opts.driver, { headed: opts.headed });

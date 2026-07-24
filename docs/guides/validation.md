@@ -228,8 +228,11 @@ Playwright stays the CI driver (deterministic, versioned with the repo); agent-b
 zero-footprint field tool. `-d auto` picks whichever is available.
 
 For no driver at all, the `/browser` subpath runs inside any live DOM:
-`scoreDOM(['main', '.card'])`, `analyzeStore(collectStore([...]))` — usable from a devtools
-console or injected by tooling.
+`analyzeDOM()` is the one-call oracle at the current viewport, `scoreDOM(['main', '.card'])`
+scores it — usable from a devtools console or injected by tooling. Two packaged ways in:
+`mountOverlay()` drops an `<rjs-overlay>` badge on the page (live counts, grouped findings,
+hover-to-highlight, re-measures on resize), and `rjs snippet --bookmarklet` turns the whole
+bundle into a bookmark you can click on any site — the overlay appears, zero install.
 
 ## CI and the CLI
 

@@ -104,9 +104,20 @@ interface MeasurementSource {
 ## `/browser` — zero-driver
 
 `collectViewport(selectors, { root?, width?, height? })` · `collectStore(...)` ·
-`scoreDOM(selectors)` · `analyzeStore` · `collectPage` / `buildCollectExpression(args)` (the
-self-contained in-page collector and its injectable expression) · `fromWire`/`toWire` ·
-`storeToJSON`/`storeFromJSON` (JSON transport of stores — Maps don't survive serialization).
+`scoreDOM(selectors)` · `analyzeDOM(selectors?, opts?)` (one-call oracle over the live DOM at
+the current viewport — defaults to `LANDMARK_SELECTORS`) · `analyzeStore` · `collectPage` /
+`buildCollectExpression(args)` (the self-contained in-page collector and its injectable
+expression) · `fromWire`/`toWire` · `storeToJSON`/`storeFromJSON` (JSON transport of stores —
+Maps don't survive serialization).
+
+**The overlay**: `mountOverlay({ selectors?, touchMin? })` appends an `<rjs-overlay>` badge
+(shadow DOM, style-isolated) that shows live E/W counts, expands to the grouped findings,
+outlines the offending element on hover, and re-measures on resize. `defineOverlay()`
+registers the element without mounting. Both are lazy — safe to import in Node/SSR.
+
+**The IIFE bundle**: `@responsivejs/design/browser-global` is this whole subpath bundled as
+a single ~52 kB script exposing `window.rjs` — droppable into any page via `<script>`,
+`page.addScriptTag`, or the `rjs snippet` bookmarklet. No module system needed.
 
 ## `LiveValidator` — realtime observers
 

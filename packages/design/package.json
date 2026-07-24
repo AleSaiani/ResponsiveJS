@@ -17,6 +17,7 @@
             "types": "./dist/browser/index.d.ts",
             "default": "./dist/browser/index.js"
         },
+        "./browser-global": "./dist/browser-global.js",
         "./design-systems/*.json": "./dist/design-systems/*.json",
         "./package.json": "./package.json"
     },
@@ -24,7 +25,7 @@
         "dist"
     ],
     "scripts": {
-        "build": "tsc -p tsconfig.json"
+        "build": "tsc -p tsconfig.json && node scripts/build-iife.mjs"
     },
     "dependencies": {
         "@responsivejs/core": "workspace:^",
@@ -45,6 +46,7 @@
     "devDependencies": {
         "@playwright/test": "^1.50.0",
         "axe-core": "^4.10.0",
+        "esbuild": "^0.25.0",
         "typescript": "^5.7.0"
     },
     "publishConfig": {

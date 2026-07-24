@@ -10,6 +10,7 @@ rjs audit <url>                one-shot HTML report with screenshots
 rjs verify <contract> <url>    execute a design contract against a live page
 rjs record <contract> <url>    measure and pin baseline curves into the contract
 rjs init <url>                 generate a contract from the page's r$ constructs
+rjs snippet                    emit the injectable browser bundle (--bookmarklet)
 rjs doctor                     check drivers and environment readiness
 ```
 
@@ -74,6 +75,19 @@ widths — plus the `noOverflow` default. What can't be expressed yet (geometry,
 element-driven fluids) is listed on stderr, never dropped silently. Then `rjs record` pins
 today's curves and `rjs verify` in CI holds the page to its own declarations. Exits 2 when
 the page has no manifest.
+
+## `snippet` — the oracle without a terminal
+
+`rjs snippet` emits the browser-global bundle (`window.rjs`, ~52 kB) ready to inject:
+
+- default — a paste-ready `<script>` block that mounts the `<rjs-overlay>` badge;
+- `--bookmarklet` — a `javascript:` URL: save it as a bookmark, click it on **any page
+  you're looking at**, and the overlay appears with live violation counts, grouped findings
+  and element highlighting. Everything is inline — nothing hosted, nothing phoned home.
+- `-o <file>` writes instead of printing.
+
+The overlay measures at the *current* viewport and says so — the CLI commands remain the
+full-sweep truth.
 
 ## `verify` and `record`
 

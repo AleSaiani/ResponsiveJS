@@ -13,7 +13,18 @@ export { score as computeScore, type AestheticScore } from '@responsivejs/core/a
 export type { ViewportSnapshot, SnapshotStore, ElementSnapshot, ChildRelation } from '@responsivejs/core/types';
 
 // F3: the pure oracle + injection/wire toolkit (all driver-free)
-export { analyzeStore, mergeReports, type AnalyzeStoreOptions, type UnifiedReport, type ConstraintsConfig } from '../analyze/core.js';
+export {
+    analyzeStore,
+    mergeReports,
+    LANDMARK_SELECTORS,
+    type AnalyzeStoreOptions,
+    type UnifiedReport,
+    type ConstraintsConfig,
+} from '../analyze/core.js';
+
+// M4: the injectable surface — one-call oracle + the in-page overlay
+export { analyzeDOM } from './analyze-dom.js';
+export { defineOverlay, mountOverlay, type OverlayOptions } from './overlay.js';
 export { collectPage, buildCollectExpression, type CollectArgs } from './inject.js';
 export {
     fromWire,

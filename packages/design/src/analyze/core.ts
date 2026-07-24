@@ -9,6 +9,27 @@ import { Asserter } from '../constraints/index.js';
 import { applyDesignSystem, type DesignSystemConfig, type ValidationSelectors } from '../constraints/design-system.js';
 import { scoreFromStore, scoreSubtree, type ScoreResult } from '../score/index.js';
 
+/** Landmark-ish default selectors: broad coverage without page-specific
+ *  knowledge. Shared by the CLI, the browser overlay and global-rule sweeps. */
+export const LANDMARK_SELECTORS = [
+    'main',
+    'header',
+    'footer',
+    'nav',
+    'section',
+    'article',
+    'h1',
+    'h2',
+    'h3',
+    'p',
+    'a[href]',
+    'button',
+    'input',
+    'select',
+    'textarea',
+    'img',
+];
+
 export interface ConstraintsConfig {
     /** Default: true. */
     noOverflow?: boolean;
