@@ -1,9 +1,9 @@
 # Using r$ in JavaScript / TypeScript — the runtime guide
 
-This is the long-form guide to `@responsivejs/runtime`: what each API is *for*, how the pieces
-fit, and worked examples that grow from one line to a real page. If you want paste-ready
-snippets instead, the [cookbook](runtime-cookbook.md) is the short version; the
-[API reference](../api/runtime.md) has every signature.
+This is the guide to `@responsivejs/runtime`: what each API is *for*, how the pieces fit,
+and worked examples that grow from one line to a real page. The
+[API reference](../api/runtime.md) has every exact signature; the
+[case studies](case-studies.md) unpack three real cases end to end.
 
 ```bash
 npm i @responsivejs/runtime
@@ -194,8 +194,8 @@ The predicates, and when to reach for each:
 
 Details worth knowing:
 
-- Boolean facts toggle attribute *presence*; numeric ones (`linesOf`) write the value:
-  `data-lines="3"`.
+- Boolean facts toggle attribute *presence*; numeric ones (`linesOf`) write the value —
+  `data-lines="3"` — so CSS can key on counts: `h2[data-lines='1'] { text-align: center; }`.
 - Re-measurement is automatic — element resize (one shared ResizeObserver), viewport resize,
   and scroll for the scroll-dependent predicates (`whenStuck`, `whenCollides`).
 - Every predicate's `measure(el)` is a pure function you can call once, without wiring:
@@ -333,10 +333,9 @@ signal is a property access), and the whole runtime is ~11 kB gzipped with zero 
 - [Case studies](case-studies.md) — the burger, the pinned header, "read more": complete
   walkthroughs with the DOM before/after and the tests.
 - [Testing guide](testing.md) — unit-test the pure half, browser-test the geometric half.
-- [Cookbook](runtime-cookbook.md) — the same constructs as paste-ready recipes.
 - [Landing example](../../examples/landing) — all of the above on one real page, with the
   hack each construct replaces.
 - [API reference](../api/runtime.md) — every signature, including the signal layer
   (`state`/`computed`/`effect`) the constructs are built on.
-- Validating what you authored: [validation cookbook](validation-cookbook.md) — the same
+- Validating what you authored: [the design guide](validation.md) — the same
   `value = f(width)` model, measured and asserted from outside.

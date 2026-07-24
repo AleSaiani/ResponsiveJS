@@ -75,7 +75,7 @@ engine), `/curves`, `/layout`, `/typography`, `/geometry`.
 ## Documentation
 
 [The runtime guide](https://github.com/AleSaiani/ResponsiveJS/blob/main/docs/guides/runtime.md)
-(start here) · [cookbook](https://github.com/AleSaiani/ResponsiveJS/blob/main/docs/guides/runtime-cookbook.md)
+(start here) · [case studies](https://github.com/AleSaiani/ResponsiveJS/blob/main/docs/guides/case-studies.md)
 · [API reference](https://github.com/AleSaiani/ResponsiveJS/blob/main/docs/api/runtime.md)
 · [live example](https://github.com/AleSaiani/ResponsiveJS/tree/main/examples/landing)
 

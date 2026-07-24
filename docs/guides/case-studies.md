@@ -2,8 +2,8 @@
 
 Three complete walkthroughs. Each one shows the *whole* mechanism: the HTML you start from,
 what the predicate actually measures, what changes in the DOM (before/after), the CSS that
-reacts, and how to verify it. Nothing is assumed — if the [cookbook](runtime-cookbook.md)
-recipes feel too compressed, this is the page that unpacks them.
+reacts, and how to verify it. Nothing is assumed — if a snippet in the
+[runtime guide](runtime.md) feels compressed, this is the page that unpacks it.
 
 ---
 

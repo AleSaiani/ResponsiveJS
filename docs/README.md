@@ -1,42 +1,20 @@
 # ResponsiveJS documentation
 
-**Start here**
+One page per question — start from what you're trying to do.
 
-- [Getting started](getting-started.md) — install, pick your entry point, first examples
-- [Concepts](concepts.md) — the `value = f(width)` model, snapshots, the oracle, CSS-first
+| Your question | The page |
+| --- | --- |
+| What is this, where do I start? | [Getting started](getting-started.md) |
+| How does the model work? | [Concepts](concepts.md) — `value = f(width)`, snapshots, the oracle, CSS-first |
+| **How do I author responsive behavior in JS/TS?** | **[The runtime guide](guides/runtime.md)** — `r$.`: every construct's purpose, gradual examples, customizing & debugging |
+| Show me a real case, nothing assumed | [Case studies](guides/case-studies.md) — burger menu, pinned header, "read more": what is measured, the DOM before/after, the CSS, the test |
+| **How do I validate/score a page?** | **[The design guide](guides/validation.md)** — `r$(page)`: measure → model → judge, `analyze()`, contracts, cutting false positives |
+| How do I test all of this? | [Testing responsive behavior](guides/testing.md) — what's unit-testable vs what needs a browser, patterns and traps |
+| How do I wire it into CI? | [CI guide](guides/ci.md) — pipelines, SARIF, baselines strategy |
+| What's the exact signature of X? | API reference: [runtime](api/runtime.md) · [design](api/design.md) · [contract](api/contract.md) · [cli](api/cli.md) · [core](api/core.md) |
+| A live page using everything | [Fluid landing example](../examples/landing) — run it, resize it, read its tutorial |
 
-**API reference**
-
-- [@responsivejs/core](api/core.md) — geometry, curves, interpolation, color/WCAG/OKLab, typography, aesthetics, snapshot model
-- [@responsivejs/runtime](api/runtime.md) — `r$()`, `r$.fluid`, `r$.geometry`, `r$.tokens`, conditionals, layout/typography helpers, signals
-- [@responsivejs/design](api/design.md) — `r$(page)`, the Asserter, `analyze()`, MeasurementSource, browser core, reporters
-- [@responsivejs/contract](api/contract.md) — the contract format, registry, builder, loader, `verifyContract`
-- [@responsivejs/cli](api/cli.md) — the `rjs` command line: analyze / verify / record, driver-pluggable
-
-**Examples**
-
-- [Fluid landing](../examples/landing) — every runtime construct on one real page, each
-  documented as "the hack it replaces vs the construct" (wrap-driven burger, stuck shadow,
-  fluid tokens, equal-height cards, cross-element type, typed breakpoints)
-
-**Guides**
-
-- **[The runtime guide](guides/runtime.md)** — using `r$` in JS/TS: the mental model, every
-  construct explained with its purpose and gradual examples. Start here for authoring.
-- **[The design guide](guides/validation.md)** — validating with `r$(page)`: measure → model
-  → judge, the Asserter, `analyze()`, scores, contracts, drivers. Start here for validation.
-- **[Case studies](guides/case-studies.md)** — real cases end to end, nothing assumed: the
-  burger menu, the pinned header, "read more" — what the predicate measures, the DOM
-  before/after, the CSS, the test
-- **[Testing responsive behavior](guides/testing.md)** — what's unit-testable (pure values)
-  vs what needs a real browser, the patterns and the traps
-- [Runtime cookbook](guides/runtime-cookbook.md) — one recipe per construct: fluid tokens,
-  wrap-driven burger, stuck shadow, truncation, equal heights, cross-element, typed breakpoints
-- [Validation cookbook](guides/validation-cookbook.md) — zero-setup audit → CI gate →
-  contract record/verify, reading scores, cutting false positives
-- [Responsive regression in CI](guides/ci.md) — assertions → oracle → contracts, SARIF, baselines
-
-**For AI agents** (compact, exact I/O)
+**For AI agents** (compact, exact I/O — different documents on purpose):
 
 - [Validation reference](agents/validation-reference.md) — commands, exit codes, report JSON
   shapes, the 27 constraints, contract skeleton, the fix loop

@@ -1,8 +1,7 @@
 # Agent reference — authoring with @responsivejs/runtime
 
 Compact rules + exact signatures for writing runtime code. Human-oriented docs:
-[runtime guide](../guides/runtime.md) · [cookbook](../guides/runtime-cookbook.md) ·
-[API](../api/runtime.md).
+[runtime guide](../guides/runtime.md) · [API](../api/runtime.md).
 
 Entry point: `import { r$ } from '@responsivejs/runtime'` — every function below also exists
 as `r$.<name>` (e.g. `r$.fluid`, `r$.geometry`, `r$.whenWraps`); `r$(target, map)` applies.

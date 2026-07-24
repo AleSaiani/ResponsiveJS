@@ -26,7 +26,7 @@ npx @responsivejs/cli analyze https://example.com -w 320,768,1280
 Driver-pluggable (Playwright, or [agent-browser](https://github.com/vercel-labs/agent-browser)
 for any live URL with nothing installed). `verify`/`record` run the contract flow.
 
-→ [CLI reference](api/cli.md) · [validation cookbook](guides/validation-cookbook.md)
+→ [CLI reference](api/cli.md) · [the design guide](guides/validation.md)
 
 ## Authoring
 
@@ -47,9 +47,9 @@ JS drives only what CSS cannot — non-linear curves, **geometry state** (wrap, 
 sticky, truncation), **cross-element dependencies** (`fromElement`, `sync`, `ratio`). Add
 `{ container: true }` to bind a value to the nearest container instead of the viewport.
 
-→ **[the runtime guide](guides/runtime.md)** (long-form: purposes, gradual examples, the
-mental model) · [cookbook](guides/runtime-cookbook.md) (paste-ready recipes) ·
-[API: runtime](api/runtime.md) · [live example](../examples/landing)
+→ **[the runtime guide](guides/runtime.md)** (purposes, gradual examples, the mental
+model) · [case studies](guides/case-studies.md) · [API: runtime](api/runtime.md) ·
+[live example](../examples/landing)
 
 ## Validation
 
@@ -72,9 +72,8 @@ const report = await r$(page).sweep({ ... }).then((r) => r.analyze());
 // UnifiedReport: { pass, violations, fixes, scores, summary, … }
 ```
 
-→ **[the design guide](guides/validation.md)** (long-form: measure → model → judge) ·
-[validation cookbook](guides/validation-cookbook.md) · [API: design](api/design.md) ·
-[guide: CI](guides/ci.md)
+→ **[the design guide](guides/validation.md)** (measure → model → judge) ·
+[API: design](api/design.md) · [guide: CI](guides/ci.md)
 
 ## Zero-driver
 

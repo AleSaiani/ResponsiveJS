@@ -1,9 +1,8 @@
 # Validating with r$ — the design guide
 
-This is the long-form guide to `@responsivejs/design`: what the validation side of r$ is for,
-how measuring works, and worked examples that grow from five lines to contracts in CI. The
-[cookbook](validation-cookbook.md) has the paste-ready versions; the
-[API reference](../api/design.md) has every signature. Authoring is the other half:
+This is the guide to `@responsivejs/design`: what the validation side of r$ is for, how
+measuring works, and worked examples that grow from five lines to contracts in CI. The
+[API reference](../api/design.md) has every exact signature. Authoring is the other half:
 [the runtime guide](runtime.md).
 
 ```bash
@@ -204,6 +203,24 @@ violations), `rjs verify <contract> <url>`, `rjs record`. Use the library in Pla
 where you already have fixtures; use the CLI where you want zero project setup or a quick
 audit of any URL. `-f sarif` feeds code-scanning UIs; `-f json` feeds anything else.
 
+The flags that matter day to day: `-s "main,.card"` (scope selectors — see below), `-w
+320,768,1280`, `--strict` (fail on warnings too), `--touch-min 44` (platform touch rule
+instead of the WCAG 24px floor), `--scroll` (below-the-fold content), `-d agent-browser`
+(audit any live URL with nothing installed in the project).
+
+## Cutting false positives
+
+A report that is mostly noise teaches people to ignore it. Four levers, in order of impact:
+
+- **Scope your selectors.** Audit `main, nav, .content, .cta` — the elements with
+  responsibilities — not the whole DOM. This is the single biggest signal/noise lever on
+  real-world pages.
+- Contrast is computed from **measured effective backgrounds** (transparent ancestors
+  resolved to the color actually painted), so what it flags is what users see.
+- Touch targets default to WCAG 2.5.8's 24px floor and **exempt inline prose links**; raise
+  to platform guidance (`44`/`48`) per rule, per run, or via a design-system profile.
+- Gate on `pass` (errors only) in loops and CI; chase `clean` (zero anything) when polishing.
+
 ## Determinism, cost, trust
 
 Same store in → same report out: scores and contrast are computed from measured values (axe's
@@ -214,8 +231,6 @@ re-judging a cached store — or a store shipped as JSON via `storeToJSON` — i
 
 ## Where next
 
-- [Validation cookbook](validation-cookbook.md) — the recipes: audit, CI gate, contract flow,
-  cutting false positives.
 - [CI guide](ci.md) — wiring reports into pipelines, SARIF, baselines strategy.
 - [Agents reference](../agents/validation-reference.md) — exact JSON shapes and the fix loop.
 - [design API](../api/design.md) · [contract API](../api/contract.md).
