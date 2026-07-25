@@ -28,12 +28,21 @@ function branchMeta(v: StyleValue | undefined): unknown {
     return v;
 }
 
-/** Only plain primitives can be inlined into static CSS declarations. */
-function staticBranch(v: StyleValue | undefined, unit: string): string | null {
+/**
+ * A branch that can be inlined into a static declaration. Primitives always
+ * can — and so can a nested ResponsiveValue that compiles to a plain
+ * declaration: `clamp()` inside a `@media` block is ordinary CSS. A nested
+ * value that needs its OWN media blocks cannot nest, so it stays dynamic.
+ */
+function staticBranch(v: StyleValue | undefined, ctx: StaticContext): string | null {
     if (v === undefined) return null;
-    if (typeof v === 'number') return `${v}${unit}`;
+    if (typeof v === 'number') return `${v}${ctx.unit}`;
     if (typeof v === 'string') return v;
-    return null; // nested ResponsiveValue/function → dynamic
+    if (isResponsiveValue(v)) {
+        const emission = v.toStatic({ ...ctx, unit: v.unit ?? ctx.unit });
+        if (emission?.declaration && !emission.mediaBlocks?.length) return emission.declaration;
+    }
+    return null; // functions and multi-block values → dynamic
 }
 
 /** when(pred, a, b?) or when([[pred, value], ...]) — first match wins. */
@@ -86,8 +95,8 @@ export function whenInRange(
             return width >= min && width <= max ? resolveBranch(value, width) : resolveBranch(otherwise, width);
         },
         toStatic(ctx): StaticEmission | null {
-            const inRange = staticBranch(value, ctx.unit);
-            const outside = staticBranch(otherwise, ctx.unit);
+            const inRange = staticBranch(value, ctx);
+            const outside = staticBranch(otherwise, ctx);
             if (inRange === null || (otherwise !== undefined && outside === null)) return null;
             const blocks: StaticEmission['mediaBlocks'] = [{ min, max, declaration: inRange }];
             return outside !== null && otherwise !== undefined
@@ -120,8 +129,8 @@ function switchValue(
         },
         toStatic(ctx): StaticEmission | null {
             const w = bpWidth(threshold);
-            const matched = staticBranch(below, ctx.unit);
-            const other = staticBranch(aboveOrEqual, ctx.unit);
+            const matched = staticBranch(below, ctx);
+            const other = staticBranch(aboveOrEqual, ctx);
             if (matched === null || (aboveOrEqual !== undefined && other === null)) return null;
             // Mobile-first: base = the value below the threshold, @media(min-width) = the other.
             if (op === 'below') {
@@ -173,8 +182,8 @@ export const breakpoint = {
                 return width >= min && width < max ? resolveBranch(value, width) : resolveBranch(otherwise, width);
             },
             toStatic(ctx): StaticEmission | null {
-                const inRange = staticBranch(value, ctx.unit);
-                const outside = staticBranch(otherwise, ctx.unit);
+                const inRange = staticBranch(value, ctx);
+                const outside = staticBranch(otherwise, ctx);
                 if (inRange === null || (otherwise !== undefined && outside === null)) return null;
                 const blocks = [{ min: bpWidth(lo), max: bpWidth(hi) - 1, declaration: inRange }];
                 return otherwise !== undefined && outside !== null
@@ -209,7 +218,7 @@ export const breakpoint = {
             },
             toStatic(ctx: StaticContext): StaticEmission | null {
                 const entries = sorted();
-                const decls = entries.map(([name]) => staticBranch(map[name], ctx.unit));
+                const decls = entries.map(([name]) => staticBranch(map[name], ctx));
                 if (decls.some((d) => d === null)) return null;
                 const [, ...rest] = entries;
                 return {

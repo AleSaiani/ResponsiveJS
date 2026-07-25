@@ -272,6 +272,20 @@ export function combine(parts: (ResponsiveValue | string | number)[]): Responsiv
         resolve(width) {
             return parts.map((p) => (isResponsiveValue(p) ? p.resolve(width) : p)).join(' ');
         },
-        toStatic: () => null,
+        toStatic(ctx) {
+            // A space-joined list is static when every part is: `transform:
+            // translateX(clamp(…)) scale(clamp(…))` is ordinary CSS.
+            const out: string[] = [];
+            for (const p of parts) {
+                if (!isResponsiveValue(p)) {
+                    out.push(typeof p === 'number' ? `${p}${ctx.unit}` : String(p));
+                    continue;
+                }
+                const emission = p.toStatic({ ...ctx, unit: p.unit ?? ctx.unit });
+                if (!emission?.declaration || emission.mediaBlocks?.length) return null;
+                out.push(emission.declaration);
+            }
+            return { declaration: out.join(' ') };
+        },
     });
 }

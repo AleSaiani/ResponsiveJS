@@ -69,7 +69,7 @@ Three ways to control it:
 ```typescript
 r$.fluid(24, 48);                        // over the configured range
 r$.fluid(24, 48, { from: 480, to: 1200 }); // explicit domain for this value
-r$.config({ breakpoints: [360, 768, 1440] }); // change the global range
+r$.configure({ breakpoints: [360, 768, 1440] }); // change the global range (r$.config() reads it back)
 ```
 
 Below the domain the value clamps to `min`, above it to `max` — a fluid value never
@@ -274,13 +274,39 @@ useEffect(() => {
 }, []);
 ```
 
+**A component usually creates several constructs.** Group them instead of juggling handles:
+
+```typescript
+const s = r$.scope();
+s.add(r$('.card', { padding: r$.fluid(12, 24) }));
+s.add(r$.geometry('.card', { wrapped: r$.whenWraps }));
+s.add(r$.sync('.card h3', 'height'));
+// …later, one call releases all three, in reverse order:
+s.dispose();
+```
+
+**Single-page apps: elements come and go.** `r$('.card', …)` binds to the elements that exist
+at call time. When a router or a list re-renders them, bind the *selector* instead:
+
+```typescript
+const cards = r$.observe('.card', { padding: r$.fluid(12, 24) });
+// new .card nodes are picked up automatically; removed ones are released
+```
+
+The static half is injected once — CSS already applies to elements that don't exist yet — so
+`observe()` only wires the JS half per element. Framework adapters use the same mechanism.
+
 **Testing.** Style writes are batched to one rAF flush per frame; in tests call `r$.flush()`
 to drain them synchronously after triggering a resize.
 
-**SSR.** No construct touches `window` at import time. For zero-flash server rendering, emit
-the static half yourself: `r$.static(selector, map)` returns `{ css, dispose }` (and throws — on purpose
-— if the map contains anything that would silently need JS), and `r$.tokens(...).css` is the
-token stylesheet. Geometry attributes appear on hydration.
+**SSR.** No construct touches `window` at import time, and the CSS-first half is fully
+server-renderable. Three ways in, from most to least surgical: `handle.css` (what that one
+construct compiled), `r$.tokens(...).css` (the token stylesheet), or `r$.renderStatic()` —
+every emission so far, ready to inline into `<head>` so the page is correct before any JS
+runs. `r$.static(selector, map)` is the strict variant: it returns `{ css, dispose }` and
+throws — on purpose — if the map contains anything that would silently need JS. Geometry
+attributes appear on hydration. Under a strict CSP, `r$.configure({ nonce })` puts the nonce
+on every injected `<style>`.
 
 ## Customizing, extending, seeing inside
 

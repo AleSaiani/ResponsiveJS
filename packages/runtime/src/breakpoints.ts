@@ -26,6 +26,8 @@ export interface TypedBreakpoints<K extends string> {
     matches(name: K): { signal: Computed<boolean>; dispose: Disposer };
     /** The names, in ascending width order. */
     readonly names: readonly K[];
+    /** Release this definition's manifest entry (every construct is disposable). */
+    dispose(): void;
 }
 
 /** Each defineBreakpoints call REPLACES the global config — one manifest
@@ -39,12 +41,13 @@ export function defineBreakpoints<T extends Record<string, number>>(map: T): Typ
     const names = (Object.keys(map) as K[]).sort((a, b) => map[a] - map[b]);
 
     unregisterBreakpoints?.();
-    unregisterBreakpoints = registerProvenance({
+    const unregister = registerProvenance({
         construct: 'breakpoints',
         target: ':root',
         behavior: names.map((n) => `${n}: ${map[n]}`),
         config: { ...map },
     });
+    unregisterBreakpoints = unregister;
 
     return {
         below: (name, value, otherwise) => breakpoint.below(name, value, otherwise),
@@ -54,5 +57,9 @@ export function defineBreakpoints<T extends Record<string, number>>(map: T): Typ
         width: (name) => map[name],
         matches: (name) => breakpointSignal(name),
         names,
+        dispose() {
+            unregister();
+            if (unregisterBreakpoints === unregister) unregisterBreakpoints = undefined;
+        },
     };
 }

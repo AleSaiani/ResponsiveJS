@@ -27,8 +27,14 @@ describe('the r$ namespace', () => {
             'fluid', 'custom', 'combine', 'when', 'whenInRange',
             'geometry', 'whenWraps', 'whenOverflows', 'whenTruncated', 'whenStuck', 'linesOf', 'whenCollides',
             'fromElement', 'sync', 'ratio',
-            'config', 'breakpoints', 'static', 'dynamic', 'tokens',
+            'configure', 'config', 'breakpoints', 'static', 'dynamic', 'tokens', 'observe', 'scope',
             'lazy', 'batch', 'memo', 'debug', 'flush', 'apply',
+            // the namespace is a SUPERSET of the authoring surface — no member
+            // should be reachable only through a named import
+            'scale', 'rotate', 'translate', 'translateX', 'translateY', 'skew',
+            'linear', 'exponential', 'logarithmic', 'easeIn', 'easeOut', 'easeInOut', 'cubic',
+            'viewportWidth', 'containerWidth', 'elementSize', 'mediaQuery', 'breakpointSignal',
+            'scrollTick', 'releaseViewportHub', 'renderStatic',
         ] as const;
         for (const name of surface) {
             expect(typeof r$[name], name).toBe('function');

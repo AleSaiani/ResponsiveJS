@@ -6,8 +6,8 @@
  * what CSS cannot (non-linear curves, measured values, logic).
  */
 
-import { applyResponsive, staticCSS, flush, type Target, type ResponsiveHandle } from './apply.js';
-import { configure, type RuntimeConfig } from './config.js';
+import { applyResponsive, applyDynamic, staticCSS, flush, type Target, type ResponsiveHandle } from './apply.js';
+import { configure, config } from './config.js';
 import { defineBreakpoints } from './breakpoints.js';
 import { template, applyUtilities } from './template.js';
 import { lazy, memo, batch, debug } from './perf.js';
@@ -16,7 +16,15 @@ import { manifest } from './provenance.js';
 import { fluid, custom, combine, type StyleMap } from './value.js';
 import { when, whenInRange, breakpoint } from './conditionals.js';
 import { fromElement, sync, ratio } from './cross.js';
+import { observe } from './observe.js';
+import { scope } from './scope.js';
 import { geometry, whenWraps, whenOverflows, whenTruncated, whenStuck, linesOf, whenCollides } from './geometry.js';
+import { scale, rotate, translate, translateX, translateY, skew } from './transforms.js';
+import { linear, exponential, logarithmic, easeIn, easeOut, easeInOut, cubic } from './curves.js';
+import { grid, space } from './layout.js';
+import { typography } from './typography.js';
+import { renderStatic } from './static.js';
+import { viewportWidth, containerWidth, elementSize, mediaQuery, breakpointSignal, scrollTick, releaseViewportHub } from './viewport.js';
 
 // ─── r$ — the whole authoring surface behind one autocompletable name ───
 
@@ -49,15 +57,22 @@ interface ResponsiveFn {
     ratio: typeof ratio;
 
     // configuration & emission
-    config(partial: Partial<RuntimeConfig>): void;
+    /** Change the config — both halves of every construct react. */
+    configure: typeof configure;
+    /** Read the config in force (the getter half). */
+    config: typeof config;
     breakpoints: typeof defineBreakpoints;
     /** Static-only compilation; throws if anything requires JS. Each call owns
      *  its own stylesheet: `{ css, dispose }`. */
     static: typeof staticCSS;
     /** Apply without the static-CSS split (everything JS-driven). */
-    dynamic(target: Target, map: StyleMap): ResponsiveHandle;
+    dynamic: typeof applyDynamic;
     /** Token bridge: fluid values as custom properties on :root (clamp where linear). */
     tokens: typeof tokens;
+    /** Selector stays bound as elements come and go (SPA). */
+    observe: typeof observe;
+    /** Group handles and dispose them together. */
+    scope: typeof scope;
 
     // performance & tooling
     lazy: typeof lazy;
@@ -70,6 +85,36 @@ interface ResponsiveFn {
     apply(target: string | Element, spec: string): ResponsiveHandle;
     /** The live provenance manifest of every active construct (also on window.__rjs_manifest). */
     manifest: typeof manifest;
+
+    // composition helpers — transforms, curves, layout, typography
+    scale: typeof scale;
+    rotate: typeof rotate;
+    translate: typeof translate;
+    translateX: typeof translateX;
+    translateY: typeof translateY;
+    skew: typeof skew;
+    linear: typeof linear;
+    exponential: typeof exponential;
+    logarithmic: typeof logarithmic;
+    easeIn: typeof easeIn;
+    easeOut: typeof easeOut;
+    easeInOut: typeof easeInOut;
+    cubic: typeof cubic;
+    grid: typeof grid;
+    space: typeof space;
+    typography: typeof typography;
+
+    // measurement signals + SSR
+    viewportWidth: typeof viewportWidth;
+    containerWidth: typeof containerWidth;
+    elementSize: typeof elementSize;
+    mediaQuery: typeof mediaQuery;
+    breakpointSignal: typeof breakpointSignal;
+    scrollTick: typeof scrollTick;
+    /** Release every listener and observer (embedded hosts, SPA teardown). */
+    releaseViewportHub: typeof releaseViewportHub;
+    /** Every stylesheet emitted so far — what a server inlines into <head>. */
+    renderStatic: typeof renderStatic;
 }
 
 function responsiveBase(
@@ -104,11 +149,14 @@ export const r$: ResponsiveFn = Object.assign(responsiveBase as ResponsiveFn, {
     fromElement,
     sync,
     ratio,
-    config: configure,
+    configure,
+    config,
     breakpoints: defineBreakpoints,
     static: staticCSS,
-    dynamic: (target: Target, map: StyleMap) => applyResponsive(target, map, { cssFirst: false }),
+    dynamic: applyDynamic,
     tokens,
+    observe,
+    scope,
     lazy,
     batch,
     memo,
@@ -116,6 +164,30 @@ export const r$: ResponsiveFn = Object.assign(responsiveBase as ResponsiveFn, {
     flush,
     apply: applyUtilities,
     manifest,
+    scale,
+    rotate,
+    translate,
+    translateX,
+    translateY,
+    skew,
+    linear,
+    exponential,
+    logarithmic,
+    easeIn,
+    easeOut,
+    easeInOut,
+    cubic,
+    grid,
+    space,
+    typography,
+    viewportWidth,
+    containerWidth,
+    elementSize,
+    mediaQuery,
+    breakpointSignal,
+    scrollTick,
+    releaseViewportHub,
+    renderStatic,
 });
 
 /** Alias of r$ — the historical name. */
@@ -160,16 +232,23 @@ export type { GeometryPredicate, GeometryHandle, GeometryOptions, PredicateInput
 
 export { state, computed, effect, subscribe, untrack } from './signals.js';
 export type { State, Computed, Signal, Disposer } from './signals.js';
-export { viewportWidth, mediaQuery, breakpointSignal, containerWidth, elementSize, scrollTick } from './viewport.js';
+export { viewportWidth, mediaQuery, breakpointSignal, containerWidth, elementSize, scrollTick, releaseViewportHub } from './viewport.js';
 export type { ElementSize } from './viewport.js';
 
 // ─── config & emission ──────────────────────────────────────────────────
 
-export { configure, domain, bpWidth } from './config.js';
+export { configure, config, domain, bpWidth } from './config.js';
 export { defineBreakpoints } from './breakpoints.js';
 export type { TypedBreakpoints } from './breakpoints.js';
-export type { RuntimeConfig } from './config.js';
-export { emitCSS, injectStyle, removeStyle } from './static.js';
+export type { RuntimeConfig, ResolvedConfig } from './config.js';
+export type { CurveSpec } from './value.js';
+export type { AdaptiveGridOptions, SpaceConfig } from './layout.js';
+export type { Equals } from './signals.js';
+export { emitCSS, injectStyle, removeStyle, renderStatic, emittedStyles } from './static.js';
+export { observe } from './observe.js';
+export type { ObserveHandle } from './observe.js';
+export { scope } from './scope.js';
+export type { Scope, Disposable } from './scope.js';
 export type { EmitResult } from './static.js';
 export type { ResponsiveHandle, Target, StaticHandle } from './apply.js';
 
@@ -178,6 +257,6 @@ export type { ResponsiveHandle, Target, StaticHandle } from './apply.js';
 // perf batch (signal batch + style flush) is `batchWrites` so it never
 // collides with the pure `batch` of ./signals.
 
-export { flush, staticCSS } from './apply.js';
+export { flush, staticCSS, applyDynamic } from './apply.js';
 export { lazy, memo, debug, batch as batchWrites } from './perf.js';
 export { applyUtilities, parseUtilities } from './template.js';

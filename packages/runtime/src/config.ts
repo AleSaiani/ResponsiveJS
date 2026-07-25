@@ -15,6 +15,8 @@ export interface RuntimeConfig {
     debug: boolean;
     /** Width assumed when no window exists (SSR). */
     ssrWidth: number;
+    /** CSP nonce copied onto every injected <style> (strict Content-Security-Policy). */
+    nonce: string;
 }
 
 export interface ResolvedConfig {
@@ -24,6 +26,7 @@ export interface ResolvedConfig {
     useMediaQueries: boolean;
     debug: boolean;
     ssrWidth: number;
+    nonce: string;
 }
 
 const DEFAULT_BREAKPOINTS = [320, 768, 1024, 1440, 1920];
@@ -50,6 +53,7 @@ function resolveConfig(partial: Partial<RuntimeConfig>, base?: ResolvedConfig): 
         useMediaQueries: partial.useMediaQueries ?? base?.useMediaQueries ?? true,
         debug: partial.debug ?? base?.debug ?? false,
         ssrWidth: partial.ssrWidth ?? base?.ssrWidth ?? 1024,
+        nonce: partial.nonce ?? base?.nonce ?? '',
     };
 }
 
@@ -57,6 +61,12 @@ export const configState: State<ResolvedConfig> = state(resolveConfig({}));
 
 export function configure(partial: Partial<RuntimeConfig>): void {
     configState.set(resolveConfig(partial, configState.get()));
+}
+
+/** The config in force — the read half of `configure()`. Frozen: change it
+ *  through `configure()` so both halves of every construct react. */
+export function config(): Readonly<ResolvedConfig> {
+    return Object.freeze({ ...configState.get() });
 }
 
 /** Resolve a breakpoint reference (name or raw px) to a width. */

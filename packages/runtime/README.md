@@ -73,7 +73,10 @@ fluid, geometry } …`) — they are the same objects. Two are renamed to stay u
   side effects like `container-type`).
 - **Geometry's one rule**: never `display: none` the element a predicate measures; collapse
   keeping layout (`visibility: hidden; height: 0; overflow: hidden`).
-- **SSR**: no `window` access at module level; ship `r$.static().css` / `r$.tokens(...).css`.
+- **SSR**: no `window` access at module level; ship `handle.css`, `r$.tokens(...).css`, or
+  `r$.renderStatic()` (every emission at once). Strict CSP? `r$.configure({ nonce })`.
+- **SPA**: `r$.observe(selector, map)` keeps a selector bound as elements mount and unmount;
+  `r$.scope()` groups a component's handles so one `dispose()` releases them all.
 - **Cost**: one resize listener, one ResizeObserver, one scroll listener — refcounted, total.
   ~11 kB gzipped, zero dependencies.
 

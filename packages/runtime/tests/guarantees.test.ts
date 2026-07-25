@@ -119,3 +119,112 @@ describe('config changes reach BOTH halves', () => {
         handle.dispose();
     });
 });
+
+// ─── R2: completeness ───────────────────────────────────────────────────
+
+describe('CSS-first reaches the cases it used to give up on', () => {
+    it('a fluid branch compiles INSIDE the @media block', () => {
+        el('side');
+        const handle = r$('.side', { width: r$.breakpoint.below(768, '100%', fluid(240, 320)) });
+        const css = sheets().join('');
+        expect(css).toContain('width: 100%');
+        expect(css).toContain('@media (min-width: 768px)');
+        expect(css).toContain('clamp(240px');
+        handle.dispose();
+    });
+
+    it('transforms compile: CSS math functions nest', () => {
+        el('badge');
+        const handle = r$('.badge', { transform: r$.combine([r$.translateX(fluid(0, 40)), r$.scale(fluid(1, 2))]) });
+        const css = sheets().join('');
+        expect(css).toContain('translateX(clamp(0px');
+        expect(css).toContain('scale(clamp(1');
+        handle.dispose();
+    });
+});
+
+describe('SSR: the compiled CSS is reachable', () => {
+    it('the handle exposes its own static half', () => {
+        el('hero');
+        const handle = r$('.hero', { fontSize: fluid(16, 32) });
+        expect(handle.css).toContain('clamp(16px');
+        handle.dispose();
+    });
+
+    it('renderStatic() collects every emission — what a server inlines', async () => {
+        const { renderStatic } = await import('../src/static.js');
+        el('hero');
+        const a = r$('.hero', { fontSize: fluid(16, 32) });
+        const b = r$.tokens({ '--space-m': fluid(16, 24) });
+        const all = renderStatic();
+        expect(all).toContain('.hero');
+        expect(all).toContain('--space-m');
+        a.dispose();
+        b.dispose();
+        expect(renderStatic()).not.toContain('--space-m'); // disposal deregisters
+    });
+
+    it('a CSP nonce is carried onto the injected style element', () => {
+        configure({ nonce: 'abc123' });
+        el('hero');
+        const handle = r$('.hero', { fontSize: fluid(16, 32) });
+        const tag = document.head.querySelector('style[data-responsivejs]')!;
+        expect(tag.getAttribute('nonce')).toBe('abc123');
+        handle.dispose();
+    });
+});
+
+describe('handles compose', () => {
+    it('r$.scope() disposes a whole component in reverse order', () => {
+        const node = el('card');
+        const s = r$.scope();
+        const styles = s.add(r$('.card', { fontSize: fluid(1, 2, { curve: 'exponential', unit: 'rem' }) }));
+        s.add(r$.geometry('.card', { wrapped: r$.whenWraps }));
+        r$.flush();
+        expect(s.size).toBe(2);
+        expect(styles.elements).toHaveLength(1);
+
+        s.dispose();
+        expect(node.style.getPropertyValue('font-size')).toBe('');
+        expect(manifest()).toHaveLength(0); // both constructs deregistered
+    });
+
+    it('defineBreakpoints is disposable like every other construct', () => {
+        const bp = r$.breakpoints({ mobile: 320, desktop: 1280 });
+        expect(manifest().some((e) => e.construct === 'breakpoints')).toBe(true);
+        bp.dispose();
+        expect(manifest().some((e) => e.construct === 'breakpoints')).toBe(false);
+    });
+});
+
+describe('observe() — the SPA answer', () => {
+    const tick = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it('binds elements that appear later, and releases the ones that leave', async () => {
+        const handle = r$.observe('.item', { fontSize: fluid(1, 2, { curve: 'exponential', unit: 'rem' }) });
+        expect(handle.elements).toHaveLength(0);
+
+        const first = el('item');
+        await tick();
+        r$.flush();
+        expect(handle.elements).toHaveLength(1);
+        expect(first.style.getPropertyValue('font-size')).toBe('1rem');
+
+        el('item');
+        await tick();
+        expect(handle.elements).toHaveLength(2);
+
+        first.remove();
+        await tick();
+        expect(handle.elements).toHaveLength(1);
+
+        handle.dispose();
+    });
+
+    it('the static half is injected once and covers future elements', () => {
+        const handle = r$.observe('.later', { fontSize: fluid(16, 32) });
+        expect(sheets().join('')).toContain('clamp(16px'); // before any .later exists
+        handle.dispose();
+        expect(sheets().join('')).not.toContain('clamp(16px');
+    });
+});

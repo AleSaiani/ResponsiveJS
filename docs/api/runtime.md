@@ -8,8 +8,10 @@ The authoring half: reactive `value = f(width)`, CSS-first. Depends only on
 (`r$.fluid`, `r$.tokens`, `r$.geometry`, `r$.whenWraps`, `r$.breakpoints`, `r$.sync`, …), so
 the editor's autocomplete is the API browser. `responsive` is an alias of the same object (the
 historical name). Precisely: every `r$` member exists, plus root named exports for the same
-functions and for the lower layers — the signal engine, curve sugar, `layout`/`typography`
-helpers and transform templates live as named exports / subpaths, not on the namespace.
+functions and for the lower layers. The namespace is a **superset of the authoring surface**:
+transforms, curve sugar, `layout`/`typography` helpers and the measurement signals are all on
+`r$.` too. Only module-level internals (`emitCSS`, `injectStyle`, `registerProvenance`) stay
+named-export-only.
 New to the runtime? Start from the [guide](../guides/runtime.md), not this reference.
 
 ## `r$()` — apply styles
@@ -42,11 +44,15 @@ the container; with `r$.static()` alone, declaring the container is on you).
 
 | Member | Meaning |
 | --- | --- |
-| `r$.config({ breakpoints, defaultUnit='px', useMediaQueries=true, debug, ssrWidth=1024 })` | Global configuration (itself reactive). |
+| `r$.configure({ breakpoints, defaultUnit='px', useMediaQueries=true, debug, ssrWidth=1024, nonce })` | Change the config (itself reactive — **both** halves of every construct re-emit). `nonce` is copied onto every injected `<style>` for strict CSP. |
+| `r$.config(): ResolvedConfig` | Read the config in force (frozen copy). |
 | `r$.breakpoints({ mobile: 320, … } as const)` | Define named breakpoints — returns the [typed API](#typed-breakpoints). |
 | `r$.tokens({ '--space-md': fluid(8, 16) })` | [Token bridge](#tokens--fluid-custom-properties): fluid custom properties on `:root`. |
 | `r$.static(selector, map): { css, dispose }` | CSS-only compilation — throws if anything needs JS. Each call owns its own stylesheet (two static maps for one selector never clobber each other) and can remove it. |
 | `r$.dynamic(target, map)` | Skip the static split, drive everything via JS. |
+| `r$.observe(selector, map): ObserveHandle` | **SPA**: the selector stays bound as elements come and go. The static half is injected once (CSS already covers future elements); the JS half is wired per element on mount and released on removal. `refresh()` re-scans on demand. |
+| `r$.scope(): Scope` | Group handles: `s.add(handle)` returns it unchanged, `s.dispose()` releases everything in reverse order. One call to tear a component down. |
+| `r$.renderStatic(): string` | Every stylesheet emitted so far — what a server inlines into `<head>`. |
 | `r$.lazy(target, map)` | Apply on first intersection (IntersectionObserver). |
 | `r$.batch(fn)` | One signal flush + one style flush for several calls. |
 | `r$.memo(map)` | Cache custom-function values per 1px width bucket. |
@@ -84,15 +90,17 @@ inherits the other side's unit) and throws a descriptive error otherwise. No fuz
 | `breakpoint.above(ref, a, b?)` / `.between(lo, hi, a, b?)` | yes* | |
 | `breakpoint.match({ mobile: 14, desktop: 18 })` | yes* | Largest matching breakpoint wins. |
 
-\* static only when the branches are plain strings/numbers; nested `ResponsiveValue` branches
-resolve correctly but force the JS path.
+\* static when the branches compile to plain declarations — including nested values:
+`breakpoint.above('md', fluid(14, 24))` emits `clamp()` **inside** the `@media` block. A branch
+that needs its own media blocks (a per-breakpoint array) cannot nest and stays JS-driven.
 
 ### Helpers
 
 - `custom(fn, opts?)` — wrap `(width) => value`; always JS.
-- `combine([...])` — space-join parts (transform lists).
+- `combine([...])` — space-join parts (transform lists). Static when every part is.
 - `scale(v)`, `rotate(v)`, `translate(x, y)`, `translateX/Y(v)`, `skew(x, y?)` — transform
-  templates with conventional default units.
+  templates with conventional default units. They compile to static CSS whenever their
+  arguments do: `transform: translateX(clamp(…)) scale(clamp(…))` is ordinary CSS.
 - `isResponsiveValue(v)` — brand check.
 
 ## `/geometry` — state from geometry
@@ -204,7 +212,11 @@ Width sources (all SSR-safe, all disposable):
 | `breakpointSignal(ref)` | `mediaQuery('(min-width: …)')` via named breakpoints. |
 | `containerWidth(el): { signal, dispose }` | ONE shared ResizeObserver, refcounted per element. |
 | `elementSize(el): { signal, dispose }` | `{width, height}` off the same observer and refcount. |
-| `scrollTick(): State<number>` | ONE capture-phase scroll listener (nested containers too). |
+| `scrollTick(): Computed<number>` | ONE capture-phase scroll listener (nested containers too). |
+| `releaseViewportHub()` | Drop every listener/observer and all registries (embedded hosts, SPA teardown). Signals re-arm lazily. |
+
+Every signal the hub hands out is **read-only** (`Computed`): the entries are shared, so a
+consumer writing to one would desynchronize every other consumer of the same element.
 
 ## Emission
 
@@ -216,5 +228,15 @@ formula: `slope = (max−min)/(vMax−vMin)`, `intercept = min − slope·vMin` 
 
 ## SSR
 
-No `window` access at module level. Values resolve at `config.ssrWidth` until hydration; prefer
-`r$.static()` for server-rendered CSS.
+No `window` access at module level; values resolve at `config.ssrWidth` until hydration.
+The CSS-first half is fully server-renderable:
+
+```typescript
+r$('.hero', { fontSize: r$.fluid(16, 32) });      // handle.css is its compiled half
+r$.tokens({ '--space-m': r$.fluid(16, 24) });     // tokens().css likewise
+const sheet = r$.renderStatic();                   // …or every emission at once
+// → inline `sheet` into <head> and the page is correct BEFORE any JS runs
+```
+
+Under a strict Content-Security-Policy pass `r$.configure({ nonce })`: every injected
+`<style>` carries it.

@@ -114,14 +114,25 @@ export function emitCSS(selector: string, map: StyleMap): EmitResult {
 
 // ─── injection ──────────────────────────────────────────────────────────
 
-/** One <style data-responsivejs="key"> per key, replaced on update. SSR no-op. */
+/**
+ * Every stylesheet r$ has emitted, keyed by its owner. Injection is a browser
+ * side effect; this registry is what makes the SAME css available on the
+ * server, where there is no document to inject into.
+ */
+const emitted = new Map<string, string>();
+
+/** One <style data-responsivejs="key"> per key, replaced on update.
+ *  Under SSR it only records — `renderStatic()` then returns the sheet. */
 export function injectStyle(css: string, key: string): void {
+    emitted.set(key, css);
     if (typeof document === 'undefined') return;
     const attr = 'data-responsivejs';
     let el = document.head.querySelector<HTMLStyleElement>(`style[${attr}="${CSS.escape(key)}"]`);
     if (!el) {
         el = document.createElement('style');
         el.setAttribute(attr, key);
+        const { nonce } = configState.get();
+        if (nonce) el.setAttribute('nonce', nonce);
         document.head.appendChild(el);
     }
     el.textContent = css;
@@ -129,6 +140,26 @@ export function injectStyle(css: string, key: string): void {
 
 /** Remove an injected stylesheet. */
 export function removeStyle(key: string): void {
+    emitted.delete(key);
     if (typeof document === 'undefined') return;
     document.head.querySelector(`style[data-responsivejs="${CSS.escape(key)}"]`)?.remove();
+}
+
+/**
+ * Every stylesheet emitted so far, concatenated — what a server should inline
+ * into `<head>` so the page is correct BEFORE any JavaScript runs. Call it
+ * after rendering (constructs emit as they are created).
+ */
+export function renderStatic(): string {
+    return [...emitted.values()].filter((css) => css.length > 0).join('\n');
+}
+
+/** The emitted stylesheets, keyed by owner — for tooling that needs the parts. */
+export function emittedStyles(): ReadonlyMap<string, string> {
+    return new Map(emitted);
+}
+
+/** Test-only: forget every recorded emission. */
+export function __resetEmitted(): void {
+    emitted.clear();
 }

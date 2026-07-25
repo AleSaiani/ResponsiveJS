@@ -19,6 +19,9 @@ import { registerProvenance, describeMap } from './provenance.js';
 
 export interface ResponsiveHandle {
     readonly elements: readonly HTMLElement[];
+    /** The static half this handle compiled — what SSR should ship. Empty when
+     *  the map is fully JS-driven (or the target is not a selector). */
+    readonly css: string;
     /** Replace the style map: dropped properties are restored, the rest re-applies. */
     update(map: StyleMap): void;
     pause(): void;
@@ -141,9 +144,12 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
     const styleKey = `r$:#${++handleCounter}${typeof target === 'string' ? `:${target}` : ''}`;
     let injectedCSS = false;
 
+    let staticCSSText = '';
+
     const splitStatic = (m: StyleMap): StyleMap => {
         if (!(options.cssFirst ?? cfg.useMediaQueries) || typeof target !== 'string') return m;
         const { css, dynamicRest } = emitCSS(target, m);
+        staticCSSText = css;
         if (css.length > 0) {
             injectStyle(css, styleKey);
             injectedCSS = true;
@@ -291,6 +297,9 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
 
     return {
         elements,
+        get css() {
+            return staticCSSText;
+        },
         update(next: StyleMap) {
             assertSourcesResolvable(next);
             teardown();
@@ -334,6 +343,11 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
             savedInline.clear();
         },
     };
+}
+
+/** Apply without the CSS-first split — every value stays JS-driven. */
+export function applyDynamic(target: Target, map: StyleMap): ResponsiveHandle {
+    return applyResponsive(target, map, { cssFirst: false });
 }
 
 function describeElement(el: HTMLElement): string {

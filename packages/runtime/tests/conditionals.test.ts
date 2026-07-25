@@ -79,8 +79,15 @@ describe('whenInRange', () => {
         expect(emission?.mediaBlocks).toEqual([{ min: 768, max: 1024, declaration: '16px' }]);
     });
 
-    it('stays dynamic when a branch is a ResponsiveValue', () => {
-        expect(whenInRange(0, 100, fluid(1, 2)).toStatic(CTX)).toBeNull();
+    it('a fluid branch still compiles: clamp() inside the @media block', () => {
+        const emission = whenInRange(0, 100, fluid(1, 2)).toStatic(CTX)!;
+        expect(emission).not.toBeNull();
+        expect(emission.mediaBlocks![0].declaration).toContain('clamp(');
+    });
+
+    it('a branch that needs its OWN media blocks cannot nest — stays dynamic', () => {
+        // per-breakpoint arrays emit @media themselves: no nesting in CSS
+        expect(whenInRange(0, 100, fluid([8, 16, 24])).toStatic(CTX)).toBeNull();
     });
 });
 
@@ -125,9 +132,12 @@ describe('breakpoint.below / above / between', () => {
         expect(v.resolve(1024)).toBe('other');
     });
 
-    it('nested fluid branches force dynamic', () => {
+    it('a fluid fallback compiles into the @media half', () => {
         const v = breakpoint.below(768, '100%', fluid(240, 320));
-        expect(v.toStatic({ ...CTX, property: 'width', unit: '' })).toBeNull();
+        const emission = v.toStatic({ ...CTX, property: 'width' })!;
+        expect(emission.declaration).toBe('100%');
+        expect(emission.mediaBlocks![0]).toMatchObject({ min: 768 });
+        expect(emission.mediaBlocks![0].declaration).toContain('clamp(240px');
         expect(v.resolve(1920)).toBe(320);
     });
 });

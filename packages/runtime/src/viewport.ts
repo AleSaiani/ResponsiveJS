@@ -15,8 +15,11 @@ const hasWindow = () => typeof window !== 'undefined';
 let vwState: State<number> | null = null;
 let vwCleanup: Disposer | null = null;
 
-/** Reactive viewport width. Lazy singleton; ONE passive resize listener. */
-export function viewportWidth(): State<number> {
+let vwReadonly: Computed<number> | null = null;
+
+/** Reactive viewport width. Lazy singleton; ONE passive resize listener.
+ *  Read-only: the hub owns the value, so a consumer cannot desynchronize it. */
+export function viewportWidth(): Computed<number> {
     if (!vwState) {
         vwState = state(hasWindow() ? window.innerWidth : configState.get().ssrWidth);
         if (hasWindow()) {
@@ -25,7 +28,8 @@ export function viewportWidth(): State<number> {
             vwCleanup = () => window.removeEventListener('resize', onResize);
         }
     }
-    return vwState;
+    vwReadonly ??= computed(() => vwState!.get());
+    return vwReadonly;
 }
 
 // ─── matchMedia registry (refcounted) ───────────────────────────────────
@@ -134,20 +138,23 @@ function releaseEntry(el: Element, entry: ContainerEntry): Disposer {
     };
 }
 
-/** Reactive width of an element (container queries in JS). Refcounted dispose. */
-export function containerWidth(el: Element): { signal: State<number>; dispose: Disposer } {
+/** Reactive width of an element (container queries in JS). Refcounted dispose.
+ *  The signal is read-only: the entry is SHARED, and a consumer writing to it
+ *  would corrupt every other consumer of the same element. */
+export function containerWidth(el: Element): { signal: Computed<number>; dispose: Disposer } {
     const entry = acquireEntry(el);
-    return { signal: entry.signal, dispose: releaseEntry(el, entry) };
+    return { signal: computed(() => entry.signal.get()), dispose: releaseEntry(el, entry) };
 }
 
 /** Reactive {width, height} of an element — same shared observer and refcount. */
-export function elementSize(el: Element): { signal: State<ElementSize>; dispose: Disposer } {
+export function elementSize(el: Element): { signal: Computed<ElementSize>; dispose: Disposer } {
     const entry = acquireEntry(el);
     if (!entry.size) {
         const initial = hasWindow() ? el.getBoundingClientRect() : { width: 0, height: 0 };
         entry.size = state({ width: Math.round(initial.width), height: Math.round(initial.height) });
     }
-    return { signal: entry.size, dispose: releaseEntry(el, entry) };
+    const size = entry.size;
+    return { signal: computed(() => size.get()), dispose: releaseEntry(el, entry) };
 }
 
 // ─── scroll tick (singleton) ────────────────────────────────────────────
@@ -155,9 +162,11 @@ export function elementSize(el: Element): { signal: State<ElementSize>; dispose:
 let scrollState: State<number> | null = null;
 let scrollCleanup: Disposer | null = null;
 
+let scrollReadonly: Computed<number> | null = null;
+
 /** Monotonic counter bumped on every scroll (capture: nested containers too).
  *  Scroll-sensitive geometry (sticky, collisions) re-measures off this. */
-export function scrollTick(): State<number> {
+export function scrollTick(): Computed<number> {
     if (!scrollState) {
         scrollState = state(0);
         if (hasWindow()) {
@@ -166,16 +175,27 @@ export function scrollTick(): State<number> {
             scrollCleanup = () => document.removeEventListener('scroll', onScroll, { capture: true });
         }
     }
-    return scrollState;
+    scrollReadonly ??= computed(() => scrollState!.get());
+    return scrollReadonly;
 }
 
-// ─── test-only teardown ─────────────────────────────────────────────────
+// ─── teardown ───────────────────────────────────────────────────────────
 
-/** Test-only: remove every listener/observer and reset all registries. */
+/**
+ * Release the whole hub: every listener, the shared ResizeObserver and all
+ * registries. For hosts that tear r$ down without tearing the page down
+ * (embedded apps, SPA route teardown, tests). Signals re-arm lazily.
+ */
+export function releaseViewportHub(): void {
+    __resetViewportHub();
+}
+
+/** Test-only alias of releaseViewportHub(). */
 export function __resetViewportHub(): void {
     vwCleanup?.();
     vwCleanup = null;
     vwState = null;
+    vwReadonly = null;
     for (const entry of mqRegistry.values()) entry.cleanup?.();
     mqRegistry.clear();
     sharedObserver?.disconnect();
@@ -184,4 +204,5 @@ export function __resetViewportHub(): void {
     scrollCleanup?.();
     scrollCleanup = null;
     scrollState = null;
+    scrollReadonly = null;
 }
