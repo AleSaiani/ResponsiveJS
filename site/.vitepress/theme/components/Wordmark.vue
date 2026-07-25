@@ -77,7 +77,17 @@ onUnmounted(() => scope.value?.dispose());
 <style>
 /* not scoped: the swap is driven by an attribute r$ writes on the nav row */
 .rjs-mark { position: relative; color: var(--rjs-green); font-weight: 700; letter-spacing: -0.01em; }
-.rjs-short { display: none; font-family: ui-monospace, SFMono-Regular, monospace; }
+/* The short form has to read as a MARK, not as two small characters — at 17px
+   wide, bare text looks like a missing logo. */
+.rjs-short {
+    display: none;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    background: var(--rjs-green);
+    color: #fff;
+    border-radius: 7px;
+    padding: 0 .38em;
+    line-height: 1.55;
+}
 .rjs-probe { position: absolute; left: 0; top: 0; height: 0; overflow: hidden; visibility: hidden; white-space: nowrap; pointer-events: none; }
 
 /* measurable, never painted, and never part of anything else's layout —

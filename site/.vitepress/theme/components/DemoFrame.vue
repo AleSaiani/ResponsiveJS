@@ -83,7 +83,9 @@ onMounted(() => {
     max-width: 100%;
     overflow: hidden;
 }
-.stage { padding: 1rem 1.25rem; }
+/* the grip overlays the right edge — content has to clear it, or a full-width
+   child (a table, a card) ends up underneath the handle */
+.stage { padding: 1rem 2.5rem 1rem 1.25rem; }
 .grip {
     position: absolute;
     top: 0;

@@ -11,7 +11,7 @@
 import { ref, onMounted, onUnmounted, shallowRef } from 'vue';
 import DemoFrame from './DemoFrame.vue';
 
-const FRAME = { min: 260, max: 900 };
+const FRAME = { min: 260, max: 1100 };
 
 const probe = ref<HTMLElement | null>(null);
 const wrap = ref<HTMLElement | null>(null);
@@ -58,7 +58,7 @@ onUnmounted(() => {
 
 <template>
     <div class="t2c">
-        <DemoFrame :start="640" :min="FRAME.min" :max="FRAME.max" label="table">
+        <DemoFrame :start="720" :min="FRAME.min" :max="FRAME.max" label="table">
             <!-- the probe: the table's natural width, never restyled, never seen -->
             <div ref="probe" class="probe" aria-hidden="true">
                 <span>INV-2053</span><span>Fabrikam Industries</span><span>12 Mar</span><span>Overdue</span><span>€ 9.120,00</span>
@@ -67,12 +67,12 @@ onUnmounted(() => {
             <div ref="wrap" class="wrap">
                 <table>
                     <thead>
-                        <tr><th>Invoice</th><th>Client</th><th>Date</th><th>Status</th><th class="num">Total</th></tr>
+                        <tr><th>Invoice</th><th class="client">Client</th><th>Date</th><th>Status</th><th class="num">Total</th></tr>
                     </thead>
                     <tbody>
                         <tr v-for="row in ROWS" :key="row.id">
                             <td data-label="Invoice"><code>{{ row.id }}</code></td>
-                            <td data-label="Client">{{ row.client }}</td>
+                            <td data-label="Client" class="client">{{ row.client }}</td>
                             <td data-label="Date">{{ row.date }}</td>
                             <td data-label="Status"><span class="pill" :data-state="row.status.toLowerCase()">{{ row.status }}</span></td>
                             <td data-label="Total" class="num"><span class="amount">{{ row.total }}</span></td>
@@ -99,20 +99,63 @@ onUnmounted(() => {
 .probe { height: 0; overflow: hidden; display: flex; gap: 1.5rem; white-space: nowrap; font-size: .95rem; }
 .probe > span { flex: 0 0 auto; }
 
-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--vp-c-divider); white-space: nowrap; }
-th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--vp-c-text-2); }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
-.pill { border-radius: 999px; padding: .15rem .55rem; font-size: .78rem; background: var(--vp-c-default-soft); }
+/* The docs theme renders tables as `display: block; width: max-content` so they
+   can scroll — which would keep this one at its content width forever. Here the
+   whole point is that it fills the panel until it can't. */
+.wrap table { display: table; width: 100%; table-layout: auto; border-collapse: collapse; font-size: .95rem; }
+th, td { text-align: left; padding: .55rem .65rem; border-bottom: 1px solid var(--vp-c-divider); white-space: nowrap; }
+th { font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; color: var(--vp-c-text-2); font-weight: 600; }
+tbody tr:last-child td { border-bottom: 0; }
+.client { width: 99%; }
+.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.pill { display: inline-block; border-radius: 999px; padding: .15rem .6rem; font-size: .76rem; font-weight: 600; background: var(--vp-c-default-soft); }
 .pill[data-state='paid'] { color: #0a6c3d; background: #d8f3e3; }
 .pill[data-state='overdue'] { color: #8a3a06; background: #ffe6d2; }
 
-/* CSS owns the switch; JS only stated the fact */
+/* ── CSS owns the switch; JS only stated the fact ─────────────────────────
+   Restyling the table freely is safe precisely because the measurement lives
+   on the probe: nothing here can feed back into it. */
+.wrap[data-crowded] table,
+.wrap[data-crowded] tbody { display: block; width: 100%; }
 .wrap[data-crowded] thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.wrap[data-crowded] tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .1rem .75rem; padding: .55rem 0; border-bottom: 1px solid var(--vp-c-divider); }
-.wrap[data-crowded] td { border: 0; padding: .12rem 0; white-space: normal; display: contents; }
-.wrap[data-crowded] td::before { content: attr(data-label); color: var(--vp-c-text-2); font-size: .8rem; }
-.wrap[data-crowded] .num { text-align: left; }
+
+.wrap[data-crowded] tr {
+    display: grid;
+    /* The right-hand track carries both the status pill and the amount, and
+       intrinsic sizing settles on the pill — which clips the amount mid-figure.
+       An explicit floor makes the money the thing that cannot lose. */
+    grid-template-columns: minmax(0, 1fr) minmax(5.75em, max-content);
+    grid-template-areas:
+        'code   total'
+        'client client'
+        'date   status';
+    gap: .2rem .75rem;
+    align-items: center;
+    padding: .7rem .85rem;
+    margin-bottom: .5rem;
+    border: 1px solid var(--vp-c-divider);
+    border-radius: 12px;
+    background: var(--vp-c-bg);
+}
+.wrap[data-crowded] tr:last-child { margin-bottom: 0; }
+.wrap[data-crowded] td { border: 0; padding: 0; white-space: normal; }
+/* the labels are scaffolding for the table; a card reads without them */
+.wrap[data-crowded] td[data-label='Invoice'] { grid-area: code; }
+/* the amount must never wrap: "€ 1.240,00" split over two lines is the kind of
+   detail that makes a card layout look broken */
+.wrap[data-crowded] td[data-label='Total'] {
+    grid-area: total;
+    text-align: right;
+    font-size: 1.05em;
+    white-space: nowrap;
+    /* the track is shared with the status pill; without this the pill wins the
+       sizing and the amount is clipped mid-figure */
+    min-width: max-content;
+}
+.wrap[data-crowded] td[data-label='Client'] { grid-area: client; font-weight: 600; font-size: 1.05em; }
+.wrap[data-crowded] td[data-label='Date'] { grid-area: date; color: var(--vp-c-text-2); font-size: .85em; }
+.wrap[data-crowded] td[data-label='Status'] { grid-area: status; justify-self: end; }
+.wrap[data-crowded] .client { width: auto; }
 
 .readout { font-size: .9rem; color: var(--vp-c-text-2); }
 .readout .on { color: #d97706; }

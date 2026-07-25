@@ -149,16 +149,38 @@ Fixes are labelled: `exact` ones apply verbatim, `heuristic` ones are a directio
 
 ## This reacts to the panel, not to your window
 
-Drag it. Five columns stay a table while they fit and become cards when they don't — and the
-switch is a *measurement*, so it survives a longer client name, a wider font, another column.
+<div class="beside">
+<div>
 
 <TableToCards />
 
-<p class="why">The subtlety worth stealing: the predicate measures a probe that keeps the
-table's natural width, never the table it restyles. Measure what you change and it oscillates
-forever.</p>
+</div>
+<div class="beside-note">
 
-<p class="more"><a class="btn" href="/demos">Six more live demos →</a></p>
+Drag it. Five columns stay a table while they fit and become cards when they don't — and the
+switch is a **measurement**, so it survives a longer client name, a wider font, another column
+next quarter.
+
+```ts
+r$.geometry('.probe', {
+    crowded: r$.whenOverflows('x'),
+});
+```
+
+```css
+.wrap[data-crowded] tr {
+    display: grid;
+    grid-template-areas: 'code total' 'client client' 'date status';
+}
+```
+
+The subtlety worth stealing: the predicate measures a **probe** that keeps the table's natural
+width, never the table it restyles. Measure what you change and it oscillates forever.
+
+<a class="btn" href="/demos">Six more live demos →</a>
+
+</div>
+</div>
 
 </div>
 
@@ -188,6 +210,11 @@ forever.</p>
 .three { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 2rem; }
 .swap p { margin: .35rem 0; }
 .why { font-size: .92rem; color: var(--vp-c-text-2); }
+
+.beside { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 2.5rem; align-items: start; }
+@media (max-width: 900px) { .beside { grid-template-columns: minmax(0, 1fr); gap: 1rem; } }
+.beside-note p { color: var(--vp-c-text-2); }
+.beside-note .btn { margin-top: .5rem; }
 
 .verdict { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 2.5rem; align-items: start; }
 @media (max-width: 900px) { .verdict { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; } }
