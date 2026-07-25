@@ -6,6 +6,7 @@
 '@responsivejs/cli': minor
 '@responsivejs/react': minor
 '@responsivejs/vue': minor
+'@responsivejs/angular': minor
 ---
 
 First public alpha of ResponsiveJS (`r$`).
@@ -39,8 +40,9 @@ generated from your constructs) and `doctor`.
 **The loop** — constructs publish a provenance manifest, so a violation names the construct
 that owns the element and where it was declared. The agent patches the cause, not the symptom.
 
-**Adapters** — `@responsivejs/react` and `@responsivejs/vue` own the lifecycle: apply on
-mount, update in place, dispose on unmount.
+**Adapters** — `@responsivejs/react`, `@responsivejs/vue` and `@responsivejs/angular` own the
+lifecycle: apply on mount, update in place, dispose on unmount. The Angular package is
+decorator-free on purpose, so it needs no Angular compilation step.
 
 Alpha: the API may still move. Everything documented is measured, and every example in the
 docs is verified against the built code.

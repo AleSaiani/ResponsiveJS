@@ -253,7 +253,8 @@ useEffect(() => {
 ```
 
 Note: selectors resolve at creation — for elements mounted later, create the construct in the
-component that owns them (adapters that manage this automatically are on the roadmap).
+component that owns them — or let an [adapter](../api/adapters.md) do it for you
+(React, Vue and Angular bindings own the lifecycle), or `r$.scope()` to release a group at once.
 
 ### SSR without flashes — static emission
 

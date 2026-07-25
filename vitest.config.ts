@@ -46,6 +46,10 @@ export default defineConfig({
                 find: /^@responsivejs\/vue$/,
                 replacement: resolve(import.meta.dirname, 'packages/vue/src/index.ts'),
             },
+            {
+                find: /^@responsivejs\/angular$/,
+                replacement: resolve(import.meta.dirname, 'packages/angular/src/index.ts'),
+            },
         ],
     },
     test: {

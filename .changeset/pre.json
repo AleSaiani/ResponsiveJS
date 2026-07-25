@@ -8,7 +8,8 @@
         "@responsivejs/design": "0.0.0",
         "@responsivejs/cli": "0.0.0",
         "@responsivejs/react": "0.0.0",
-        "@responsivejs/vue": "0.0.0"
+        "@responsivejs/vue": "0.0.0",
+        "@responsivejs/angular": "0.0.0"
     },
     "changesets": []
 }

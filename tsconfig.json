@@ -13,7 +13,8 @@
             "@responsivejs/design": ["./packages/design/src/index.ts"],
             "@responsivejs/design/browser": ["./packages/design/src/browser/index.ts"],
             "@responsivejs/react": ["./packages/react/src/index.ts"],
-            "@responsivejs/vue": ["./packages/vue/src/index.ts"]
+            "@responsivejs/vue": ["./packages/vue/src/index.ts"],
+            "@responsivejs/angular": ["./packages/angular/src/index.ts"]
         }
     },
     "include": [

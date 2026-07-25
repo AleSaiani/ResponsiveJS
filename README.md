@@ -26,6 +26,7 @@ and AI agents. One lineage (`r$`), one model, three uses:
 | [`@responsivejs/contract`](packages/contract) | The design-contract DSL: declarative, serializable expectations for CI regression and AI agents.                     | **alpha**   |
 | [`@responsivejs/react`](packages/react)    | React bindings: hooks that own the construct lifecycle (mount → update → unmount).                                     | **alpha**   |
 | [`@responsivejs/vue`](packages/vue)        | Vue bindings: the same composables, plus a `v-responsive` directive.                                                   | **alpha**   |
+| [`@responsivejs/angular`](packages/angular) | Angular bindings: decorator-free `inject*` helpers and signals — no compilation step.                                | **alpha**   |
 
 ## Quick start — audit any URL (CLI)
 

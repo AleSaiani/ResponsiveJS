@@ -25,7 +25,7 @@ Or pick your entry:
 | Validate/score a page in CI                            | `npm i -D @responsivejs/design @playwright/test` | [§ Validation](#validation) |
 | Score a live DOM without any driver                    | `npm i @responsivejs/design`           | [§ Zero-driver](#zero-driver) |
 | Pin a layout down as a verifiable contract             | `npm i -D @responsivejs/contract`      | [§ Contracts](#contracts) |
-| Use it in React / Vue                                  | `npm i @responsivejs/react` · `@responsivejs/vue` | [§ Adapters](#adapters) |
+| Use it in React / Vue / Angular                         | `npm i @responsivejs/react` · `/vue` · `/angular` | [§ Adapters](#adapters) |
 | Just the math (curves, geometry, WCAG, aesthetics)     | `npm i @responsivejs/core`             | [API: core](api/core.md) |
 | Drive r$ as an AI agent                                | —                                      | [agents docs](agents/validation-reference.md) |
 
@@ -94,7 +94,9 @@ useResponsive(card, { padding: r$.fluid(12, 24) });
 ```
 
 Changing a declaration calls `update()` on the live handle instead of recreating it; React's
-StrictMode double-invocation is handled. → [react](../packages/react) · [vue](../packages/vue)
+StrictMode double-invocation is handled. Angular ships decorator-free helpers (`injectResponsive`,
+`injectViewportWidth`, …) that need no compilation step.
+→ **[adapters reference](api/adapters.md)**
 
 ## Validation
 

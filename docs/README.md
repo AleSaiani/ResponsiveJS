@@ -12,8 +12,8 @@ One page per question — start from what you're trying to do.
 | **How do I validate/score a page?** | **[The design guide](guides/validation.md)** — `r$(page)`: measure → model → judge, `analyze()`, contracts, cutting false positives |
 | How do I test all of this? | [Testing responsive behavior](guides/testing.md) — what's unit-testable vs what needs a browser, patterns and traps |
 | How do I wire it into CI? | [CI guide](guides/ci.md) — pipelines, SARIF, baselines strategy |
-| What's the exact signature of X? | API reference: [runtime](api/runtime.md) · [design](api/design.md) · [contract](api/contract.md) · [cli](api/cli.md) · [core](api/core.md) |
-| How do I use it in React or Vue? | [react adapter](../packages/react) · [vue adapter](../packages/vue) — hooks/composables that own the construct lifecycle |
+| What's the exact signature of X? | API reference: [runtime](api/runtime.md) · [design](api/design.md) · [contract](api/contract.md) · [cli](api/cli.md) · [core](api/core.md) · [adapters](api/adapters.md) |
+| How do I use it in React / Vue / Angular? | [Adapters reference](api/adapters.md) — the lifecycle, per framework |
 | I have no build step (CMS, plain HTML) | [`runtime/global`](api/runtime.md#no-build-step) — one `<script>`, `window.r$` |
 | A live page using everything | [Fluid landing example](../examples/landing) — run it, resize it, read its tutorial |
 | The oracle inside DevTools | [The r$ devtool](../packages/devtool) — sweep, curve inspector, score HUD, contract recorder (load unpacked) |
