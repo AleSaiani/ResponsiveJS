@@ -42,5 +42,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # the landing fixture and the inject/devtool e2e run against built dist
+      - run: pnpm build
       - run: pnpm --filter @responsivejs/design exec playwright install --with-deps chromium
       - run: pnpm test:e2e

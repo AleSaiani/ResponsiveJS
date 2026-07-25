@@ -9,7 +9,8 @@
             "@responsivejs/runtime/*": ["./packages/runtime/src/*.ts"],
             "@responsivejs/contract": ["./packages/contract/src/index.ts"],
             "@responsivejs/contract/*": ["./packages/contract/src/*.ts"],
-            "@responsivejs/design": ["./packages/design/src/index.ts"]
+            "@responsivejs/design": ["./packages/design/src/index.ts"],
+            "@responsivejs/design/browser": ["./packages/design/src/browser/index.ts"]
         }
     },
     "include": [

@@ -22,6 +22,10 @@ export default defineConfig({
                 find: /^@responsivejs\/design$/,
                 replacement: resolve(import.meta.dirname, 'packages/design/src/index.ts'),
             },
+            {
+                find: /^@responsivejs\/design\/browser$/,
+                replacement: resolve(import.meta.dirname, 'packages/design/src/browser/index.ts'),
+            },
         ],
     },
     test: {

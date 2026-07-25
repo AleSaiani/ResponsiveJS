@@ -1,0 +1,25 @@
+{
+    "name": "@responsivejs/devtool",
+    "version": "0.0.0",
+    "private": true,
+    "description": "r$ DevTools extension — the closed loop, visualized: report, curve inspector, score HUD, contract recorder.",
+    "license": "MPL-2.0",
+    "type": "module",
+    "engines": {
+        "node": ">=20.19"
+    },
+    "scripts": {
+        "build": "node scripts/build.mjs"
+    },
+    "dependencies": {
+        "@responsivejs/contract": "workspace:^",
+        "@responsivejs/core": "workspace:^",
+        "@responsivejs/design": "workspace:^"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.50.0",
+        "@types/chrome": "^0.0.287",
+        "esbuild": "^0.25.0",
+        "typescript": "^5.7.0"
+    }
+}

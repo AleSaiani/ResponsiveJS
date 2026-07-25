@@ -14,6 +14,7 @@ One page per question — start from what you're trying to do.
 | How do I wire it into CI? | [CI guide](guides/ci.md) — pipelines, SARIF, baselines strategy |
 | What's the exact signature of X? | API reference: [runtime](api/runtime.md) · [design](api/design.md) · [contract](api/contract.md) · [cli](api/cli.md) · [core](api/core.md) |
 | A live page using everything | [Fluid landing example](../examples/landing) — run it, resize it, read its tutorial |
+| The oracle inside DevTools | [The r$ devtool](../packages/devtool) — sweep, curve inspector, score HUD, contract recorder (load unpacked) |
 
 **For AI agents** (compact, exact I/O — different documents on purpose):
 

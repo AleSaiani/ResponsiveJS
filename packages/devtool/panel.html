@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+:root { color-scheme: light dark; }
+body { font: 12px/1.5 system-ui, sans-serif; margin: 0; padding: 10px 12px; }
+button { font: inherit; padding: 3px 10px; cursor: pointer; }
+input, select { font: inherit; padding: 2px 6px; }
+code { font-family: ui-monospace, monospace; font-size: 11px; }
+.bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.bar label { opacity: .75; }
+#widths, #touch-min { width: 7.5em; } #selectors { width: 18em; }
+#hud { margin: 6px 0; font-weight: 600; }
+#hud .pass { color: #30a46c; } #hud .fail { color: #e5484d; }
+#hud .counts, #hud .score { font-weight: 400; opacity: .85; }
+#status { opacity: .65; margin: 4px 0 10px; }
+details { margin: .4em 0; } summary { cursor: pointer; font-weight: 600; }
+.violation { padding: 2px 4px; border-radius: 4px; cursor: pointer; }
+.violation:hover { background: rgb(128 128 128 / .15); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+.owner { opacity: .65; margin-left: 1.2em; font-size: 11px; }
+.clean { color: #30a46c; font-weight: 600; }
+.hint { opacity: .6; }
+.cols { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+.col { min-width: 22rem; flex: 1; }
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; margin: 14px 0 6px; }
+#curve-plot svg { max-width: 340px; border: 1px solid rgb(128 128 128 / .3); border-radius: 4px; }
+#curve-plot circle { fill: #3b82f6; }
+#contract-out { white-space: pre; overflow: auto; max-height: 30vh; border: 1px solid rgb(128 128 128 / .3);
+  border-radius: 4px; padding: 8px; font-family: ui-monospace, monospace; font-size: 11px; }
+a { cursor: pointer; opacity: .6; margin-left: .5em; }
+</style>
+</head>
+<body>
+<div class="bar">
+    <button id="quick">Quick check</button>
+    <button id="sweep">Sweep</button>
+    <label>widths <input id="widths" value="320,768,1280" /></label>
+    <label>touch-min <input id="touch-min" value="24" /></label>
+    <label>selectors <input id="selectors" placeholder="(landmark set)" /></label>
+    <button id="overlay">Mount overlay</button>
+</div>
+<div id="hud"></div>
+<div id="status"></div>
+
+<div class="cols">
+    <div class="col">
+        <h2>Findings</h2>
+        <div id="violations"></div>
+    </div>
+    <div class="col">
+        <h2>Curves — measured f(width)</h2>
+        <div class="bar">
+            <select id="curve-selector"></select>
+            <select id="curve-prop">
+                <option>fontSize</option><option>width</option><option>height</option><option>x</option><option>y</option>
+            </select>
+            <button id="pin">Pin as baseline</button>
+        </div>
+        <div id="curve-plot"><div class="hint">sweep first — a curve needs at least two widths</div></div>
+
+        <h2>Contract recorder</h2>
+        <div class="bar">
+            <label><input type="checkbox" id="rec-touch" checked /> touchTarget ≥</label>
+            <input id="rec-touch-min" value="24" style="width:4em" />
+            <button id="export">Build contract</button>
+        </div>
+        <div id="pinned"></div>
+        <div id="contract-out"></div>
+    </div>
+</div>
+
+<script src="panel.js"></script>
+</body>
+</html>

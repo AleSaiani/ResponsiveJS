@@ -1,0 +1,11 @@
+{
+    "manifest_version": 3,
+    "name": "r$ devtool",
+    "version": "0.1.0",
+    "description": "The responsive design oracle in your DevTools: measure f(width), judge it, pin it as a contract.",
+    "devtools_page": "devtools.html",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "permissions": ["debugger"]
+}
