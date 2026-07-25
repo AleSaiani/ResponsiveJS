@@ -15,6 +15,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 await build({
     entryPoints: [
         join(root, 'src/panel.ts'),
+        join(root, 'src/sidebar.ts'),
         join(root, 'src/devtools.ts'),
         join(root, 'src/background.ts'),
     ],
@@ -27,7 +28,7 @@ await build({
 });
 
 await mkdir(join(root, 'dist'), { recursive: true });
-for (const file of ['manifest.json', 'devtools.html', 'panel.html']) {
+for (const file of ['manifest.json', 'devtools.html', 'panel.html', 'sidebar.html']) {
     await cp(join(root, file), join(root, 'dist', file));
 }
 

@@ -7,5 +7,5 @@
     "background": {
         "service_worker": "background.js"
     },
-    "permissions": ["debugger"]
+    "permissions": ["debugger", "storage"]
 }

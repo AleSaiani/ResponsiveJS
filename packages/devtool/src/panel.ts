@@ -2,45 +2,42 @@
 /**
  * The r$ panel — the closed loop, visualized.
  *
- * Page report: full-width sweep (CDP emulation through the background's
- * chrome.debugger proxy) or a quick live-viewport check. Element f(width):
- * pick an element ($0 or a selector) and every measurable property is
- * plotted as the MEASURED curve. Contract: pin curves, build the JSON.
+ * Page report (full-width sweep, diff vs the previous one), Element
+ * f(width) (mouse picker / $0 / selector → every property as a measured
+ * curve, arbitrary extras included), Contract (pins → JSON). Settings and
+ * pins persist in chrome.storage (pins per origin); `live` re-checks the
+ * page on DOM mutations. Everything measured via CDP emulation, with
+ * automatic iframe-emulation fallback when the debugger is blocked.
  */
 
 import { analyzeStore, buildCollectExpression, fromWire, type UnifiedReport, type ViewportSnapshotWire } from '@responsivejs/design/browser';
 import type { SnapshotStore, Violation } from '@responsivejs/core/types';
-import { makeCdpClient, curveOf, cdpSweep, iframeSweep, type TabCdp, type MeasureConfig, type ElementInspection } from './engine.js';
-import { parsePropList, toTrack } from './props.js';
-import { curveToSvg } from './curve-svg.js';
+import { curveOf, type MeasureConfig } from './engine.js';
+import { evalInPage, measure, modeNote } from './devtools-io.js';
+import { curveCard, discreteCard, el, fmt } from './cards.js';
 import { buildRecordedContract, type RecordedBaseline } from './recorder.js';
+import { toTrack, parsePropList } from './props.js';
 import { SELECTED_ELEMENT_EXPRESSION } from './select-element.js';
 import { PICKER_INSTALL_EXPRESSION, PICKER_POLL_EXPRESSION, type PickState } from './picker.js';
 import { buildHighlightExpression } from './highlight.js';
+import { diffSweeps, type SweepDiff } from './diff.js';
+import { WATCH_START_EXPRESSION, WATCH_POLL_EXPRESSION, WATCH_STOP_EXPRESSION } from './watch.js';
+import { loadSettings, saveSettings, loadPins, savePins, onPinsChanged } from './settings.js';
 
 const MEASURABLE = ['fontSize', 'width', 'height', 'x', 'y'] as const;
+const DEFAULT_SELECTORS = ['main', 'header', 'footer', 'nav', 'section', 'h1', 'h2', 'p', 'a[href]', 'button', 'input', 'img'];
 
 // ─── state ──────────────────────────────────────────────────────────────
 
 let pageStore: SnapshotStore | null = null;
 let report: UnifiedReport | null = null;
-let cdp: TabCdp | null = null;
-const baselines: RecordedBaseline[] = [];
+let previous: { store: SnapshotStore; violations: Violation[] } | null = null;
+let baselines: RecordedBaseline[] = [];
+let origin = '';
+let watchTimer: ReturnType<typeof setInterval> | undefined;
+let recheckTimer: ReturnType<typeof setTimeout> | undefined;
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
-
-const messenger = {
-    send: (msg: Record<string, unknown>) => chrome.runtime.sendMessage(msg) as Promise<{ ok?: boolean; result?: unknown; error?: string }>,
-};
-
-function evalInPage<T>(expression: string): Promise<T> {
-    return new Promise((resolve, reject) => {
-        chrome.devtools.inspectedWindow.eval(expression, (result, err) => {
-            if (err) reject(new Error(err.description ?? 'eval failed'));
-            else resolve(result as T);
-        });
-    });
-}
 
 function widths(): number[] {
     return ($<HTMLInputElement>('widths').value || '320,768,1280')
@@ -64,40 +61,6 @@ function explainCdpError(message: string): string {
     return message;
 }
 
-/** attach → work → detach; the debugger bar on the page is expected. */
-async function withCdp<T>(work: (client: TabCdp) => Promise<T>): Promise<T> {
-    cdp ??= makeCdpClient(messenger, chrome.devtools.inspectedWindow.tabId);
-    const pageUrl = await evalInPage<string>('location.href').catch(() => undefined);
-    await cdp.attach(pageUrl);
-    try {
-        return await work(cdp);
-    } finally {
-        await cdp.detach().catch(() => {});
-    }
-}
-
-/**
- * Measure through the debugger; when Chrome refuses the attach because a
- * FOREIGN extension has frames in the page (its check covers the whole
- * tab — nothing we can do), fall back to iframe emulation: the page
- * reloaded hidden at every width. Honest caveat: that is a fresh load.
- */
-async function measure(cfg: MeasureConfig): Promise<ElementInspection & { mode: 'cdp' | 'iframe' }> {
-    try {
-        const inspection = await withCdp((client) => cdpSweep(client, cfg));
-        return { ...inspection, mode: 'cdp' };
-    } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        if (!message.includes('different extension')) throw e;
-        status('debugger blocked by another extension — iframe emulation (fresh same-origin load)…');
-        const inspection = await iframeSweep(evalInPage, cfg);
-        return { ...inspection, mode: 'iframe' };
-    }
-}
-
-const modeNote = (mode: 'cdp' | 'iframe'): string =>
-    mode === 'iframe' ? ' · measured via iframe emulation (fresh load — another extension blocks the debugger here)' : '';
-
 // ─── tabs ───────────────────────────────────────────────────────────────
 
 function showTab(name: string): void {
@@ -111,8 +74,8 @@ function showTab(name: string): void {
 
 // ─── page report ────────────────────────────────────────────────────────
 
-async function quickCheck(): Promise<void> {
-    status('measuring at the live viewport…');
+async function quickCheck(auto = false): Promise<void> {
+    if (!auto) status('measuring at the live viewport…');
     const wire = await evalInPage<ViewportSnapshotWire>(buildCollectExpression({ selectors: DEFAULT_SELECTORS }));
     const snap = fromWire(wire);
     pageStore = {
@@ -123,18 +86,28 @@ async function quickCheck(): Promise<void> {
     };
     report = analyzeStore(pageStore);
     renderReport();
-    showTab('page');
-    status(`live check at ${snap.width}px — Sweep page for every width`);
+    if (!auto) {
+        showTab('page');
+        status(`live check at ${snap.width}px — Sweep page for every width`);
+    } else {
+        status(`live re-check at ${snap.width}px (${new Date().toLocaleTimeString()}) — the page changed`);
+    }
 }
 
 async function sweepPage(): Promise<void> {
     const ws = widths();
     status(`sweeping ${ws.join(', ')}px (the yellow debugger bar is expected)…`);
     try {
-        const { store, mode } = await measure({ widths: ws, selectors: DEFAULT_SELECTORS });
+        const outgoing = pageStore && report && pageStore.widths.length > 1 ? { store: pageStore, violations: report.violations } : null;
+        const { store, mode } = await measure(
+            { widths: ws, selectors: DEFAULT_SELECTORS },
+            () => status('debugger blocked by another extension — iframe emulation (fresh same-origin load)…'),
+        );
+        previous = outgoing;
         pageStore = store;
         report = analyzeStore(store);
         renderReport();
+        renderDiff(previous ? diffSweeps(previous, { store, violations: report.violations }) : null);
         showTab('page');
         status(`swept ${ws.length} widths — now pick an element in the Element tab${modeNote(mode)}`);
     } catch (e) {
@@ -184,13 +157,30 @@ function renderReport(): void {
             });
             row.append(dot, target, document.createTextNode(` @${v.width}px — ${v.detail} `), toElements);
             if (v.owner) row.append(el('div', 'owner', `↳ ${v.owner.construct}${v.owner.source ? ` at ${v.owner.source}` : ''}`));
-            // stay in the panel: scroll the page to the element and flash it
             row.addEventListener('click', () => flashOnPage(v.element, v.rule));
             details.append(row);
         }
         list.append(details);
     }
     if (report.violations.length === 0) list.append(el('div', 'clean', 'No violations.'));
+}
+
+function renderDiff(diff: SweepDiff | null): void {
+    const box = $('diff');
+    box.innerHTML = '';
+    if (!diff) return;
+    if (diff.changes.length === 0 && diff.appeared.length === 0 && diff.resolved.length === 0) {
+        box.append(el('div', 'hint', 'diff vs previous sweep: nothing changed'));
+        return;
+    }
+    box.append(el('h2', '', 'Changed since the previous sweep'));
+    for (const key of diff.resolved) box.append(el('div', 'diff-resolved', `✓ resolved: ${key.replaceAll('|', ' · ')}`));
+    for (const key of diff.appeared) box.append(el('div', 'diff-appeared', `✗ appeared: ${key.replaceAll('|', ' · ')}`));
+    for (const c of diff.changes.slice(0, 40)) {
+        const elName = c.index > 0 ? `${c.selector}[${c.index}]` : c.selector;
+        box.append(el('div', 'diff-change', `${elName} · ${c.prop} @${c.width}px: ${fmt(c.before)} → ${fmt(c.after)}`));
+    }
+    if (diff.changes.length > 40) box.append(el('div', 'hint', `… and ${diff.changes.length - 40} more value changes`));
 }
 
 function openInElements(element: string | undefined): void {
@@ -213,7 +203,6 @@ function flashOnPage(element: string | undefined, rule: string): void {
 
 // ─── element f(width) — the inspector ───────────────────────────────────
 
-/** Mouse picker: highlight-on-hover in the page, click picks, Esc cancels. */
 async function pickOnPage(): Promise<void> {
     await evalInPage(PICKER_INSTALL_EXPRESSION);
     status('🖱 click an element ON THE PAGE to measure it (Esc cancels)…');
@@ -257,12 +246,10 @@ async function inspectElement(selector: string): Promise<void> {
     const extraProps = parsePropList($<HTMLInputElement>('el-props').value);
     status(`measuring ${selector} at ${ws.join(', ')}px…`);
     try {
-        const inspection = await measure({
-            widths: ws,
-            selectors: [selector],
-            extraSelector: selector,
-            extraProps,
-        });
+        const cfg: MeasureConfig = { widths: ws, selectors: [selector], extraSelector: selector, extraProps };
+        const inspection = await measure(cfg, () =>
+            status('debugger blocked by another extension — iframe emulation (fresh same-origin load)…'),
+        );
         renderElementProps(selector, inspection.store, inspection.extra);
         showTab('element');
         status(`${selector} measured at ${ws.length} widths — pin the curves worth keeping${modeNote(inspection.mode)}`);
@@ -276,39 +263,23 @@ function renderElementProps(selector: string, store: SnapshotStore, extra: Map<s
     grid.innerHTML = '';
     let rendered = 0;
 
-    // the default measurable set — pinnable as contract baselines
     for (const prop of MEASURABLE) {
         const curve = curveOf(store, selector, prop);
         if (curve.size === 0) continue;
         rendered++;
-        grid.append(curveCard(prop, curve, () => {
-            baselines.push({ selector, prop, curve: [...curve.entries()] });
-            renderRecorder();
-            status(`pinned ${selector} · ${prop} — see the Contract tab`);
-        }));
+        grid.append(
+            curveCard(prop, curve, () => {
+                void addPin({ selector, prop, curve: [...curve.entries()] });
+                status(`pinned ${selector} · ${prop} — see the Contract tab`);
+            }),
+        );
     }
 
-    // user-requested extra properties: numeric → curve; anything else → discrete
     for (const [prop, values] of extra) {
         if (values.size === 0) continue;
         rendered++;
         const track = toTrack(values);
-        if (track.kind === 'curve') {
-            grid.append(curveCard(prop, track.curve)); // not a baseline prop — no pin
-        } else {
-            const card = el('div', 'prop-card');
-            const h = document.createElement('h3');
-            const distinct = new Set(track.values.values()).size;
-            h.append(el('span', '', prop), el('span', 'range', distinct === 1 ? 'constant' : `${distinct} distinct values`));
-            const list = el('div', 'discrete');
-            for (const [w, v] of track.values) {
-                const row = el('div', '');
-                row.append(el('span', 'w', `${w}px`), document.createTextNode(v || '—'));
-                list.append(row);
-            }
-            card.append(h, list);
-            grid.append(card);
-        }
+        grid.append(track.kind === 'curve' ? curveCard(prop, track.curve) : discreteCard(prop, track.values));
     }
 
     if (rendered === 0) {
@@ -316,43 +287,13 @@ function renderElementProps(selector: string, store: SnapshotStore, extra: Map<s
     }
 }
 
-function curveCard(prop: string, curve: Map<number, number>, onPin?: () => void): HTMLElement {
-    const svg = curveToSvg(curve, 300, 110);
-    const flat = svg.minValue === svg.maxValue;
+// ─── contract recorder (pins persist per origin) ────────────────────────
 
-    const card = el('div', 'prop-card');
-    const h = document.createElement('h3');
-    h.append(
-        el('span', '', prop),
-        el('span', 'range', flat ? `${fmt(svg.minValue)} (constant)` : `${fmt(svg.minValue)} → ${fmt(svg.maxValue)}`),
-    );
-    if (onPin) {
-        const pin = document.createElement('button');
-        pin.className = 'pin';
-        pin.textContent = '📌 pin';
-        pin.title = 'Pin this measured curve as a contract baseline';
-        pin.addEventListener('click', onPin);
-        h.append(pin);
-    }
-
-    const dots = svg.points
-        .map((p) => `<circle cx="${p.x}" cy="${p.y}" r="3"><title>${fmt(p.value)} @ ${p.width}px</title></circle>`)
-        .join('');
-    const plot = document.createElement('div');
-    plot.innerHTML = `<svg viewBox="0 0 ${svg.width} ${svg.height}" class="${flat ? 'flat' : ''}"><path d="${svg.path}"/>${dots}</svg>`;
-
-    const vals = el('div', 'vals');
-    for (const [w, v] of curve) vals.append(el('span', '', `${w}px → ${fmt(v)}`));
-
-    card.append(h, plot, vals);
-    return card;
+async function addPin(pin: RecordedBaseline): Promise<void> {
+    baselines.push(pin);
+    renderRecorder();
+    if (origin) await savePins(origin, baselines);
 }
-
-function fmt(n: number): string {
-    return Number.isInteger(n) ? String(n) : n.toFixed(1);
-}
-
-// ─── contract recorder ──────────────────────────────────────────────────
 
 function renderRecorder(): void {
     const pinned = $('pinned');
@@ -363,6 +304,7 @@ function renderRecorder(): void {
         del.addEventListener('click', () => {
             baselines.splice(i, 1);
             renderRecorder();
+            if (origin) void savePins(origin, baselines);
         });
         row.append(del);
         pinned.append(row);
@@ -371,7 +313,7 @@ function renderRecorder(): void {
 
 function exportContract(): void {
     const contract = buildRecordedContract({
-        name: 'recorded',
+        name: origin ? new URL(origin).hostname : 'recorded',
         widths: pageStore?.widths.length ? pageStore.widths : widths(),
         touchMin: $<HTMLInputElement>('rec-touch').checked ? Number($<HTMLInputElement>('rec-touch-min').value) || 24 : undefined,
         baselines,
@@ -380,7 +322,30 @@ function exportContract(): void {
     status('contract ready — save it and wire `rjs verify` into CI');
 }
 
-// ─── overlay + helpers ──────────────────────────────────────────────────
+// ─── live re-check on mutations ─────────────────────────────────────────
+
+async function setLive(on: boolean): Promise<void> {
+    clearInterval(watchTimer);
+    clearTimeout(recheckTimer);
+    if (!on) {
+        await evalInPage(WATCH_STOP_EXPRESSION).catch(() => {});
+        status('live re-check off');
+        return;
+    }
+    await evalInPage(WATCH_START_EXPRESSION);
+    watchTimer = setInterval(() => {
+        void evalInPage<boolean>(WATCH_POLL_EXPRESSION)
+            .then((dirty) => {
+                if (!dirty) return;
+                clearTimeout(recheckTimer);
+                recheckTimer = setTimeout(() => void quickCheck(true).catch(() => {}), 400);
+            })
+            .catch(() => {});
+    }, 1000);
+    status('live — the page re-checks itself on every DOM change (quick check, live viewport)');
+}
+
+// ─── overlay ────────────────────────────────────────────────────────────
 
 async function mountOverlay(): Promise<void> {
     const code = await (await fetch(chrome.runtime.getURL('browser-global.js'))).text();
@@ -388,16 +353,38 @@ async function mountOverlay(): Promise<void> {
     status('overlay mounted on the page (bottom-right badge)');
 }
 
-function el(tag: string, cls: string, text?: string): HTMLElement {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text !== undefined) e.textContent = text;
-    return e;
+// ─── boot ───────────────────────────────────────────────────────────────
+
+async function refreshOrigin(): Promise<void> {
+    origin = await evalInPage<string>('location.origin').catch(() => '');
+    baselines = origin ? await loadPins(origin) : [];
+    renderRecorder();
+    if (origin) onPinsChanged(origin, (pins) => {
+        baselines = pins;
+        renderRecorder();
+    });
 }
 
-const DEFAULT_SELECTORS = ['main', 'header', 'footer', 'nav', 'section', 'h1', 'h2', 'p', 'a[href]', 'button', 'input', 'img'];
+async function init(): Promise<void> {
+    const settings = await loadSettings();
+    $<HTMLInputElement>('widths').value = settings.widths;
+    $<HTMLInputElement>('el-props').value = settings.extraProps;
+    $<HTMLInputElement>('rec-touch-min').value = settings.touchMin;
+    $<HTMLInputElement>('live').checked = settings.live;
+    await refreshOrigin();
+    if (settings.live) void setLive(true);
 
-// ─── boot ───────────────────────────────────────────────────────────────
+    $<HTMLInputElement>('widths').addEventListener('change', (e) => void saveSettings({ widths: (e.target as HTMLInputElement).value }));
+    $<HTMLInputElement>('el-props').addEventListener('change', (e) => void saveSettings({ extraProps: (e.target as HTMLInputElement).value }));
+    $<HTMLInputElement>('rec-touch-min').addEventListener('change', (e) => void saveSettings({ touchMin: (e.target as HTMLInputElement).value }));
+    $<HTMLInputElement>('live').addEventListener('change', (e) => {
+        const on = (e.target as HTMLInputElement).checked;
+        void saveSettings({ live: on });
+        void setLive(on);
+    });
+
+    status('ready — Sweep page for the report, or pick an element in the Element tab');
+}
 
 for (const b of document.querySelectorAll<HTMLButtonElement>('.tabs button')) {
     b.addEventListener('click', () => showTab(b.dataset.tab!));
@@ -416,17 +403,21 @@ $('copy').addEventListener('click', () => {
     const text = $('contract-out').textContent ?? '';
     if (text) void navigator.clipboard.writeText(text).then(() => status('contract JSON copied'));
 });
+
 // A navigation/reload invalidates every measurement: clear the panel so it
-// never shows verdicts about a page that no longer exists. Pins survive —
-// they are the user's work (and record-worthy across reloads).
+// never shows verdicts about a page that no longer exists. Pins reload for
+// the (possibly new) origin; the mutation watcher re-installs if live.
 chrome.devtools.network.onNavigated.addListener((url) => {
     pageStore = null;
     report = null;
+    previous = null;
     $('hud').innerHTML = '';
     $('violations').innerHTML = '';
+    $('diff').innerHTML = '';
     $('el-cards').innerHTML = '';
+    void refreshOrigin();
+    if ($<HTMLInputElement>('live').checked) void setLive(true);
     status(`page navigated (${url}) — previous measurements cleared, sweep again`);
 });
 
-renderRecorder();
-status('ready — Sweep page for the report, or select an element and open the Element tab');
+void init();

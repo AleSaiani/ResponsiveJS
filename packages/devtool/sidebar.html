@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+:root { color-scheme: light dark; }
+body { font: 12px/1.5 system-ui, sans-serif; margin: 0; padding: 8px 10px; }
+button { font: inherit; padding: 2px 8px; cursor: pointer; }
+.bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+#selector { font-family: ui-monospace, monospace; font-size: 11px; opacity: .85; overflow-wrap: anywhere; }
+#status { opacity: .6; margin: 4px 0 8px; }
+.hint { opacity: .6; }
+.props { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.prop-card { border: 1px solid rgb(128 128 128 / .3); border-radius: 6px; padding: 6px 8px; }
+.prop-card h3 { margin: 0 0 4px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.prop-card h3 .range { font-weight: 400; opacity: .7; }
+.prop-card svg { width: 100%; height: auto; }
+.prop-card .flat { opacity: .55; }
+.prop-card path { stroke: #3b82f6; stroke-width: 2; fill: none; }
+.prop-card circle { fill: #3b82f6; }
+.vals { display: flex; gap: 8px; flex-wrap: wrap; opacity: .75; font-size: 10px; margin-top: 2px; }
+.discrete { font-family: ui-monospace, monospace; font-size: 10px; }
+.discrete .w { opacity: .6; display: inline-block; min-width: 4em; }
+</style>
+</head>
+<body>
+<div class="bar">
+    <button id="go">Measure f(width)</button>
+    <label title="Measure automatically whenever the selection changes"><input type="checkbox" id="auto" /> auto</label>
+</div>
+<div id="selector">(nothing selected)</div>
+<div id="status">select an element in the tree above</div>
+<div id="cards" class="props"></div>
+<script src="sidebar.js"></script>
+</body>
+</html>

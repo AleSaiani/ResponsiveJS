@@ -60,6 +60,10 @@ details { margin: .4em 0; } summary { cursor: pointer; font-weight: 600; }
 a.del { cursor: pointer; opacity: .6; margin-left: .5em; }
 a.jump { cursor: pointer; opacity: .5; margin-left: .3em; text-decoration: none; }
 a.jump:hover { opacity: 1; }
+#diff { margin: 6px 0; }
+.diff-change { font-family: ui-monospace, monospace; font-size: 11px; padding: 1px 0; }
+.diff-appeared { color: #e5484d; font-size: 12px; }
+.diff-resolved { color: #30a46c; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -69,6 +73,7 @@ a.jump:hover { opacity: 1; }
     <button id="sweep" title="Emulate every width via the debugger and run the full oracle">Sweep page</button>
     <button id="quick" title="Measure only the live viewport, no debugger">Quick check</button>
     <button id="overlay" title="Mount the r$ badge on the page">Overlay</button>
+    <label title="Re-run the quick check automatically when the page's DOM changes"><input type="checkbox" id="live" /> live</label>
 </div>
 <div class="tabs">
     <button data-tab="page" class="active">Page report</button>
@@ -80,6 +85,7 @@ a.jump:hover { opacity: 1; }
 <section id="tab-page" class="active">
     <div class="hint">Sweep page (all widths) or Quick check (live viewport) — findings appear here. Click one to open it in Elements.</div>
     <div id="hud"></div>
+    <div id="diff"></div>
     <div id="violations"></div>
 </section>
 
