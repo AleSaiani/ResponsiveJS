@@ -38,10 +38,18 @@ export default defineConfig({
                 find: /^@responsivejs\/design\/browser$/,
                 replacement: resolve(import.meta.dirname, 'packages/design/src/browser/index.ts'),
             },
+            {
+                find: /^@responsivejs\/react$/,
+                replacement: resolve(import.meta.dirname, 'packages/react/src/index.ts'),
+            },
+            {
+                find: /^@responsivejs\/vue$/,
+                replacement: resolve(import.meta.dirname, 'packages/vue/src/index.ts'),
+            },
         ],
     },
     test: {
         environment: 'node',
-        include: ['packages/*/tests/**/*.test.ts'],
+        include: ['packages/*/tests/**/*.test.{ts,tsx}'],
     },
 });

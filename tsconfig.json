@@ -2,6 +2,7 @@
     "extends": "./tsconfig.base.json",
     "compilerOptions": {
         "noEmit": true,
+        "jsx": "react-jsx",
         "paths": {
             "@responsivejs/core": ["./packages/core/src/index.ts"],
             "@responsivejs/core/*": ["./packages/core/src/*.ts"],
@@ -10,7 +11,9 @@
             "@responsivejs/contract": ["./packages/contract/src/index.ts"],
             "@responsivejs/contract/*": ["./packages/contract/src/*.ts"],
             "@responsivejs/design": ["./packages/design/src/index.ts"],
-            "@responsivejs/design/browser": ["./packages/design/src/browser/index.ts"]
+            "@responsivejs/design/browser": ["./packages/design/src/browser/index.ts"],
+            "@responsivejs/react": ["./packages/react/src/index.ts"],
+            "@responsivejs/vue": ["./packages/vue/src/index.ts"]
         }
     },
     "include": [

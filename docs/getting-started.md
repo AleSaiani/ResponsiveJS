@@ -25,6 +25,7 @@ Or pick your entry:
 | Validate/score a page in CI                            | `npm i -D @responsivejs/design @playwright/test` | [§ Validation](#validation) |
 | Score a live DOM without any driver                    | `npm i @responsivejs/design`           | [§ Zero-driver](#zero-driver) |
 | Pin a layout down as a verifiable contract             | `npm i -D @responsivejs/contract`      | [§ Contracts](#contracts) |
+| Use it in React / Vue                                  | `npm i @responsivejs/react` · `@responsivejs/vue` | [§ Adapters](#adapters) |
 | Just the math (curves, geometry, WCAG, aesthetics)     | `npm i @responsivejs/core`             | [API: core](api/core.md) |
 | Drive r$ as an AI agent                                | —                                      | [agents docs](agents/validation-reference.md) |
 
@@ -71,6 +72,29 @@ sticky, truncation), **cross-element dependencies** (`fromElement`, `sync`, `rat
 → **[the runtime guide](guides/runtime.md)** (purposes, gradual examples, the mental
 model) · [case studies](guides/case-studies.md) · [API: runtime](api/runtime.md) ·
 [live example](../examples/landing)
+
+## Adapters
+
+The constructs are framework-agnostic; the adapters own the **lifecycle**.
+
+```tsx
+// React
+const ref = useRef<HTMLDivElement>(null);
+useResponsive(ref, { padding: r$.fluid(12, 24) });   // applied on mount, disposed on unmount
+const isDesktop = useBreakpoint('desktop');
+```
+
+```vue
+<!-- Vue -->
+<script setup>
+const card = ref(null);
+useResponsive(card, { padding: r$.fluid(12, 24) });
+</script>
+<template><div ref="card" v-responsive="{ gap: r$.fluid(8, 16) }" /></template>
+```
+
+Changing a declaration calls `update()` on the live handle instead of recreating it; React's
+StrictMode double-invocation is handled. → [react](../packages/react) · [vue](../packages/vue)
 
 ## Validation
 

@@ -1,0 +1,53 @@
+{
+    "name": "@responsivejs/vue",
+    "version": "0.0.0",
+    "description": "Vue bindings for r$ — composables and a directive that own the construct lifecycle: apply on mount, update on change, dispose on unmount.",
+    "license": "MPL-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20.19"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "@responsivejs/runtime": "workspace:^"
+    },
+    "peerDependencies": {
+        "vue": ">=3.4"
+    },
+    "devDependencies": {
+        "typescript": "^5.7.0",
+        "vue": "^3.5.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AleSaiani/ResponsiveJS.git",
+        "directory": "packages/vue"
+    },
+    "homepage": "https://github.com/AleSaiani/ResponsiveJS#readme",
+    "bugs": {
+        "url": "https://github.com/AleSaiani/ResponsiveJS/issues"
+    },
+    "keywords": [
+        "responsive",
+        "vue",
+        "composables",
+        "fluid",
+        "container-queries"
+    ]
+}
