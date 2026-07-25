@@ -77,6 +77,8 @@ fluid, geometry } …`) — they are the same objects. Two are renamed to stay u
   `r$.renderStatic()` (every emission at once). Strict CSP? `r$.configure({ nonce })`.
 - **SPA**: `r$.observe(selector, map)` keeps a selector bound as elements mount and unmount;
   `r$.scope()` groups a component's handles so one `dispose()` releases them all.
+- **No build step**: `dist/global.js` is the whole runtime as an IIFE (~15.5 kB gzip) —
+  `<script>` it and use `window.r$`. Same API, same CSS-first split.
 - **Cost**: one resize listener, one ResizeObserver, one scroll listener — refcounted, total.
   ~11 kB gzipped, zero dependencies.
 

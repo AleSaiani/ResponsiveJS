@@ -33,19 +33,21 @@
             "types": "./dist/geometry.d.ts",
             "default": "./dist/geometry.js"
         },
-        "./package.json": "./package.json"
+        "./package.json": "./package.json",
+        "./global": "./dist/global.js"
     },
     "files": [
         "dist"
     ],
     "scripts": {
-        "build": "tsc -p tsconfig.json"
+        "build": "tsc -p tsconfig.json && node scripts/build-iife.mjs"
     },
     "dependencies": {
         "@responsivejs/core": "workspace:^"
     },
     "devDependencies": {
         "@playwright/test": "^1.61.1",
+        "esbuild": "^0.25.0",
         "typescript": "^5.7.0"
     },
     "publishConfig": {

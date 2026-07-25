@@ -226,6 +226,23 @@ formula: `slope = (max−min)/(vMax−vMin)`, `intercept = min − slope·vMin` 
 `clamp(lo, calc(intercept + slope·100vw), hi)` (bounds reordered for descending ranges,
 `cqi` for containers).
 
+## No build step
+
+`@responsivejs/runtime/global` is the whole runtime as one IIFE (~15.5 kB gzip). Drop it in
+with a `<script>` and `window.r$` is the same callable namespace — nothing else changes, the
+CSS-first split included:
+
+```html
+<script src="https://unpkg.com/@responsivejs/runtime/dist/global.js"></script>
+<script>
+    r$.tokens({ '--space-m': r$.fluid(16, 24) });   // → clamp() on :root, zero JS after this
+    r$.geometry('.site-nav', { wrapped: r$.whenWraps });
+</script>
+```
+
+For CMS pages, plain HTML, docs demos, and agents injecting the runtime into a page they do
+not own. `responsive` is published as an alias of the same object.
+
 ## SSR
 
 No `window` access at module level; values resolve at `config.ssrWidth` until hydration.

@@ -28,6 +28,9 @@ Or pick your entry:
 | Just the math (curves, geometry, WCAG, aesthetics)     | `npm i @responsivejs/core`             | [API: core](api/core.md) |
 | Drive r$ as an AI agent                                | —                                      | [agents docs](agents/validation-reference.md) |
 
+No bundler? `<script src="…/@responsivejs/runtime/dist/global.js"></script>` gives you the
+same `r$` on `window` (~15.5 kB gzip) — CMS pages, plain HTML, live demos.
+
 All packages are ESM-only, zero runtime dependencies (Playwright and axe-core are optional
 peers of `design`), Node ≥ 20.19, MPL-2.0.
 
@@ -133,7 +136,7 @@ travel with the repo, and double as the machine-readable spec agents enforce.
 ```bash
 git clone https://github.com/AleSaiani/ResponsiveJS.git && cd ResponsiveJS
 pnpm install
-pnpm test        # 464 unit tests, plain Node
+pnpm test        # unit tests, plain Node
 pnpm typecheck   # no build needed (source-resolved)
 pnpm build       # tsc, topological
 pnpm test:e2e    # needs: pnpm --filter @responsivejs/design exec playwright install chromium
