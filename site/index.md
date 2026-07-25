@@ -147,21 +147,34 @@ Fixes are labelled: `exact` ones apply verbatim, `heuristic` ones are a directio
 
 <div class="band">
 
-## Everything below reacts to the panel, not your window
+## This reacts to the panel, not to your window
 
-Drag it. The menu collapses when the links stop fitting; the padding, radius and shadow are
-functions of the panel's width.
+Drag it. Five columns stay a table while they fit and become cards when they don't — and the
+switch is a *measurement*, so it survives a longer client name, a wider font, another column.
 
-<ResizeMe />
+<TableToCards />
+
+<p class="why">The subtlety worth stealing: the predicate measures a probe that keeps the
+table's natural width, never the table it restyles. Measure what you change and it oscillates
+forever.</p>
 
 <p class="more"><a class="btn" href="/demos">Six more live demos →</a></p>
 
 </div>
 
+<div class="band alt">
+
+## One declaration, whichever framework you're in
+
+<FrameworkDemo />
+
+</div>
+
 <style scoped>
-.band { max-width: 76rem; margin: 0 auto; padding: 2.75rem 1.5rem; }
+/* one clamp instead of a ladder: the bands keep widening to 4K */
+.band { max-width: clamp(60rem, 82vw, 132rem); margin: 0 auto; padding: 2.75rem clamp(1.5rem, 2vw, 3rem); }
 .band.alt { background: var(--vp-c-bg-alt); max-width: none; }
-.band.alt > * { max-width: 76rem; margin-inline: auto; }
+.band.alt > * { max-width: clamp(60rem, 82vw, 132rem); margin-inline: auto; }
 .band h2 { font-size: clamp(1.4rem, 2.6vw, 2rem); border: 0; margin: 0 0 1.75rem; padding: 0; }
 
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 3rem; align-items: center; padding: 2.5rem 1.5rem 1rem; }

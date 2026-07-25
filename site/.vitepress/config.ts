@@ -21,8 +21,21 @@ export default defineConfig({
             },
         ],
     ],
+    // Every docs page ships a markdown twin (scripts/emit-llms.mjs). Advertising
+    // it in <head> is how an agent finds the source without scraping the theme.
+    transformPageData(pageData) {
+        if (!pageData.relativePath.startsWith('docs/')) return;
+        const markdown = `/${pageData.relativePath}`;
+        pageData.frontmatter.head ??= [];
+        pageData.frontmatter.head.push([
+            'link',
+            { rel: 'alternate', type: 'text/markdown', href: markdown, title: 'Markdown source' },
+        ]);
+    },
     themeConfig: {
-        siteTitle: 'r$',
+        // the wordmark is a component (theme/components/Wordmark.vue): it measures
+        // whether "ResponsiveJS" fits and falls back to "r$" when it does not
+        siteTitle: false,
         nav: [
             { text: 'Demos', link: '/demos' },
             { text: 'Docs', link: '/docs/getting-started' },
@@ -86,7 +99,7 @@ export default defineConfig({
         search: { provider: 'local' },
         footer: {
             message:
-                'Built with r$ · verified by r$ in CI against <a href="https://github.com/AleSaiani/ResponsiveJS/blob/main/site/site.contract.json">its own contract</a> — 9 rules, 6 widths, every build.',
+                'Built with r$ · verified by r$ in CI against <a href="https://github.com/AleSaiani/ResponsiveJS/blob/main/site/site.contract.json">its own contract</a> — 9 rules, 8 widths, every build. Agents: <a href="/llms.txt">llms.txt</a> · <a href="/llms-full.txt">llms-full.txt</a>.',
             copyright: 'MPL-2.0 licensed',
         },
         editLink: {

@@ -6,11 +6,17 @@
     --vp-c-brand-1: #255fd8;
     --vp-c-brand-2: #1d4ed8;
     --vp-c-brand-3: #1b45c0;
+    /* ASSUMPTION: the original ResponsiveJS green is not recorded anywhere in
+       this repo or its history. This is a green that clears AA on both themes
+       (7.3:1 here, 8.9:1 on the dark bar) — swap the two values if the exact
+       brand hex turns up. */
+    --rjs-green: #0b7a43;
 }
 .dark {
     --vp-c-brand-1: #8ab0ff;
     --vp-c-brand-2: #6f9bff;
     --vp-c-brand-3: #5d8bf5;
+    --rjs-green: #45d68a;
 }
 .demo pre { margin: 0; }
 
@@ -20,3 +26,27 @@
 
 /* Same story: the appearance switch measured 40×22 at 768px. */
 .VPSwitch { min-height: 24px; }
+
+/* ── The site keeps answering to the width, all the way to 4K ─────────────
+   A docs theme normally stops at ~1100px and leaves the other 2700 empty —
+   which is the exact gap this library exists to close. Everything below is a
+   clamp(), i.e. the same Utopia formula r$ emits for a linear fluid value:
+   zero JavaScript, one declaration, no ladder. */
+:root {
+    --vp-layout-max-width: clamp(1440px, 94vw, 2560px);
+    --vp-sidebar-width: clamp(272px, 17vw, 400px);
+    /* 16px until 1600, then up to 19px at 3840 — slope and intercept computed,
+       not eyeballed. Below 1600 it is exactly 16px, so recorded baselines
+       taken at the standard widths stay valid. */
+    font-size: clamp(16px, 0.134vw + 13.86px, 19px);
+}
+
+@media (min-width: 1440px) {
+    /* structure gets the extra room; the reading measure grows far more
+       slowly, because 2000px-wide prose is not a feature */
+    .VPDoc .container { max-width: none; }
+    .VPDoc .content-container,
+    .VPDoc.has-aside .content-container { max-width: clamp(46rem, 44vw, 68rem); }
+    .VPDoc.has-aside .content { max-width: none; }
+    .VPHome .container { max-width: none; }
+}

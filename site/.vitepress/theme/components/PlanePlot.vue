@@ -13,6 +13,15 @@ const MIN = 320;
 const MAX = 1440;
 const width = ref(560);
 
+// Deliberately synchronous. The browser already coalesces `input` on a range
+// control to about one event per frame, and Vue batches the render into a
+// microtask — so this repaints in the same frame the event arrived in.
+// Deferring to requestAnimationFrame instead adds a frame of latency and, on
+// any frame the browser delays, the card visibly falls behind the thumb.
+function onInput(event: Event): void {
+    width.value = Number((event.target as HTMLInputElement).value);
+}
+
 type Fn = (w: number) => number;
 const fluidFont = shallowRef<Fn>((w) => 18 + ((w - MIN) / (MAX - MIN)) * 30);
 const fluidPad = shallowRef<Fn>((w) => 12 + ((w - MIN) / (MAX - MIN)) * 28);
@@ -98,7 +107,7 @@ const cardWidth = computed(() => Math.round(((width.value - MIN) / (MAX - MIN)) 
 
             <label class="scrubber">
                 <span class="sr">Viewport width</span>
-                <input type="range" :min="MIN" :max="MAX" step="10" v-model.number="width" />
+                <input type="range" :min="MIN" :max="MAX" step="5" :value="width" @input="onInput" />
             </label>
 
             <p class="numbers">
@@ -146,7 +155,9 @@ const cardWidth = computed(() => Math.round(((width.value - MIN) / (MAX - MIN)) 
 .numbers .s { color: var(--vp-c-text-1); }
 
 .preview { border-top: 1px dashed var(--vp-c-divider); padding-top: 1rem; }
-.preview-inner { max-width: 100%; overflow: hidden; transition: width .05s linear; }
+/* A fixed box plus containment makes the card a layout leaf: dragging changes
+   type, padding and width inside it without reflowing anything on the page. */
+.preview-inner { max-width: 100%; height: 16.5rem; overflow: hidden; contain: layout paint; }
 .specimen {
     border: 1px solid var(--vp-c-divider);
     border-radius: 10px;

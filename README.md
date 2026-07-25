@@ -118,6 +118,17 @@ loops — including [Vercel's agent-browser](https://github.com/vercel-labs/agen
 raw `eval` primitive. The browser tool is the arm, `r$` is the judgment: they compose, no
 lock-in. See the [agents guide](docs/guides/agents.md).
 
+For agents specifically, the docs site publishes source markdown rather than HTML to scrape —
+[`llms.txt`](https://responsivejs.com/llms.txt) as the index,
+[`llms-full.txt`](https://responsivejs.com/llms-full.txt) for one fetch, and a `.md` twin of
+every page. And in Claude Code, [`plugins/responsivejs`](plugins/responsivejs/README.md) adds
+two skills — authoring and verification — plus an `/rjs-audit` command:
+
+```
+/plugin marketplace add AleSaiani/ResponsiveJS
+/plugin install responsivejs@responsivejs
+```
+
 ## Roadmap
 
 **Available now (alpha)**: the shared math (`core`); the authoring runtime (`runtime`) with

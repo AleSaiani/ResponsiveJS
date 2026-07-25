@@ -164,6 +164,12 @@ describe('eased', () => {
     it('is monotonic for monotone easings', () => {
         expect(isMonotonicUp(sample(eased(10, 20, 'ease-in-out', DOMAIN)))).toBe(true);
     });
+
+    it('names the valid easings when given one that does not exist', () => {
+        // a misspelling used to fail deep in the maths with "not iterable"
+        expect(() => eased(10, 20, 'easeInOut' as never, DOMAIN)).toThrow(/invalid easing/);
+        expect(() => eased(10, 20, 'easeInOut' as never, DOMAIN)).toThrow(/'ease-in-out'/);
+    });
 });
 
 describe('stepped', () => {

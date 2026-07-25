@@ -10,6 +10,9 @@ import DemoFrame from './DemoFrame.vue';
 
 const props = defineProps<{ kind: 'tokens' | 'truncate' | 'sync' | 'ratio' | 'stuck' }>();
 
+/** The panel's range — one source of truth for the frame AND the fluid domain. */
+const FRAME = { min: 240, max: 820 };
+
 const stage = ref<HTMLElement | null>(null);
 const readout = ref('');
 const scope = shallowRef<{ dispose(): void } | null>(null);
@@ -23,18 +26,22 @@ onMounted(async () => {
 
     if (props.kind === 'tokens') {
         // A scale, not a ladder: one declaration, every consumer follows.
+        // `from`/`to` matter here: a container fluid defaults to the VIEWPORT
+        // breakpoint range, so a 240–820px panel would only walk a slice of
+        // the curve. Say what the panel's range is and the whole ramp shows.
+        const panel = { container: true, from: FRAME.min, to: FRAME.max } as const;
         s.add(
             r$(q('.tk'), {
-                fontSize: r$.fluid(15, 22, { container: true }),
-                padding: r$.fluid(10, 26, { container: true }),
-                borderRadius: r$.fluid(4, 16, { container: true }),
-                boxShadow: r$.fluid('0 1px 2px rgba(0,0,0,.3)', '0 16px 44px rgba(0,0,0,.16)', { container: true }),
-                backgroundColor: r$.fluid('#eef2ff', '#dbe6ff', { container: true }),
+                fontSize: r$.fluid(15, 26, panel),
+                padding: r$.fluid(10, 30, panel),
+                borderRadius: r$.fluid(4, 20, panel),
+                boxShadow: r$.fluid('0 1px 2px rgba(0,0,0,.3)', '0 16px 44px rgba(0,0,0,.16)', panel),
+                backgroundColor: r$.fluid('#f4f7ff', '#7aa2ff', panel),
             }),
         );
         const report = (): void => {
             const cs = getComputedStyle(q('.tk'));
-            readout.value = `font-size ${cs.fontSize} · padding ${cs.padding} · radius ${cs.borderRadius}`;
+            readout.value = `font-size ${cs.fontSize} · padding ${cs.padding} · radius ${cs.borderRadius} · background ${cs.backgroundColor}`;
         };
         observer = new MutationObserver(report);
         observer.observe(q('.tk'), { attributes: true, attributeFilter: ['style'] });
@@ -76,7 +83,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <DemoFrame :label="kind" :start="kind === 'ratio' ? 560 : 420" :min="240" :max="820">
+    <DemoFrame :label="kind" :start="kind === 'ratio' ? 560 : 420" :min="FRAME.min" :max="FRAME.max">
         <div ref="stage">
             <template v-if="kind === 'tokens'">
                 <div class="tk">Every value here is a function of this panel's width — including the colour.</div>
@@ -119,7 +126,7 @@ onUnmounted(() => {
 <style scoped>
 .readout { font-size: .875rem; color: var(--vp-c-text-2); margin-top: -.75rem; }
 
-.tk { background: #eef2ff; color: #1a2340; }
+.tk { background: #f4f7ff; color: #101a33; }
 
 .excerpt {
     display: -webkit-box;

@@ -37,17 +37,25 @@ browser does the work.
 <Demo kind="tokens" />
 
 ```ts
+const panel = { container: true, from: 240, to: 820 };   // ← the panel's range
+
 r$(card, {
-    fontSize:     r$.fluid(15, 22, { container: true }),
-    padding:      r$.fluid(10, 26, { container: true }),
-    borderRadius: r$.fluid(4, 16,  { container: true }),
-    boxShadow:    r$.fluid('0 1px 2px rgba(0,0,0,.3)', '0 16px 44px rgba(0,0,0,.16)', { container: true }),
-    backgroundColor: r$.fluid('#eef2ff', '#dbe6ff', { container: true }),
+    fontSize:     r$.fluid(15, 26, panel),
+    padding:      r$.fluid(10, 30, panel),
+    borderRadius: r$.fluid(4, 20,  panel),
+    boxShadow:    r$.fluid('0 1px 2px rgba(0,0,0,.3)', '0 16px 44px rgba(0,0,0,.16)', panel),
+    backgroundColor: r$.fluid('#f4f7ff', '#7aa2ff', panel),
 });
 ```
 
 Colours interpolate in **OKLab**, so a ramp never passes through the muddy grey that plain sRGB
 mixing produces. Shadows interpolate structurally — numbers *and* the colour inside them.
+
+::: tip Give a container fluid its own range
+`from`/`to` are doing real work above. Without them a `{ container: true }` value spans the
+**viewport** breakpoints — so a 240–820px panel walks barely a fifth of the curve and the whole
+thing looks broken. Your container is not the viewport: say how wide it gets.
+:::
 
 ## "Read more" only when something was cut
 

@@ -151,6 +151,23 @@ SSR stylesheet.
 viewport (static output uses `cqi`; the handle configures `container-type` on the parent,
 refcounted). The same card component sizes correctly in a sidebar and in the main column.
 
+**Give it the container's range.** `container: true` changes *what is measured*, not the
+domain the value is interpolated over — that still defaults to your configured breakpoints.
+A card that lives between 240px and 820px inside a `[320, 1440]` project therefore only ever
+walks a fifth of its own curve, and the result looks like nothing is happening:
+
+```ts
+const panel = { container: true, from: 240, to: 820 };   // the container's real range
+
+r$('.card', {
+    fontSize: r$.fluid(15, 26, panel),
+    padding: r$.fluid(10, 30, panel),
+});
+```
+
+Rule of thumb: if a value is bound to a container, `from`/`to` are not optional polish — they
+are the other half of the declaration.
+
 ## Styling any property
 
 The style map takes **any** CSS property (camelCase), and `fluid` is polymorphic — numbers,

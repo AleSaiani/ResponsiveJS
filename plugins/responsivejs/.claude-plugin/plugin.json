@@ -1,0 +1,13 @@
+{
+    "name": "responsivejs",
+    "description": "Write responsive behavior as value = f(width) with r$, and verify the rendered result with the rjs CLI.",
+    "version": "0.1.0",
+    "author": {
+        "name": "ResponsiveJS",
+        "url": "https://github.com/AleSaiani/ResponsiveJS"
+    },
+    "homepage": "https://responsivejs.com",
+    "repository": "https://github.com/AleSaiani/ResponsiveJS",
+    "license": "MPL-2.0",
+    "keywords": ["responsive", "css", "wcag", "contract", "verification"]
+}

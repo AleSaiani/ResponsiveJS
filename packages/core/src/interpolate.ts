@@ -45,6 +45,15 @@ export function progress(width: number, domain: Domain): number {
  * progress). Newton-Raphson with bisection fallback, ~1e-6 precision.
  */
 export function cubicBezier(bezier: Bezier): (t: number) => number {
+    if (!Array.isArray(bezier) || bezier.length !== 4) {
+        // Reached mainly through a misspelled easing name, where the lookup
+        // yields undefined — say which names exist instead of failing deep
+        // inside the maths with "undefined is not iterable".
+        throw new Error(
+            `r$: invalid easing — expected one of ${Object.keys(EASINGS).map((n) => `'${n}'`).join(', ')} ` +
+                `or a 4-number bezier [x1, y1, x2, y2], got ${JSON.stringify(bezier)}`,
+        );
+    }
     const [x1, y1, x2, y2] = bezier;
     const cx = 3 * x1;
     const bx = 3 * (x2 - x1) - cx;

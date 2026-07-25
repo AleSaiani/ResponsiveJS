@@ -208,6 +208,9 @@ importers:
       '@responsivejs/runtime':
         specifier: workspace:^
         version: link:../packages/runtime
+      '@responsivejs/vue':
+        specifier: workspace:^
+        version: link:../packages/vue
     devDependencies:
       vitepress:
         specifier: ^1.6.0

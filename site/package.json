@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "sync": "node scripts/sync-docs.mjs",
+        "sync": "node scripts/sync-docs.mjs && node scripts/emit-llms.mjs",
         "dev": "pnpm sync && vitepress dev",
         "build:site": "pnpm sync && vitepress build",
         "preview": "vitepress preview"
@@ -12,6 +12,7 @@
         "vitepress": "^1.6.0"
     },
     "dependencies": {
-        "@responsivejs/runtime": "workspace:^"
+        "@responsivejs/runtime": "workspace:^",
+        "@responsivejs/vue": "workspace:^"
     }
 }

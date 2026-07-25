@@ -1,0 +1,21 @@
+{
+    "name": "responsivejs",
+    "owner": {
+        "name": "ResponsiveJS",
+        "url": "https://github.com/AleSaiani/ResponsiveJS"
+    },
+    "metadata": {
+        "description": "Author responsive behavior as functions of width, then measure the rendered page and fail on disagreement.",
+        "version": "0.1.0"
+    },
+    "plugins": [
+        {
+            "name": "responsivejs",
+            "source": "./plugins/responsivejs",
+            "description": "Skills and commands for writing and verifying responsive behavior with r$ — value = f(width), measured.",
+            "version": "0.1.0",
+            "category": "development",
+            "keywords": ["responsive", "css", "accessibility", "wcag", "design-system", "testing"]
+        }
+    ]
+}

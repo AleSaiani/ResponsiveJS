@@ -2,3 +2,8 @@
 docs/
 .vitepress/dist/
 .vitepress/cache/
+
+# agent-readable twins, emitted by scripts/emit-llms.mjs
+public/docs/
+public/llms.txt
+public/llms-full.txt
