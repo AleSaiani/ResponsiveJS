@@ -22,9 +22,10 @@ and AI agents. One lineage (`r$`), one model, three uses:
 | [`@responsivejs/design`](packages/design)  | The validation oracle: constraints, reports with fix suggestions, aesthetic score (experimental), Playwright driver + zero-driver browser core. | **alpha**   |
 | [`@responsivejs/runtime`](packages/runtime) | Authoring: reactive `value = f(width)`, container-aware, `clamp()` where CSS suffices.                                | **alpha**   |
 | [`@responsivejs/cli`](packages/cli)        | The `rjs` command line: analyze / verify / record any URL, driver-pluggable (Playwright, agent-browser).               | **alpha**   |
-| `@responsivejs/devtool`                    | The in-page visual overlay: width-sweep, problem overlay, curve inspector, score HUD.                                  | planned     |
+| `@responsivejs/devtool`                    | The DevTools extension: page report, element `f(width)` inspector, contract recorder, in-page overlay. Loaded unpacked (not an npm module). | **alpha**   |
 | [`@responsivejs/contract`](packages/contract) | The design-contract DSL: declarative, serializable expectations for CI regression and AI agents.                     | **alpha**   |
-| Adapters (`react`, `vue`, …)               | Thin framework bindings.                                                                                               | planned     |
+| [`@responsivejs/react`](packages/react)    | React bindings: hooks that own the construct lifecycle (mount → update → unmount).                                     | **alpha**   |
+| [`@responsivejs/vue`](packages/vue)        | Vue bindings: the same composables, plus a `v-responsive` directive.                                                   | **alpha**   |
 
 ## Quick start — audit any URL (CLI)
 
