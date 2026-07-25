@@ -70,7 +70,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.resize-me { max-width: 46rem; margin: 2rem auto 0; padding: 0 1.5rem; }
+.resize-me { max-width: 46rem; margin: 1.25rem 0 0; }
 .bar { display: flex; align-items: center; gap: .75rem; }
 .logo { font-weight: 700; }
 .nav { display: flex; gap: .75rem; flex-wrap: wrap; flex: 1; }
