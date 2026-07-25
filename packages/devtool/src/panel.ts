@@ -16,6 +16,7 @@ import { curveToSvg } from './curve-svg.js';
 import { buildRecordedContract, type RecordedBaseline } from './recorder.js';
 import { SELECTED_ELEMENT_EXPRESSION } from './select-element.js';
 import { PICKER_INSTALL_EXPRESSION, PICKER_POLL_EXPRESSION, type PickState } from './picker.js';
+import { buildHighlightExpression } from './highlight.js';
 
 const MEASURABLE = ['fontSize', 'width', 'height', 'x', 'y'] as const;
 
@@ -171,12 +172,20 @@ function renderReport(): void {
         details.append(summary);
         for (const v of violations.slice(0, 50)) {
             const row = el('div', 'violation');
+            row.title = 'click: flash the element on the page';
             const dot = el('span', 'dot', '');
             dot.style.background = SEV[v.severity ?? 'error'];
             const target = el('code', '', v.element ?? v.elements?.join(' + ') ?? '?');
-            row.append(dot, target, document.createTextNode(` @${v.width}px — ${v.detail}`));
+            const toElements = el('a', 'jump', '⧉');
+            toElements.title = 'open in the Elements panel';
+            toElements.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openInElements(v.element);
+            });
+            row.append(dot, target, document.createTextNode(` @${v.width}px — ${v.detail} `), toElements);
             if (v.owner) row.append(el('div', 'owner', `↳ ${v.owner.construct}${v.owner.source ? ` at ${v.owner.source}` : ''}`));
-            row.addEventListener('click', () => openInElements(v.element));
+            // stay in the panel: scroll the page to the element and flash it
+            row.addEventListener('click', () => flashOnPage(v.element, v.rule));
             details.append(row);
         }
         list.append(details);
@@ -189,6 +198,17 @@ function openInElements(element: string | undefined): void {
     const selector = element.replace(/\[\d+\]$/, '');
     const index = Number(/\[(\d+)\]$/.exec(element)?.[1] ?? 0);
     void evalInPage(`inspect(document.querySelectorAll(${JSON.stringify(selector)})[${index}])`).catch(() => {});
+}
+
+function flashOnPage(element: string | undefined, rule: string): void {
+    if (!element) return;
+    const selector = element.replace(/\[\d+\]$/, '');
+    const index = Number(/\[(\d+)\]$/.exec(element)?.[1] ?? 0);
+    void evalInPage<boolean>(buildHighlightExpression(selector, index, `${rule} · ${element}`))
+        .then((found) => {
+            if (!found) status(`✗ ${element} not found on the CURRENT page (measured on a previous state?)`);
+        })
+        .catch(() => {});
 }
 
 // ─── element f(width) — the inspector ───────────────────────────────────

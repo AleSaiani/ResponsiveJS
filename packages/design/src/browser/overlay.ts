@@ -38,6 +38,8 @@ const STYLES = `
 .meta { color: #666; font-size: 11px; margin-top: .6em; }
 .hl { position: fixed; z-index: 2147483646; border: 2px solid #d33; pointer-events: none;
   background: rgb(221 51 51 / .08); }
+.hl .lbl { position: absolute; left: -2px; background: #d33; color: #fff;
+  font: 11px/1.6 system-ui, sans-serif; padding: 0 6px; border-radius: 3px; white-space: nowrap; }
 .clean { color: #2a9d4a; font-weight: 600; }
 `;
 
@@ -144,13 +146,20 @@ export function defineOverlay(): void {
             this.panel.append(meta);
         }
 
-        /** Outline the live element behind a violation ('.card[2]' → 3rd match). */
+        /** Outline the live element behind a violation ('.card[2]' → 3rd match).
+         *  Scrolls it into view first — a highlight below the fold helps no one —
+         *  and labels the box so you know WHAT you are looking at. */
         private outline(element: string | undefined): void {
             if (!element) return;
             const selector = element.replace(/\[\d+\]$/, '');
             const index = Number(/\[(\d+)\]$/.exec(element)?.[1] ?? 0);
             const target = document.querySelectorAll(selector)[index];
             if (!target) return;
+            try {
+                target.scrollIntoView({ block: 'center', inline: 'nearest' });
+            } catch {
+                // older engines: highlight in place
+            }
             const r = target.getBoundingClientRect();
             Object.assign(this.highlight.style, {
                 left: `${r.x}px`,
@@ -158,6 +167,12 @@ export function defineOverlay(): void {
                 width: `${r.width}px`,
                 height: `${r.height}px`,
             });
+            this.highlight.replaceChildren();
+            const label = document.createElement('div');
+            label.className = 'lbl';
+            label.textContent = element;
+            label.style.top = r.y > 28 ? '-24px' : '100%';
+            this.highlight.appendChild(label);
             this.highlight.hidden = false;
         }
     }
