@@ -41,12 +41,32 @@
     font-size: clamp(16px, 0.134vw + 13.86px, 19px);
 }
 
-@media (min-width: 1440px) {
-    /* structure gets the extra room; the reading measure grows far more
-       slowly, because 2000px-wide prose is not a feature */
-    .VPDoc .container { max-width: none; }
-    .VPDoc .content-container,
-    .VPDoc.has-aside .content-container { max-width: clamp(46rem, 44vw, 68rem); }
-    .VPDoc.has-aside .content { max-width: none; }
-    .VPHome .container { max-width: none; }
+/* The theme's own width caps are scoped (`[data-v-…]`), which outranks a plain
+   class selector — hence `#app`. Without it these rules lose silently and the
+   body stays 688px wide no matter how large the screen is. */
+#app .VPDoc .container { max-width: none; }
+#app .VPDoc.has-aside .content { max-width: none; }
+#app .VPHome .container { max-width: none; }
+#app .VPDoc:not(.has-sidebar) .content { max-width: none; }
+
+/* One declaration for the reading measure, from phone to 4K. The ceiling is in
+   rem on purpose: a line stays ~108 characters at every root size, so the page
+   gets wider without the prose becoming unreadable (82rem measured 195
+   characters at 3840 — that is not "using the width", that is losing the
+   reader). The room beyond it goes to the sidebar, the outline and the margins. */
+#app .VPDoc .content-container,
+#app .VPDoc.has-aside .content-container {
+    max-width: clamp(42rem, 22rem + 30vw, 54rem);
+    margin-inline: auto;
+}
+
+/* The theme sets body copy to a fixed 16px, so a wider column would simply mean
+   a longer line. Scaling the text on the same curve as the layout keeps the
+   measure at ~108 characters from 1440 to 4K — and 16px prose on a 4K display
+   was too small anyway. Identical to 16px below 1600. */
+#app .vp-doc p,
+#app .vp-doc li,
+#app .vp-doc td {
+    font-size: clamp(16px, 0.134vw + 13.86px, 19px);
+    line-height: 1.75;
 }
