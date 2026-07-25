@@ -58,9 +58,12 @@ the rest updates via a single shared resize listener, coalesced to one style wri
 Every value accepts `{ container: true }` to bind to the nearest container width instead of
 the viewport (shared `ResizeObserver`; static emission switches `vw` → `cqi`).
 
-Named exports of every function exist for tree-shaking-sensitive code (`import { fluid,
-geometry } …`) — they are the same objects. Subpaths: `/signals` (the TC39-shaped reactive
-engine), `/curves`, `/layout`, `/typography`, `/geometry`.
+Named exports of every namespace member exist for tree-shaking-sensitive code (`import {
+fluid, geometry } …`) — they are the same objects. Two are renamed to stay unambiguous:
+`r$.apply` is `applyUtilities`, and `r$.batch` (signal batch **plus** style flush) is
+`batchWrites`, so it never collides with the pure `batch` of `/signals`. Subpaths:
+`/signals` (the TC39-shaped reactive engine), `/curves`, `/layout`, `/typography`,
+`/geometry`.
 
 ## Contracts worth knowing
 
@@ -70,7 +73,7 @@ engine), `/curves`, `/layout`, `/typography`, `/geometry`.
   side effects like `container-type`).
 - **Geometry's one rule**: never `display: none` the element a predicate measures; collapse
   keeping layout (`visibility: hidden; height: 0; overflow: hidden`).
-- **SSR**: no `window` access at module level; ship `r$.static()` / `r$.tokens(...).css`.
+- **SSR**: no `window` access at module level; ship `r$.static().css` / `r$.tokens(...).css`.
 - **Cost**: one resize listener, one ResizeObserver, one scroll listener — refcounted, total.
   ~11 kB gzipped, zero dependencies.
 

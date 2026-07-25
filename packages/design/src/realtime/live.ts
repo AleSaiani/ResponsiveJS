@@ -1,107 +1,89 @@
 /**
- * LiveValidator — attach to a Playwright page for real-time measurement
- * via browser-injected observers (ResizeObserver + MutationObserver).
+ * LiveValidator — attach to a Playwright page and keep measuring it while it
+ * changes (theme builders, devtools, tuning loops).
+ *
+ * It runs the SAME in-page collector as every other path (sweep, CDP,
+ * agent-browser, the browser bundle), so its measurements are identical:
+ * DOM-semantic interactivity, effective backgrounds, overflow containment and
+ * the provenance manifest all come along.
  */
 
 import type { Page } from '@playwright/test';
-import type { SnapshotStore, ViewportSnapshot, ElementSnapshot, ChildRelation, Report } from '@responsivejs/core/types';
+import type { SnapshotStore, ViewportSnapshot, Report } from '@responsivejs/core/types';
 import type { AestheticScore } from '@responsivejs/core/aesthetics';
 import { score as computeScore } from '@responsivejs/core/aesthetics';
-import { buildObserverScript } from './observer.js';
+import {
+    buildObserverScript,
+    buildReadWidthExpression,
+    CLEAR_LIVE_EXPRESSION,
+    READ_LIVE_EXPRESSION,
+    STOP_LIVE_EXPRESSION,
+} from './observer.js';
+import { fromWire, type ViewportSnapshotWire } from '../browser/wire.js';
 import { Asserter } from '../constraints/index.js';
-import { fromDOMRect } from '@responsivejs/core/rect';
-
-/** Raw snapshot shape stored by the browser observer script. */
-interface BrowserSnapshot {
-    width: number;
-    height: number;
-    measurements: BrowserMeasurement[];
-    timestamp: number;
-}
-
-/** Single element measurement as stored by the observer. */
-interface BrowserMeasurement {
-    selector: string;
-    index: number;
-    rect: { x: number; y: number; width: number; height: number };
-    styles: ElementSnapshot['styles'];
-    computed: ElementSnapshot['computed'];
-}
 
 export class LiveValidator {
     private page: Page | null = null;
     private selectors: string[] = [];
 
-    /** Inject observers into the page and start measuring. */
+    /** Inject the observers and take a first measurement. */
     async attach(page: Page, selectors: string[]): Promise<void> {
         this.page = page;
         this.selectors = selectors;
         await page.evaluate(buildObserverScript(selectors));
     }
 
-    /** Read all collected measurements from the browser and convert to SnapshotStore. */
+    /** Every measurement collected so far, as a SnapshotStore. */
     async snapshot(): Promise<SnapshotStore> {
         this.ensureAttached();
-
-        // Read __rjs_store from browser — it's a Map<number, BrowserSnapshot>
-        const rawEntries: [number, BrowserSnapshot][] = await this.page!.evaluate(() => {
-            const store = (window as any).__rjs_store as Map<number, any>;
-            return Array.from(store.entries());
-        });
+        const entries = await this.page!.evaluate<[number, ViewportSnapshotWire][]>(READ_LIVE_EXPRESSION);
 
         const snapshots = new Map<number, ViewportSnapshot>();
-        const widths: number[] = [];
-
-        for (const [width, raw] of rawEntries) {
-            widths.push(width);
-            snapshots.set(width, this.convertSnapshot(raw));
+        let manifest: SnapshotStore['manifest'];
+        for (const [width, wire] of entries ?? []) {
+            const snap = fromWire(wire);
+            snapshots.set(width, snap);
+            if (snap.manifest) manifest = snap.manifest;
         }
 
-        widths.sort((a, b) => a - b);
-
-        return { snapshots, widths, selectors: this.selectors };
+        return {
+            snapshots,
+            widths: [...snapshots.keys()].sort((a, b) => a - b),
+            selectors: this.selectors,
+            ...(manifest ? { manifest } : {}),
+        };
     }
 
-    /** Resize the browser viewport and wait for observer to re-measure. */
+    /** Resize the viewport and let the observers re-measure. */
     async resizeTo(width: number, height = 900): Promise<void> {
         this.ensureAttached();
         await this.page!.setViewportSize({ width, height });
-        // Wait for observer callback to fire and measure
         await this.page!.waitForTimeout(100);
     }
 
-    /** Compute aesthetic score at the current (or specified) viewport width. */
+    /** Aesthetic score at the current (or given) viewport width. */
     async scoreAt(width?: number): Promise<AestheticScore> {
         this.ensureAttached();
+        const targetWidth = width ?? (await this.page!.evaluate<number>('window.innerWidth'));
 
-        const targetWidth = width ?? (await this.page!.evaluate(() => window.innerWidth));
-
-        // Read the snapshot for this width, retrying AT MOST once after nudging the store.
-        // The previous version recursed unconditionally when no snapshot existed; since
-        // clear() never produces a fresh measurement, that recursion never terminated (L-94).
+        // Bounded probe (L-94): the previous version recursed forever when no
+        // snapshot existed, because clearing never produces a fresh measurement.
         for (let attempt = 0; attempt < 2; attempt++) {
-            const raw: BrowserSnapshot | null = await this.page!.evaluate((w) => {
-                const store = (window as any).__rjs_store as Map<number, any>;
-                return store.get(w) ?? null;
-            }, targetWidth);
-
-            if (raw) {
-                const vp = { width: raw.width, height: raw.height };
-                const rects = raw.measurements.map(m => fromDOMRect(m.rect));
-                return computeScore(rects, vp);
+            const wire = await this.page!.evaluate<ViewportSnapshotWire | null>(buildReadWidthExpression(targetWidth));
+            if (wire) {
+                const snap = fromWire(wire);
+                const rects = [...snap.elements.values()].flat().map((e) => e.rect);
+                return computeScore(rects, { width: snap.width, height: snap.height });
             }
-
-            // No snapshot yet — nudge the observer to re-measure, then retry ONCE.
-            await this.page!.evaluate(() => { (window as any).__rjs_store?.clear(); });
+            await this.page!.evaluate(CLEAR_LIVE_EXPRESSION);
             await this.page!.waitForTimeout(50);
         }
 
-        // Still nothing after the retry: score an empty layout rather than loop forever.
-        const height = await this.page!.evaluate(() => window.innerHeight);
+        const height = await this.page!.evaluate<number>('window.innerHeight');
         return computeScore([], { width: targetWidth, height });
     }
 
-    /** Build a SnapshotStore from current measurements and run the Asserter. */
+    /** Build a store from the current measurements and run the Asserter. */
     async check(): Promise<Report> {
         const store = await this.snapshot();
         const asserter = new Asserter(store);
@@ -109,50 +91,11 @@ export class LiveValidator {
         return asserter.report();
     }
 
-    /** Remove observers from the page. */
+    /** Disconnect the observers and drop the in-page store. */
     async detach(): Promise<void> {
-        if (this.page) {
-            await this.page.evaluate(() => {
-                const win = window as any;
-                if (win.__rjs_resizeObserver) {
-                    win.__rjs_resizeObserver.disconnect();
-                    delete win.__rjs_resizeObserver;
-                }
-                if (win.__rjs_mutationObserver) {
-                    win.__rjs_mutationObserver.disconnect();
-                    delete win.__rjs_mutationObserver;
-                }
-                delete win.__rjs_store;
-            });
-        }
+        if (this.page) await this.page.evaluate(STOP_LIVE_EXPRESSION);
         this.page = null;
         this.selectors = [];
-    }
-
-    /** Convert a browser snapshot into a ViewportSnapshot. */
-    private convertSnapshot(raw: BrowserSnapshot): ViewportSnapshot {
-        const elements = new Map<string, ElementSnapshot[]>();
-
-        for (const m of raw.measurements) {
-            const snapshot: ElementSnapshot = {
-                selector: m.selector,
-                index: m.index,
-                rect: fromDOMRect(m.rect),
-                styles: m.styles,
-                computed: m.computed,
-            };
-
-            if (!elements.has(m.selector)) elements.set(m.selector, []);
-            elements.get(m.selector)!.push(snapshot);
-        }
-
-        return {
-            width: raw.width,
-            height: raw.height,
-            elements,
-            childRelations: new Map<string, ChildRelation[]>(),
-            timestamp: raw.timestamp,
-        };
     }
 
     private ensureAttached(): void {

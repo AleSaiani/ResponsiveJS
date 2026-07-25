@@ -120,10 +120,25 @@ describe('responsive() — CSS-first split', () => {
         expect(() => responsive.static('.el', { width: custom((w) => w) })).toThrow(/cannot be expressed/);
     });
 
-    it('responsive.static returns and injects pure CSS', () => {
-        const css = responsive.static('.title', { fontSize: fluid(16, 32) });
-        expect(css).toContain('clamp');
-        expect(document.head.querySelector('style[data-responsivejs]')?.textContent).toBe(css);
+    it('responsive.static returns and injects pure CSS, with its own disposer', () => {
+        const handle = responsive.static('.title', { fontSize: fluid(16, 32) });
+        expect(handle.css).toContain('clamp');
+        expect(document.head.querySelector('style[data-responsivejs]')?.textContent).toBe(handle.css);
+        handle.dispose();
+        expect(document.head.querySelector('style[data-responsivejs]')).toBeNull();
+    });
+
+    it('two static maps for the same selector do NOT clobber each other', () => {
+        // Regression: the style key was derived from the selector alone, so the
+        // second call overwrote the first — contradicting the ownership model.
+        const a = responsive.static('.card', { fontSize: fluid(16, 32) });
+        const b = responsive.static('.card', { padding: fluid(8, 16) });
+        const sheets = [...document.head.querySelectorAll('style[data-responsivejs]')].map((s) => s.textContent ?? '');
+        expect(sheets).toHaveLength(2);
+        expect(sheets.some((s) => s.includes('font-size'))).toBe(true);
+        expect(sheets.some((s) => s.includes('padding'))).toBe(true);
+        a.dispose();
+        b.dispose();
     });
 
     it('breakpoint switches go fully static through responsive()', () => {

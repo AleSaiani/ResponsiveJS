@@ -278,7 +278,7 @@ useEffect(() => {
 to drain them synchronously after triggering a resize.
 
 **SSR.** No construct touches `window` at import time. For zero-flash server rendering, emit
-the static half yourself: `r$.static(selector, map)` returns the CSS (and throws — on purpose
+the static half yourself: `r$.static(selector, map)` returns `{ css, dispose }` (and throws — on purpose
 — if the map contains anything that would silently need JS), and `r$.tokens(...).css` is the
 token stylesheet. Geometry attributes appear on hydration.
 

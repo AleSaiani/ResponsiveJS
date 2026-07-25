@@ -1,129 +1,66 @@
 /**
- * Browser-injectable observer script for real-time DOM measurement.
- * Creates ResizeObserver + MutationObserver to re-measure on changes.
+ * Live observation script — ResizeObserver + MutationObserver that re-run the
+ * ONE shared collector (browser/inject.ts) and park wire snapshots on
+ * `window.__rjs_live`, keyed by viewport width.
+ *
+ * It deliberately does NOT measure anything itself: a second collector is a
+ * second definition of truth, and this file used to be exactly that (it had
+ * drifted — no DOM-semantic interactivity, no overflow containment, no
+ * provenance manifest, so LiveValidator disagreed with every other path).
  */
 
-/**
- * Build a self-contained script string that, when evaluated in a browser,
- * sets up observers and stores measurements in `window.__rjs_store`.
- */
+import { collectPage } from '../browser/inject.js';
+
+export const LIVE_STORE = '__rjs_live';
+
+/** Build the injectable script: measure now, then on resize and mutation. */
 export function buildObserverScript(selectors: string[]): string {
-    const selectorsJSON = JSON.stringify(selectors);
+    return `(() => {
+    const collect = ${collectPage.toString()};
+    const selectors = ${JSON.stringify(selectors)};
+    const win = window;
+    win.${LIVE_STORE} = win.${LIVE_STORE} ?? new Map();
 
-    // The script runs entirely inside the browser — no imports, pure DOM API
-    return `
-(function() {
-    const selectors = ${selectorsJSON};
+    const measure = () => {
+        const width = win.innerWidth;
+        win.${LIVE_STORE}.set(width, collect({ selectors, width, height: win.innerHeight }));
+    };
 
-    // Global store: Map<viewportWidth, measurement[]>
-    if (!window.__rjs_store) {
-        window.__rjs_store = new Map();
-    }
+    if (win.__rjs_live_stop) win.__rjs_live_stop();
+    const ro = new ResizeObserver(measure);
+    ro.observe(document.documentElement);
+    const mo = new MutationObserver(measure);
+    mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true });
+    win.__rjs_live_stop = () => {
+        ro.disconnect();
+        mo.disconnect();
+        delete win.__rjs_live_stop;
+    };
 
-    // Effective background: walk up past transparent ancestors (see inject.ts).
-    function effectiveBackground(start) {
-        let node = start;
-        while (node) {
-            const bg = getComputedStyle(node).backgroundColor;
-            if (bg && bg !== 'transparent' && !/^rgba\\(\\s*\\d+,\\s*\\d+,\\s*\\d+,\\s*0\\s*\\)$/.test(bg) && !/\\/\\s*0\\s*\\)$/.test(bg)) {
-                return bg;
-            }
-            node = node.parentElement;
-        }
-        return 'rgb(255, 255, 255)';
-    }
-
-    function measure() {
-        const width = window.innerWidth;
-        const results = [];
-
-        for (const selector of selectors) {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(function(el, index) {
-                const r = el.getBoundingClientRect();
-                const cs = getComputedStyle(el);
-
-                results.push({
-                    selector: selector,
-                    index: index,
-                    rect: { x: r.x, y: r.y, width: r.width, height: r.height },
-                    styles: {
-                        fontSize: parseFloat(cs.fontSize) || 0,
-                        lineHeight: parseFloat(cs.lineHeight) || 0,
-                        fontWeight: parseFloat(cs.fontWeight) || 400,
-                        gap: parseFloat(cs.gap) || 0,
-                        paddingTop: parseFloat(cs.paddingTop) || 0,
-                        paddingRight: parseFloat(cs.paddingRight) || 0,
-                        paddingBottom: parseFloat(cs.paddingBottom) || 0,
-                        paddingLeft: parseFloat(cs.paddingLeft) || 0,
-                        marginTop: parseFloat(cs.marginTop) || 0,
-                        marginRight: parseFloat(cs.marginRight) || 0,
-                        marginBottom: parseFloat(cs.marginBottom) || 0,
-                        marginLeft: parseFloat(cs.marginLeft) || 0,
-                        borderRadiusTL: parseFloat(cs.borderTopLeftRadius) || 0,
-                        borderRadiusTR: parseFloat(cs.borderTopRightRadius) || 0,
-                        borderRadiusBR: parseFloat(cs.borderBottomRightRadius) || 0,
-                        borderRadiusBL: parseFloat(cs.borderBottomLeftRadius) || 0,
-                        minWidth: parseFloat(cs.minWidth) || 0,
-                        maxWidth: cs.maxWidth === 'none' ? Infinity : (parseFloat(cs.maxWidth) || 0),
-                        minHeight: parseFloat(cs.minHeight) || 0,
-                        maxHeight: cs.maxHeight === 'none' ? Infinity : (parseFloat(cs.maxHeight) || 0),
-                        zIndex: cs.zIndex === 'auto' ? 0 : (parseInt(cs.zIndex) || 0),
-                        opacity: parseFloat(cs.opacity) || 1,
-                        outlineWidth: parseFloat(cs.outlineWidth) || 0,
-                        outlineOffset: parseFloat(cs.outlineOffset) || 0
-                    },
-                    computed: {
-                        display: cs.display,
-                        overflow: cs.overflow,
-                        position: cs.position,
-                        visibility: cs.visibility,
-                        pointerEvents: cs.pointerEvents,
-                        backgroundColor: effectiveBackground(el),
-                        color: cs.color,
-                        boxSizing: cs.boxSizing,
-                        textAlign: cs.textAlign,
-                        whiteSpace: cs.whiteSpace,
-                        cursor: cs.cursor
-                    }
-                });
-            });
-        }
-
-        window.__rjs_store.set(width, {
-            width: width,
-            height: window.innerHeight,
-            measurements: results,
-            timestamp: Date.now()
-        });
-    }
-
-    // Cleanup previous observers if re-injected
-    if (window.__rjs_resizeObserver) {
-        window.__rjs_resizeObserver.disconnect();
-    }
-    if (window.__rjs_mutationObserver) {
-        window.__rjs_mutationObserver.disconnect();
-    }
-
-    // ResizeObserver on documentElement to detect viewport resize
-    window.__rjs_resizeObserver = new ResizeObserver(function() {
-        measure();
-    });
-    window.__rjs_resizeObserver.observe(document.documentElement);
-
-    // MutationObserver on body to detect DOM changes
-    window.__rjs_mutationObserver = new MutationObserver(function() {
-        measure();
-    });
-    window.__rjs_mutationObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true
-    });
-
-    // Measure immediately on injection
     measure();
-})();
-`;
+    return 'observing';
+})()`;
 }
+
+/** Read every measurement collected so far, as [width, wireSnapshot] pairs. */
+export const READ_LIVE_EXPRESSION = `(() => {
+    const store = window.${LIVE_STORE};
+    return store ? Array.from(store.entries()) : [];
+})()`;
+
+/** Read one width's measurement (null when it has not been measured yet). */
+export function buildReadWidthExpression(width: number): string {
+    return `(() => {
+    const store = window.${LIVE_STORE};
+    return store ? (store.get(${width}) ?? null) : null;
+})()`;
+}
+
+/** Drop collected measurements (forces the next observation to re-fill). */
+export const CLEAR_LIVE_EXPRESSION = `(() => { window.${LIVE_STORE}?.clear(); })()`;
+
+/** Disconnect the observers and drop the store. */
+export const STOP_LIVE_EXPRESSION = `(() => {
+    window.__rjs_live_stop?.();
+    delete window.${LIVE_STORE};
+})()`;

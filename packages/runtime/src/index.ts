@@ -51,8 +51,9 @@ interface ResponsiveFn {
     // configuration & emission
     config(partial: Partial<RuntimeConfig>): void;
     breakpoints: typeof defineBreakpoints;
-    /** Static-only compilation; throws if anything requires JS. */
-    static(selector: string, map: StyleMap): string;
+    /** Static-only compilation; throws if anything requires JS. Each call owns
+     *  its own stylesheet: `{ css, dispose }`. */
+    static: typeof staticCSS;
     /** Apply without the static-CSS split (everything JS-driven). */
     dynamic(target: Target, map: StyleMap): ResponsiveHandle;
     /** Token bridge: fluid values as custom properties on :root (clamp where linear). */
@@ -169,4 +170,14 @@ export { defineBreakpoints } from './breakpoints.js';
 export type { TypedBreakpoints } from './breakpoints.js';
 export type { RuntimeConfig } from './config.js';
 export { emitCSS, injectStyle, removeStyle } from './static.js';
-export type { ResponsiveHandle, Target } from './apply.js';
+export type { EmitResult } from './static.js';
+export type { ResponsiveHandle, Target, StaticHandle } from './apply.js';
+
+// ─── performance & tooling ──────────────────────────────────────────────
+// Every namespace member has an importable name: `r$.lazy` IS `lazy`. The
+// perf batch (signal batch + style flush) is `batchWrites` so it never
+// collides with the pure `batch` of ./signals.
+
+export { flush, staticCSS } from './apply.js';
+export { lazy, memo, debug, batch as batchWrites } from './perf.js';
+export { applyUtilities, parseUtilities } from './template.js';

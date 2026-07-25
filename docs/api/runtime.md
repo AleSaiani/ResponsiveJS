@@ -24,6 +24,10 @@ r$`selector { prop: ${r$.fluid(14, 24)}px }`   // tagged-template form
   `(width) => value` function, or a plain string/number.
 - With a selector target and `useMediaQueries` on (default), the map is **split**: statically
   expressible values become one injected `<style data-responsivejs>`; the rest is JS-driven.
+- In the tagged-template form a literal suffix that is *just a unit* (`${fluid(14, 24)}px`)
+  belongs to the value: it is folded in, so the declaration still compiles to `clamp()`.
+  Genuinely mixed content (`${a} solid red`) is a composed string and stays JS-driven — CSS
+  has no way to express it.
 
 `ResponsiveHandle`: `elements`, `update(map)`, `pause()`, `resume()`, `dispose()`.
 Ownership guarantees: every handle owns a **unique** stylesheet (two `r$('.x', …)` calls never
@@ -41,7 +45,7 @@ the container; with `r$.static()` alone, declaring the container is on you).
 | `r$.config({ breakpoints, defaultUnit='px', useMediaQueries=true, debug, ssrWidth=1024 })` | Global configuration (itself reactive). |
 | `r$.breakpoints({ mobile: 320, … } as const)` | Define named breakpoints — returns the [typed API](#typed-breakpoints). |
 | `r$.tokens({ '--space-md': fluid(8, 16) })` | [Token bridge](#tokens--fluid-custom-properties): fluid custom properties on `:root`. |
-| `r$.static(selector, map): string` | CSS-only compilation — throws if anything needs JS. |
+| `r$.static(selector, map): { css, dispose }` | CSS-only compilation — throws if anything needs JS. Each call owns its own stylesheet (two static maps for one selector never clobber each other) and can remove it. |
 | `r$.dynamic(target, map)` | Skip the static split, drive everything via JS. |
 | `r$.lazy(target, map)` | Apply on first intersection (IntersectionObserver). |
 | `r$.batch(fn)` | One signal flush + one style flush for several calls. |
@@ -120,7 +124,11 @@ attributes). SSR: inert. Bare factories are accepted (`wrapped: whenWraps` ≡ `
 ## Cross-element
 
 - `fromElement(target)` — a fluid **domain**: `fluid(14, 18, { domain: fromElement('.sidebar'),
-  from: 200, to: 600 })` makes the value follow the sidebar's width, not the viewport.
+  from: 200, to: 600 })` makes the value follow the sidebar's width, not the viewport. Honoured
+  by every value kind (numbers, per-breakpoint arrays, colors, structural strings, `custom`);
+  a `combine()` whose parts follow *different* elements throws, since a combined value has one
+  driving width. A source selector that matches nothing throws **at construction**, before any
+  stylesheet or provenance entry exists.
 - `sync(target, 'height' | 'width')` — equalize a dimension across unrelated containers (max
   natural size wins). Re-measures on viewport resize and `handle.measure()`.
 - `ratio(a, b, { min?, max? })` — the design constraint promoted to **enforcement**: keeps

@@ -257,7 +257,7 @@ component that owns them (adapters that manage this automatically are on the roa
 
 ### SSR without flashes — static emission
 
-Linear constructs never needed JS: ship `r$.tokens(...).css` / `r$.static(selector, map)` as
+Linear constructs never needed JS: ship `r$.tokens(...).css` / `r$.static(selector, map).css` as
 server-rendered CSS; geometry attributes hydrate on the client (constructs are inert without
 `window`). The page is correct before a single byte of JS runs.
 

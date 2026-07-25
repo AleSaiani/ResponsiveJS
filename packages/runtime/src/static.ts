@@ -55,14 +55,6 @@ export function emitCSS(selector: string, map: StyleMap): EmitResult {
 
     for (const [prop, value] of Object.entries(map)) {
         const kebab = toKebab(prop);
-        const ctx: StaticContext = {
-            selector,
-            property: kebab,
-            domain: d,
-            breakpoints: cfg.breakpoints,
-            container: false,
-            unit: UNITLESS.has(kebab) ? '' : cfg.defaultUnit,
-        };
 
         if (typeof value === 'number' || typeof value === 'string') {
             base.push(`${kebab}: ${declarationValue(value, kebab, cfg.defaultUnit)};`);
@@ -72,6 +64,17 @@ export function emitCSS(selector: string, map: StyleMap): EmitResult {
             dynamicRest[prop] = value; // custom function
             continue;
         }
+
+        // The value's own unit wins over the global default — otherwise a
+        // rem-valued fluid would compile to px.
+        const ctx: StaticContext = {
+            selector,
+            property: kebab,
+            domain: d,
+            breakpoints: cfg.breakpoints,
+            container: value.container ?? false,
+            unit: UNITLESS.has(kebab) ? '' : (value.unit ?? cfg.defaultUnit),
+        };
 
         const emission: StaticEmission | null = value.toStatic(ctx);
         if (emission === null) {

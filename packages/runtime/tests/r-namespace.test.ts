@@ -1,6 +1,18 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, afterEach } from 'vitest';
-import { r$, responsive, fluid, geometry } from '../src/index.js';
+import {
+    r$,
+    responsive,
+    fluid,
+    geometry,
+    flush,
+    staticCSS,
+    lazy,
+    memo,
+    debug,
+    batchWrites,
+    applyUtilities,
+} from '../src/index.js';
 import { __resetViewportHub } from '../src/viewport.js';
 import { __resetConfig } from '../src/config.js';
 
@@ -29,6 +41,17 @@ describe('the r$ namespace', () => {
         expect(r$.fluid).toBe(fluid);
         expect(r$.geometry).toBe(geometry);
         expect(responsive).toBe(r$); // the historical alias
+    });
+
+    it('EVERY namespace member has an importable name — the README promise', () => {
+        // These seven had no named export at all: the tree-shaking claim was false.
+        expect(r$.flush).toBe(flush);
+        expect(r$.static).toBe(staticCSS);
+        expect(r$.lazy).toBe(lazy);
+        expect(r$.memo).toBe(memo);
+        expect(r$.debug).toBe(debug);
+        expect(r$.batch).toBe(batchWrites); // renamed: ./signals has its own `batch`
+        expect(r$.apply).toBe(applyUtilities);
     });
 
     it('works end to end through the namespace alone', () => {

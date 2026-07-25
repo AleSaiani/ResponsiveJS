@@ -20,7 +20,7 @@ as `r$.<name>` (e.g. `r$.fluid`, `r$.geometry`, `r$.whenWraps`); `r$(target, map
    restores inline values that existed before the handle touched them.
 5. **Prefer `tokens()` over per-element styles** for design-scale values: one write point on
    `:root`, consumed as `var()`.
-6. SSR: all constructs are inert without `window`; ship `r$.static()` / `tokens().css`.
+6. SSR: all constructs are inert without `window`; ship `r$.static().css` / `tokens().css`.
 
 ## Signatures
 
@@ -28,7 +28,7 @@ as `r$.<name>` (e.g. `r$.fluid`, `r$.geometry`, `r$.whenWraps`); `r$(target, map
 // Apply styles (CSS-first split on selector targets)
 r$(target, map): ResponsiveHandle          // target: selector | Element | Element[]
 r$.dynamic(target, map)                    // force JS path
-r$.static(selector, map): string           // CSS only; throws if JS needed
+r$.static(selector, map): {css, dispose}   // CSS only; throws if JS needed
 r$.flush()                                 // drain pending writes (tests)
 
 // Values

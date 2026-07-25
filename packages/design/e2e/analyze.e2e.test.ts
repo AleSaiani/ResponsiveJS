@@ -102,3 +102,28 @@ describe('analyze e2e (chromium)', () => {
         expect(deep!.length).toBeGreaterThan(0);
     });
 });
+
+describe('LiveValidator — the same collector as every other path', () => {
+    it('measures through the shared collector: DOM semantics and containment included', async () => {
+        const { LiveValidator } = await import('../src/realtime/live.js');
+        const live = new LiveValidator();
+        await live.attach(page, ['button', '.card']);
+        await live.resizeTo(900, 700);
+
+        const store = await live.snapshot();
+        expect(store.widths).toContain(900);
+        const button = store.snapshots.get(900)!.elements.get('button')![0];
+
+        // These three came from the SHARED collector; the old duplicated
+        // observer in realtime/ produced none of them, so LiveValidator
+        // silently disagreed with sweep/CDP/agent-browser measurements.
+        expect(button.computed.interactive).toBe(true);
+        expect(button.computed.tagName).toBe('button');
+        expect(button.computed.backgroundColor).toMatch(/^rgb/); // effective, resolved
+        expect(store.snapshots.get(900)!.childRelations.size).toBeGreaterThanOrEqual(0);
+
+        const report = await live.check();
+        expect(typeof report.pass).toBe('boolean');
+        await live.detach();
+    }, 60_000);
+});

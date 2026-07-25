@@ -123,7 +123,9 @@ a single ~52 kB script exposing `window.rjs` — droppable into any page via `<s
 
 `attach(page, selectors)` · `snapshot(): SnapshotStore` · `resizeTo(width)` ·
 `scoreAt(width?)` · `check(): Report` · `detach()`. For continuous scoring while a page changes
-(theme builders, devtools).
+(theme builders, devtools). It runs the **same in-page collector** as every other path, so its
+measurements are identical — DOM-semantic interactivity, effective backgrounds, overflow
+containment and the provenance manifest all included.
 
 ## Reporters
 

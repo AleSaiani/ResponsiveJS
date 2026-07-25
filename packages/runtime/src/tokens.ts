@@ -48,11 +48,44 @@ export function tokens(map: TokensMap): TokensHandle {
     }
 
     const styleKey = `r$:tokens:#${++tokenCounter}`;
-    const { css, dynamicRest } = emitCSS(':root', map as StyleMap);
-    if (css.length > 0) injectStyle(css, styleKey);
-
-    const dynamicNames = Object.keys(dynamicRest) as TokenName[];
+    /** Inline :root values present before our first write — restored on dispose. */
+    const savedVars = new Map<string, string>();
     const disposers: Disposer[] = [];
+
+    let css = '';
+    let dynamicNames: TokenName[] = [];
+    let dynamicDisposer: Disposer | undefined;
+
+    /** Split the map into static CSS + JS-driven rest, and (re)wire the JS half.
+     *  Re-runs when the config changes: new breakpoints mean new clamps. */
+    const applySplit = (): void => {
+        dynamicDisposer?.();
+        dynamicDisposer = undefined;
+
+        const emitted = emitCSS(':root', map as StyleMap);
+        css = emitted.css;
+        if (css.length > 0) injectStyle(css, styleKey);
+        else removeStyle(styleKey);
+        dynamicNames = Object.keys(emitted.dynamicRest) as TokenName[];
+
+        if (dynamicNames.length > 0 && typeof document !== 'undefined') {
+            const root = document.documentElement;
+            for (const name of dynamicNames) {
+                if (!savedVars.has(name)) savedVars.set(name, root.style.getPropertyValue(name));
+            }
+            const vw = viewportWidth();
+            dynamicDisposer = effect(() => {
+                const width = vw.get();
+                const unit = configState.get().defaultUnit;
+                for (const name of dynamicNames) {
+                    root.style.setProperty(name, resolveToken(emitted.dynamicRest[name], width, unit));
+                }
+            });
+        }
+    };
+
+    applySplit();
+
     disposers.push(
         registerProvenance({
             construct: 'tokens',
@@ -63,27 +96,26 @@ export function tokens(map: TokensMap): TokensHandle {
             config: describeMap(map as StyleMap),
         }),
     );
-    /** Inline :root values present before our first write — restored on dispose. */
-    const savedVars = new Map<string, string>();
 
-    if (dynamicNames.length > 0 && typeof document !== 'undefined') {
-        const root = document.documentElement;
-        for (const name of dynamicNames) savedVars.set(name, root.style.getPropertyValue(name));
-        const vw = viewportWidth();
-        disposers.push(
-            effect(() => {
-                const width = vw.get();
-                const unit = configState.get().defaultUnit;
-                for (const name of dynamicNames) {
-                    root.style.setProperty(name, resolveToken(dynamicRest[name], width, unit));
-                }
-            }),
-        );
-    }
+    let configSettled = false;
+    disposers.push(
+        effect(() => {
+            configState.get();
+            if (!configSettled) {
+                configSettled = true;
+                return;
+            }
+            applySplit();
+        }),
+    );
 
     return {
-        css,
-        dynamic: dynamicNames,
+        get css() {
+            return css;
+        },
+        get dynamic() {
+            return dynamicNames;
+        },
         toDTCG() {
             const out: Record<string, DTCGToken> = {};
             const cfg = configState.get();
@@ -105,16 +137,18 @@ export function tokens(map: TokensMap): TokensHandle {
             return out;
         },
         dispose() {
+            dynamicDisposer?.();
             for (const d of disposers) d();
             if (css.length > 0) removeStyle(styleKey);
             if (typeof document !== 'undefined') {
                 const root = document.documentElement;
-                for (const name of dynamicNames) {
-                    const saved = savedVars.get(name);
+                // every var we ever wrote (the split may have changed with the config)
+                for (const [name, saved] of savedVars) {
                     if (saved) root.style.setProperty(name, saved);
                     else root.style.removeProperty(name);
                 }
             }
+            savedVars.clear();
         },
     };
 }

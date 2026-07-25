@@ -116,8 +116,25 @@ interface ApplyOptions {
 
 let handleCounter = 0;
 
+/**
+ * fromElement() sources are validated BEFORE anything is written: provenance
+ * registration and injected CSS are side effects, and a throw from setup()
+ * used to leave both behind with no handle to clean them up.
+ */
+function assertSourcesResolvable(map: StyleMap): void {
+    if (typeof document === 'undefined') return;
+    for (const value of Object.values(map)) {
+        if (!isResponsiveValue(value) || !value.source) continue;
+        const { target } = value.source;
+        if (typeof target === 'string' && !document.querySelector(target)) {
+            throw new Error(`r$: fromElement('${target}') matched no element`);
+        }
+    }
+}
+
 export function applyResponsive(target: Target, map: StyleMap, options: ApplyOptions = {}): ResponsiveHandle {
     const cfg = configState.get();
+    assertSourcesResolvable(map);
     const elements = resolveElements(target);
     // Unique per handle: two r$('.x', …) calls must never share (or clobber)
     // each other's stylesheet. Later injection wins the cascade — documented.
@@ -168,7 +185,8 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
             : typeof value === 'function'
               ? value(width)
               : value;
-        const unit = configState.get().defaultUnit;
+        // The value's own unit wins: fluid(1, 2, 'rem') must not write px.
+        const unit = (isResponsiveValue(value) ? value.unit : undefined) ?? configState.get().defaultUnit;
         enqueueWrite(el, kebab, declarationValue(resolved, kebab, unit));
         if (configState.get().debug) {
             console.log(`[r$] ${describeElement(el)} ${kebab} @ ${width}px →`, resolved);
@@ -217,9 +235,10 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
             for (const [prop, value] of sourceEntries) {
                 const target = (value as { source: { target: string | Element } }).source.target;
                 const sourceEl = typeof target === 'string' ? document.querySelector(target) : target;
-                if (!sourceEl) {
-                    throw new Error(`r$: fromElement('${String(target)}') matched no element`);
-                }
+                // Vanished after construction (DOM churn, or a re-run after a
+                // config change): skip. The loud failure belongs to the
+                // construction-time preflight, where the caller can still act.
+                if (!sourceEl) continue;
                 const { signal, dispose } = containerWidth(sourceEl);
                 disposers.push(dispose);
                 disposers.push(
@@ -255,9 +274,25 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
 
     setup();
 
+    // The static half must react to config changes exactly like the JS half:
+    // new breakpoints mean new clamps, otherwise the two halves of the same
+    // map drift apart (stale CSS + fresh JS).
+    let configSettled = false;
+    const configWatcher = effect(() => {
+        configState.get();
+        if (!configSettled) {
+            configSettled = true;
+            return;
+        }
+        teardown();
+        currentMap = splitStatic(fullMap);
+        setup();
+    });
+
     return {
         elements,
         update(next: StyleMap) {
+            assertSourcesResolvable(next);
             teardown();
             unregister();
             unregister = registerProvenance({
@@ -289,6 +324,7 @@ export function applyResponsive(target: Target, map: StyleMap, options: ApplyOpt
         },
         dispose() {
             teardown();
+            configWatcher();
             unregister();
             if (injectedCSS) removeStyle(styleKey);
             for (const [el, saved] of savedInline) {
@@ -304,10 +340,19 @@ function describeElement(el: HTMLElement): string {
     return el.id ? `#${el.id}` : el.className ? `.${String(el.className).split(' ')[0]}` : el.tagName.toLowerCase();
 }
 
-/** responsive.static(): compile the map to CSS only. Injects in browser, returns the CSS.
+export interface StaticHandle {
+    /** The compiled stylesheet — what SSR should ship. */
+    readonly css: string;
+    /** Remove the injected stylesheet. */
+    dispose(): void;
+}
+
+/** responsive.static(): compile the map to CSS only. Injects in the browser and
+ *  returns the CSS plus its disposer — each call owns its OWN stylesheet, so two
+ *  static maps for the same selector never clobber each other.
  *  NOTE: container values compile to cqi — with static-only emission YOU must
  *  declare `container-type` on the container (r$() full application does it for you). */
-export function staticCSS(selector: string, map: StyleMap): string {
+export function staticCSS(selector: string, map: StyleMap): StaticHandle {
     const { css, dynamicRest } = emitCSS(selector, map);
     const dynamicProps = Object.keys(dynamicRest);
     if (dynamicProps.length > 0) {
@@ -316,6 +361,15 @@ export function staticCSS(selector: string, map: StyleMap): string {
                 'Use responsive() (CSS-first split) or responsive.dynamic() for these.',
         );
     }
-    injectStyle(css, `r$:${selector}`);
-    return css;
+    const styleKey = `r$:static:#${++handleCounter}:${selector}`;
+    injectStyle(css, styleKey);
+    let disposed = false;
+    return {
+        css,
+        dispose() {
+            if (disposed) return;
+            disposed = true;
+            removeStyle(styleKey);
+        },
+    };
 }

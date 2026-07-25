@@ -182,8 +182,21 @@ export function geometry(
         }),
     );
 
+    /** Attribute values present BEFORE our first write (server-rendered state):
+     *  restored on dispose, exactly like apply.ts restores inline styles. */
+    const savedAttrs = new Map<HTMLElement, Map<string, string | null>>();
+    const remember = (el: HTMLElement, attr: string): void => {
+        let saved = savedAttrs.get(el);
+        if (!saved) {
+            saved = new Map();
+            savedAttrs.set(el, saved);
+        }
+        if (!saved.has(attr)) saved.set(attr, el.getAttribute(attr));
+    };
+
     const measureElement = (el: HTMLElement): void => {
         for (const [attr, predicate] of predicates) {
+            remember(el, attr);
             const value = predicate.measure(el);
             if (typeof value === 'boolean') {
                 if (value) el.setAttribute(attr, '');
@@ -224,9 +237,13 @@ export function geometry(
         },
         dispose() {
             for (const d of disposers) d();
-            for (const el of elements) {
-                for (const [attr] of predicates) el.removeAttribute(attr);
+            for (const [el, saved] of savedAttrs) {
+                for (const [attr, previous] of saved) {
+                    if (previous === null) el.removeAttribute(attr);
+                    else el.setAttribute(attr, previous);
+                }
             }
+            savedAttrs.clear();
         },
     };
 }

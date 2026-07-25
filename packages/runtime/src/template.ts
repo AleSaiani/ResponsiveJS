@@ -8,8 +8,12 @@
  */
 
 import { applyResponsive, type ResponsiveHandle } from './apply.js';
-import { fluid, custom, isResponsiveValue, type StyleMap, type ResponsiveValue } from './value.js';
+import { fluid, custom, isResponsiveValue, withUnit, type StyleMap, type ResponsiveValue } from './value.js';
 import { space } from './layout.js';
+
+/** A literal suffix that is JUST a CSS unit is the value's unit, not a string
+ *  concatenation — folding it keeps the value statically emittable. */
+const UNIT_SUFFIX_RE = /^(px|rem|em|%|vw|vh|vmin|vmax|ch|ex|cqw|cqi|cqh|cqb|cqmin|cqmax|pt|pc|cm|mm|in|q|deg|rad|turn|fr|s|ms)$/i;
 
 // ─── tagged template ────────────────────────────────────────────────────
 
@@ -91,7 +95,15 @@ function parseTemplateValue(raw: string, values: unknown[]): StyleMap[string] {
     if (parts.length === 1 && typeof parts[0] === 'string') return parts[0];
     if (parts.length === 1) return parts[0] as ResponsiveValue;
 
-    // Mixed literal + placeholder (e.g. `${fluid(14,24)}px`): resolve and concatenate.
+    // `${fluid(14, 24)}px` — the unit belongs to the value. Folding it (instead
+    // of concatenating strings) is what keeps the CSS-first path alive: the
+    // value still compiles to clamp(). This is the flagship template form.
+    if (parts.length === 2 && isResponsiveValue(parts[0]) && typeof parts[1] === 'string' && UNIT_SUFFIX_RE.test(parts[1])) {
+        return withUnit(parts[0], parts[1]);
+    }
+
+    // Genuinely mixed content (`${a} solid ${b}`): a composed string, JS-driven
+    // by nature — CSS has no way to express it.
     return custom((width) =>
         parts.map((p) => (typeof p === 'string' ? p : p.resolve(width))).join(''),
     );

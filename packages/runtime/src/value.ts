@@ -67,6 +67,19 @@ export function makeValue(
     return { ...desc, [RESPONSIVE_VALUE]: true } as ResponsiveValue;
 }
 
+/**
+ * Same value, with an explicit unit — how the tagged template folds a literal
+ * suffix (`${fluid(14, 24)}px`) into the value instead of degrading it to a
+ * JS-only concatenation. Both the static and the dynamic path read `unit`.
+ */
+export function withUnit(value: ResponsiveValue, unit: string): ResponsiveValue {
+    if (value.unit === unit) return value;
+    if (value.unit !== undefined) {
+        throw new Error(`r$: value already declares unit '${value.unit}' — cannot also apply '${unit}'.`);
+    }
+    return { ...value, unit } as ResponsiveValue;
+}
+
 export interface FluidOpts {
     curve?: CurveSpec;
     unit?: string;
@@ -192,12 +205,15 @@ function arrayFluid(values: number[], opts?: FluidOpts): ResponsiveValue {
     return makeValue({
         kind: 'fluid',
         container: opts?.container,
+        source: opts?.domain,
         unit: opts?.unit,
         meta: {
             value: 'fluid',
             values,
             ...(opts?.curve && opts.curve !== 'linear' ? { curve: opts.curve } : {}),
             ...(opts?.unit ? { unit: opts.unit } : {}),
+            ...(opts?.container ? { container: true } : {}),
+            ...(opts?.domain && typeof opts.domain.target === 'string' ? { follows: opts.domain.target } : {}),
         },
         resolve(width) {
             return interp.piecewise(points(), easing)(width);
@@ -223,10 +239,14 @@ function arrayFluid(values: number[], opts?: FluidOpts): ResponsiveValue {
 }
 
 /** Wrap a custom (width) => value function. Always JS-driven. */
-export function custom(fn: (width: number) => string | number, opts?: Pick<FluidOpts, 'container' | 'unit'>): ResponsiveValue {
+export function custom(
+    fn: (width: number) => string | number,
+    opts?: Pick<FluidOpts, 'container' | 'unit' | 'domain'>,
+): ResponsiveValue {
     return makeValue({
         kind: 'custom',
         container: opts?.container,
+        source: opts?.domain,
         unit: opts?.unit,
         meta: { value: 'custom' },
         resolve: (width) => fn(width),
@@ -236,9 +256,18 @@ export function custom(fn: (width: number) => string | number, opts?: Pick<Fluid
 
 /** Space-join multiple responsive values (e.g. transform parts). */
 export function combine(parts: (ResponsiveValue | string | number)[]): ResponsiveValue {
+    // One driving width per value: parts bound to DIFFERENT elements cannot be
+    // resolved together, so say so instead of silently honouring one of them.
+    const sourced = parts.filter(isResponsiveValue).filter((p) => p.source);
+    const targets = new Set(sourced.map((p) => p.source!.target));
+    if (targets.size > 1) {
+        throw new Error('r$: combine() parts follow different elements — a combined value has one driving width.');
+    }
+    const sources = sourced.map((p) => p.source!);
     return makeValue({
         kind: 'combined',
         container: parts.some((p) => isResponsiveValue(p) && p.container),
+        source: sources[0],
         meta: { value: 'combined', parts: parts.map((p) => (isResponsiveValue(p) ? (p.meta ?? { value: p.kind }) : p)) },
         resolve(width) {
             return parts.map((p) => (isResponsiveValue(p) ? p.resolve(width) : p)).join(' ');

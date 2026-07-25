@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe('tagged template', () => {
-    it('parses rules and applies fluid values with literal suffixes', () => {
+    it('a unit suffix is FOLDED into the value, keeping it CSS-first', () => {
         (window as { innerWidth: number }).innerWidth = 320;
         const el = document.createElement('div');
         el.className = 'card';
@@ -30,7 +30,37 @@ describe('tagged template', () => {
             }
         `;
         responsive.flush();
-        expect(el.style.getPropertyValue('font-size')).toBe('14px');
+
+        // `${fluid(14,24)}px` used to degrade to a JS-only concatenation — the
+        // flagship template example silently lost the CSS-first guarantee.
+        // Now the unit belongs to the value and it compiles to clamp().
+        const sheet = document.head.querySelector('style[data-responsivejs]')?.textContent ?? '';
+        expect(sheet).toContain('clamp(14px');
+        expect(el.style.getPropertyValue('font-size')).toBe(''); // no inline write needed
+        handle.dispose();
+    });
+
+    it('a non-default unit survives both halves (rem stays rem)', () => {
+        (window as { innerWidth: number }).innerWidth = 320;
+        const el = document.createElement('div');
+        el.className = 'lede';
+        document.body.appendChild(el);
+
+        const handle = responsive`.lede { font-size: ${fluid(1, 2)}rem; }`;
+        responsive.flush();
+        expect(document.head.querySelector('style[data-responsivejs]')?.textContent).toContain('clamp(1rem');
+        handle.dispose();
+    });
+
+    it('genuinely mixed content stays JS-driven (CSS cannot express it)', () => {
+        (window as { innerWidth: number }).innerWidth = 320;
+        const el = document.createElement('div');
+        el.className = 'mixed';
+        document.body.appendChild(el);
+
+        const handle = responsive`.mixed { border: ${fluid(1, 4)}px solid red; }`;
+        responsive.flush();
+        expect(el.style.getPropertyValue('border')).toBe('1px solid red');
         handle.dispose();
     });
 
