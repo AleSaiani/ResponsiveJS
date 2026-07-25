@@ -10,7 +10,7 @@
 
 import { analyzeStore, buildCollectExpression, fromWire, type UnifiedReport, type ViewportSnapshotWire } from '@responsivejs/design/browser';
 import type { SnapshotStore, Violation } from '@responsivejs/core/types';
-import { makeCdpClient, fullSweep, curveOf, inspectElementSweep, type TabCdp } from './engine.js';
+import { makeCdpClient, curveOf, cdpSweep, iframeSweep, type TabCdp, type MeasureConfig, type ElementInspection } from './engine.js';
 import { parsePropList, toTrack } from './props.js';
 import { curveToSvg } from './curve-svg.js';
 import { buildRecordedContract, type RecordedBaseline } from './recorder.js';
@@ -75,6 +75,28 @@ async function withCdp<T>(work: (client: TabCdp) => Promise<T>): Promise<T> {
     }
 }
 
+/**
+ * Measure through the debugger; when Chrome refuses the attach because a
+ * FOREIGN extension has frames in the page (its check covers the whole
+ * tab — nothing we can do), fall back to iframe emulation: the page
+ * reloaded hidden at every width. Honest caveat: that is a fresh load.
+ */
+async function measure(cfg: MeasureConfig): Promise<ElementInspection & { mode: 'cdp' | 'iframe' }> {
+    try {
+        const inspection = await withCdp((client) => cdpSweep(client, cfg));
+        return { ...inspection, mode: 'cdp' };
+    } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        if (!message.includes('different extension')) throw e;
+        status('debugger blocked by another extension — iframe emulation (fresh same-origin load)…');
+        const inspection = await iframeSweep(evalInPage, cfg);
+        return { ...inspection, mode: 'iframe' };
+    }
+}
+
+const modeNote = (mode: 'cdp' | 'iframe'): string =>
+    mode === 'iframe' ? ' · measured via iframe emulation (fresh load — another extension blocks the debugger here)' : '';
+
 // ─── tabs ───────────────────────────────────────────────────────────────
 
 function showTab(name: string): void {
@@ -108,12 +130,12 @@ async function sweepPage(): Promise<void> {
     const ws = widths();
     status(`sweeping ${ws.join(', ')}px (the yellow debugger bar is expected)…`);
     try {
-        const outcome = await withCdp((client) => fullSweep(client, { widths: ws, selectors: DEFAULT_SELECTORS }));
-        pageStore = outcome.store;
-        report = outcome.report;
+        const { store, mode } = await measure({ widths: ws, selectors: DEFAULT_SELECTORS });
+        pageStore = store;
+        report = analyzeStore(store);
         renderReport();
         showTab('page');
-        status(`swept ${ws.length} widths — now pick an element in the Element tab`);
+        status(`swept ${ws.length} widths — now pick an element in the Element tab${modeNote(mode)}`);
     } catch (e) {
         status(`✗ ${explainCdpError(e instanceof Error ? e.message : String(e))}`);
     }
@@ -215,12 +237,15 @@ async function inspectElement(selector: string): Promise<void> {
     const extraProps = parsePropList($<HTMLInputElement>('el-props').value);
     status(`measuring ${selector} at ${ws.join(', ')}px…`);
     try {
-        const inspection = await withCdp((client) =>
-            inspectElementSweep(client, selector, { widths: ws, extraProps }),
-        );
+        const inspection = await measure({
+            widths: ws,
+            selectors: [selector],
+            extraSelector: selector,
+            extraProps,
+        });
         renderElementProps(selector, inspection.store, inspection.extra);
         showTab('element');
-        status(`${selector} measured at ${ws.length} widths — pin the curves worth keeping`);
+        status(`${selector} measured at ${ws.length} widths — pin the curves worth keeping${modeNote(inspection.mode)}`);
     } catch (e) {
         status(`✗ ${explainCdpError(e instanceof Error ? e.message : String(e))}`);
     }

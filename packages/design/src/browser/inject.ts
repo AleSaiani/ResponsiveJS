@@ -22,8 +22,17 @@ export interface CollectArgs {
  */
 export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnapshotWire {
     const scope: ParentNode = root ?? document;
-    const width = args.width ?? window.innerWidth;
-    const height = args.height ?? window.innerHeight;
+    // Cross-document safe: when `root` is another (same-origin) document —
+    // the iframe-emulation sweep — styles must come from THAT document's
+    // view, and body/html boundaries must be that document's too.
+    const doc = (scope as Document).documentElement ? (scope as Document) : (scope.ownerDocument ?? document);
+    const view = doc.defaultView ?? window;
+    // Free-global fallback: stubbed environments inject getComputedStyle
+    // without putting it on the window object.
+    const styleOf = (el: Element): CSSStyleDeclaration =>
+        typeof view.getComputedStyle === 'function' ? view.getComputedStyle(el) : getComputedStyle(el);
+    const width = args.width ?? view.innerWidth;
+    const height = args.height ?? view.innerHeight;
 
     // Effective (visible) background: transparent elements inherit whatever
     // ancestor actually paints behind them — without this, contrast checks
@@ -42,7 +51,7 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
                 resolved = cached;
                 break;
             }
-            const bg = getComputedStyle(node).backgroundColor;
+            const bg = styleOf(node).backgroundColor;
             if (bg && !isTransparent(bg)) {
                 resolved = bg;
                 break;
@@ -77,11 +86,11 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
         const chain: Element[] = [];
         let node: Element | null = start.parentElement;
         let found: 'scroll' | 'clip' | null = null;
-        while (node && node !== document.body && node !== document.documentElement) {
+        while (node && node !== doc.body && node !== doc.documentElement) {
             const hit = containCache.get(node);
             if (hit !== undefined) { found = hit; break; }
             chain.push(node);
-            const ox = getComputedStyle(node).overflowX;
+            const ox = styleOf(node).overflowX;
             if (ox === 'auto' || ox === 'scroll') { found = 'scroll'; break; }
             if (ox === 'hidden' || ox === 'clip') { found = 'clip'; break; }
             node = node.parentElement;
@@ -99,7 +108,7 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
 
         scope.querySelectorAll(selector).forEach((el, index) => {
             const r = el.getBoundingClientRect();
-            const cs = getComputedStyle(el);
+            const cs = styleOf(el);
             const rect: RawRect = { x: r.x, y: r.y, width: r.width, height: r.height };
 
             snaps.push({
@@ -165,8 +174,9 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
     }
 
     // Provenance: if the page runs @responsivejs/runtime, ship its manifest
-    // with the measurements (the closed loop's transport).
-    const manifest = (window as unknown as { __rjs_manifest?: unknown }).__rjs_manifest;
+    // with the measurements (the closed loop's transport). `view`, not
+    // window: an iframe-emulated sweep wants the MEASURED page's manifest.
+    const manifest = (view as unknown as { __rjs_manifest?: unknown }).__rjs_manifest;
 
     return {
         width,
