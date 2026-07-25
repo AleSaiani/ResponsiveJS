@@ -12,7 +12,8 @@ for (const entry of readdirSync(packagesDir)) {
     const dir = join(packagesDir, entry);
     const manifestPath = join(dir, 'package.json');
     if (!existsSync(manifestPath)) continue;
-    const { name, version } = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    const { name, version, private: isPrivate } = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    if (isPrivate) continue; // e.g. the devtool extension — a build artifact, not an npm module
 
     try {
         execSync(`npm unpublish ${name}@${version} --force --registry ${REGISTRY}`, { stdio: 'ignore' });
