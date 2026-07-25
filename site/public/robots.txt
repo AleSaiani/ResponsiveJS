@@ -1,0 +1,10 @@
+# ResponsiveJS — https://responsivejs.com
+User-agent: *
+Allow: /
+
+Sitemap: https://responsivejs.com/sitemap.xml
+
+# For agents: the documentation is published as source markdown, not just HTML.
+#   https://responsivejs.com/llms.txt        index, in the llmstxt.org format
+#   https://responsivejs.com/llms-full.txt   every page in one fetch
+#   https://responsivejs.com/docs/<page>.md  the markdown twin of any page

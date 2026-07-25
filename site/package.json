@@ -6,10 +6,12 @@
         "sync": "node scripts/sync-docs.mjs && node scripts/emit-llms.mjs",
         "dev": "pnpm sync && vitepress dev",
         "build:site": "pnpm sync && vitepress build",
-        "preview": "vitepress preview"
+        "preview": "vitepress preview",
+        "og": "node scripts/make-og.mjs"
     },
     "devDependencies": {
-        "vitepress": "^1.6.0"
+        "vitepress": "^1.6.0",
+        "@playwright/test": "^1.49.0"
     },
     "dependencies": {
         "@responsivejs/runtime": "workspace:^",
