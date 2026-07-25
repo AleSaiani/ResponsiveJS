@@ -66,7 +66,8 @@ function explainCdpError(message: string): string {
 /** attach → work → detach; the debugger bar on the page is expected. */
 async function withCdp<T>(work: (client: TabCdp) => Promise<T>): Promise<T> {
     cdp ??= makeCdpClient(messenger, chrome.devtools.inspectedWindow.tabId);
-    await cdp.attach();
+    const pageUrl = await evalInPage<string>('location.href').catch(() => undefined);
+    await cdp.attach(pageUrl);
     try {
         return await work(cdp);
     } finally {

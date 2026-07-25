@@ -15,7 +15,9 @@ export interface Messenger {
 }
 
 export interface TabCdp extends CdpClient {
-    attach(): Promise<void>;
+    /** pageUrl helps the background find the page TARGET when tab-level
+     *  attach is poisoned by foreign-extension frames. */
+    attach(pageUrl?: string): Promise<void>;
     detach(): Promise<void>;
 }
 
@@ -27,7 +29,7 @@ export function makeCdpClient(messenger: Messenger, tabId: number): TabCdp {
         return res.result;
     };
     return {
-        attach: async () => void (await call({ type: 'cdp.attach', tabId })),
+        attach: async (pageUrl) => void (await call({ type: 'cdp.attach', tabId, ...(pageUrl ? { pageUrl } : {}) })),
         detach: async () => void (await call({ type: 'cdp.detach', tabId })),
         send: (method, params) => call({ type: 'cdp.send', tabId, method, params }),
     };
