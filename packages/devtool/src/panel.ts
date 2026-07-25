@@ -52,6 +52,17 @@ function status(text: string): void {
     $('status').textContent = text;
 }
 
+/** Turn the debugger's cryptic failures into something actionable. */
+function explainCdpError(message: string): string {
+    if (message.includes('different extension')) {
+        return `${message} — another extension injects frames here; try disabling it on this page`;
+    }
+    if (message.includes('already attached')) {
+        return `${message} — close other debugger sessions (or the yellow bar) and retry`;
+    }
+    return message;
+}
+
 /** attach → work → detach; the debugger bar on the page is expected. */
 async function withCdp<T>(work: (client: TabCdp) => Promise<T>): Promise<T> {
     cdp ??= makeCdpClient(messenger, chrome.devtools.inspectedWindow.tabId);
@@ -103,7 +114,7 @@ async function sweepPage(): Promise<void> {
         showTab('page');
         status(`swept ${ws.length} widths — now pick an element in the Element tab`);
     } catch (e) {
-        status(`✗ ${e instanceof Error ? e.message : String(e)}`);
+        status(`✗ ${explainCdpError(e instanceof Error ? e.message : String(e))}`);
     }
 }
 
@@ -210,7 +221,7 @@ async function inspectElement(selector: string): Promise<void> {
         showTab('element');
         status(`${selector} measured at ${ws.length} widths — pin the curves worth keeping`);
     } catch (e) {
-        status(`✗ ${e instanceof Error ? e.message : String(e)}`);
+        status(`✗ ${explainCdpError(e instanceof Error ? e.message : String(e))}`);
     }
 }
 
