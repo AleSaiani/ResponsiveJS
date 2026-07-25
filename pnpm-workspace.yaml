@@ -1,6 +1,7 @@
 packages:
     - 'packages/*'
     - 'examples/*'
+    - 'site'
 
 # pnpm 10 blocks postinstall build scripts by default; vitest → vite → esbuild needs its install script.
 onlyBuiltDependencies:

@@ -1,0 +1,128 @@
+{
+    "$schema": "https://raw.githubusercontent.com/AleSaiani/ResponsiveJS/main/packages/contract/schema/design-contract.v1.json",
+    "version": 1,
+    "name": "responsivejs.com",
+    "description": "What this site promises about itself. Verified in CI by rjs — the badge in the footer is this file passing.",
+    "viewport": {
+        "widths": [
+            320,
+            375,
+            768,
+            1024,
+            1280,
+            1920
+        ]
+    },
+    "rules": [
+        {
+            "id": "no-bleed",
+            "assert": "noOverflow",
+            "description": "nothing bleeds out of the viewport at any width — code blocks scroll on purpose and are reported as warnings, not errors"
+        },
+        {
+            "id": "tappable-links",
+            "assert": "touchTarget",
+            "args": {
+                "selector": "a[href]",
+                "min": 24
+            },
+            "description": "every visible link meets the WCAG 2.5.8 (AA) 24px floor; links flowing inside prose are exempt by the standard"
+        },
+        {
+            "id": "tappable-controls",
+            "assert": "touchTarget",
+            "args": {
+                "selector": "button",
+                "min": 24
+            },
+            "description": "the same floor for controls — the theme switch failed this at 768px until we measured it"
+        },
+        {
+            "id": "readable-prose",
+            "assert": "contrastRatio",
+            "args": {
+                "selector": "p",
+                "level": "AA"
+            },
+            "description": "body text meets WCAG AA against the background actually painted behind it"
+        },
+        {
+            "id": "readable-code",
+            "assert": "contrastRatio",
+            "args": {
+                "selector": "code",
+                "level": "AA"
+            },
+            "description": "inline code too — its chip is semi-transparent, so the check composites it over what is behind"
+        },
+        {
+            "id": "readable-headings",
+            "assert": "contrastRatio",
+            "args": {
+                "selector": "h1",
+                "level": "AA"
+            },
+            "description": "headings meet AA as well"
+        },
+        {
+            "id": "hero-grows",
+            "assert": "monotonic",
+            "args": {
+                "selector": "h1",
+                "prop": "fontSize",
+                "direction": "up"
+            },
+            "description": "the hero headline never shrinks as the viewport grows — the class of bug a per-width screenshot review cannot see"
+        },
+        {
+            "id": "hero-is-continuous",
+            "assert": "continuous",
+            "args": {
+                "selector": "h1",
+                "prop": "fontSize",
+                "maxJump": 24
+            },
+            "description": "and it grows smoothly: no jump larger than its whole declared range between adjacent widths"
+        },
+        {
+            "id": "content-present",
+            "assert": "visible",
+            "args": {
+                "selector": ".VPContent"
+            },
+            "description": "the page actually renders content at every width (a blank page passes every other rule)"
+        }
+    ],
+    "baselines": [
+        {
+            "selector": "h1",
+            "prop": "fontSize",
+            "curve": [
+                [
+                    320,
+                    32
+                ],
+                [
+                    375,
+                    32
+                ],
+                [
+                    768,
+                    38.4
+                ],
+                [
+                    1024,
+                    51.2
+                ],
+                [
+                    1280,
+                    51.2
+                ],
+                [
+                    1920,
+                    51.2
+                ]
+            ]
+        }
+    ]
+}

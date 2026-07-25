@@ -367,6 +367,9 @@ export class Asserter {
                 const interactive = el.computed.interactive === true || el.computed.cursor === 'pointer';
                 if (!interactive) continue;
                 if (el.rect.width === 0 && el.rect.height === 0) continue; // not rendered
+                // Invisible in the resting state (skip links, hover-only anchors):
+                // it becomes a target when it appears, not before.
+                if (el.computed.visuallyHidden) continue;
                 // WCAG 2.5.8 inline exception: targets that flow inside a line
                 // of text (links in prose) are exempt from the size minimum.
                 if (el.computed.display === 'inline') continue;
@@ -438,6 +441,10 @@ export class Asserter {
         for (const [w, snapshot] of this.store.snapshots) {
             const elements = snapshot.elements.get(selector) || [];
             for (const el of elements) {
+                // Nothing visible, nothing to contrast: a 0×0 element (a control
+                // the theme hides at this width) or sr-only text is not a finding.
+                if (el.rect.width === 0 && el.rect.height === 0) continue;
+                if (el.computed.visuallyHidden) continue;
                 this.totalChecks++;
                 const ratio = colorMath.contrastRatio(el.computed.color, el.computed.backgroundColor);
                 const fs = el.styles.fontSize;

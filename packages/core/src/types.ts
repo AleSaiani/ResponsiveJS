@@ -53,6 +53,9 @@ export interface ElementSnapshot {
         /** DOM-semantic interactivity: native controls (button/a[href]/input/…),
          *  interactive roles, or tabindex >= 0 — and not disabled. */
         interactive?: boolean;
+        /** Present but invisible in the resting state (sr-only clip, opacity 0,
+         *  1×1 absolute): not a touch target, not a contrast finding. */
+        visuallyHidden?: boolean;
         /** Nearest ancestor (html/body excluded) that contains horizontal
          *  overflow: 'scroll' (overflow-x auto/scroll — a scroll region by
          *  design) or 'clip' (hidden/clip). Absent = overflow would bleed

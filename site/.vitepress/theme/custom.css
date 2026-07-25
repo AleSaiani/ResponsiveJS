@@ -1,0 +1,22 @@
+/* Brand colours picked with r$'s own contrast math, not by eye:
+   #255fd8 gives 4.97:1 on the light inline-code chip and 5.66:1 under white
+   button text; #8ab0ff gives 5.87:1 on the dark chip. The site is measured
+   against its own contract in CI, so these numbers are not decoration. */
+:root {
+    --vp-c-brand-1: #255fd8;
+    --vp-c-brand-2: #1d4ed8;
+    --vp-c-brand-3: #1b45c0;
+}
+.dark {
+    --vp-c-brand-1: #8ab0ff;
+    --vp-c-brand-2: #6f9bff;
+    --vp-c-brand-3: #5d8bf5;
+}
+.demo pre { margin: 0; }
+
+/* Measured, not guessed: the nav title link was 17×64 — under the WCAG 2.5.8
+   floor of 24×24 on its narrow axis. Our own touchTarget check found it. */
+.VPNavBarTitle .title { min-width: 24px; justify-content: center; }
+
+/* Same story: the appearance switch measured 40×22 at 768px. */
+.VPSwitch { min-height: 24px; }

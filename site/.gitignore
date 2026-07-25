@@ -1,0 +1,4 @@
+# generated from the repository's docs/ by scripts/sync-docs.mjs
+docs/
+.vitepress/dist/
+.vitepress/cache/

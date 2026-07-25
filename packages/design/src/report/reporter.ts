@@ -114,9 +114,14 @@ import type { ContractReport } from '@responsivejs/contract';
 export function formatContractConsole(report: ContractReport): string {
     const lines: string[] = [];
     const name = report.contract.name ? ` '${report.contract.name}'` : '';
+    // Say WHY passed < total when it passes: those checks produced warnings,
+    // not errors. A bare "559/568" reads like nine failures.
+    const warnings = report.violations.filter((v) => (v.severity ?? 'error') === 'warning').length;
+    const infos = report.violations.filter((v) => v.severity === 'info').length;
+    const notes = [warnings > 0 ? `${warnings} warnings` : null, infos > 0 ? `${infos} info` : null].filter(Boolean);
     lines.push(
         report.pass
-            ? `r$ contract${name} ✓ ${report.passed}/${report.total} checks`
+            ? `r$ contract${name} ✓ ${report.passed}/${report.total} checks${notes.length > 0 ? ` (${notes.join(', ')} — no errors)` : ''}`
             : `r$ contract${name} ✗ ${report.failed} violations (${report.total} checks)`,
     );
 
@@ -126,7 +131,10 @@ export function formatContractConsole(report: ContractReport): string {
             continue;
         }
         if (rule.pass) continue;
-        lines.push(`  ✗ ${rule.ruleId} (${rule.assert})`);
+        // A rule that only produced warnings did not fail the gate — saying
+        // ✗ for it reads as a failure the exit code does not agree with.
+        const hasError = rule.violations.some((v) => (v.severity ?? 'error') === 'error');
+        lines.push(`  ${hasError ? '✗' : '~'} ${rule.ruleId} (${rule.assert})${hasError ? '' : ' — warnings only'}`);
         const description = rule.violations[0]?.ruleDescription;
         if (description) lines.push(`    intent: ${description}`);
         for (const v of rule.violations.slice(0, 5)) {

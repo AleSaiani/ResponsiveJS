@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 /**
  * Regression tests for the 2026-07-24 external review findings — each one
  * reproduces the reported failure and pins the corrected guarantee.
@@ -223,5 +224,38 @@ describe('finding 5 — touchTarget sees native controls, not just cursor:pointe
             makeEl('input', { rect: makeRect(0, 0, 0, 0), computed: { cursor: 'auto', interactive: true } as never }),
         ]);
         expect(new Asserter(store).touchTarget('input').report().total).toBe(0);
+    });
+});
+
+describe('effective background — semi-transparent layers are composited', () => {
+    // Found by running the oracle on our own site: an rgba(…, .14) chip read
+    // as if it were opaque produced a 1.54:1 contrast nobody experiences.
+    const run = (expr: string): unknown => (0, eval)(expr);
+
+    it('composites a translucent layer over what is behind it', async () => {
+        const { buildCollectExpression } = await import('../src/browser/inject.js');
+        document.body.innerHTML =
+            '<div id="page" style="background: rgb(255,255,255)">' +
+            '<code id="chip" style="background: rgba(142,150,170,0.14); color: rgb(47,111,237)">x</code></div>';
+        const wire = run(buildCollectExpression({ selectors: ['#chip'] })) as {
+            elements: [string, { computed: { backgroundColor: string } }[]][];
+        };
+        const bg = wire.elements[0][1][0].computed.backgroundColor;
+
+        // 0.14 of (142,150,170) over white → ~(239,240,243), not the raw chip color
+        expect(bg).toMatch(/^rgb\(/);
+        const [r, g, b] = bg.match(/\d+/g)!.map(Number);
+        expect(r).toBeGreaterThan(230);
+        expect(g).toBeGreaterThan(230);
+        expect(b).toBeGreaterThan(230);
+    });
+
+    it('an opaque background still wins immediately', async () => {
+        const { buildCollectExpression } = await import('../src/browser/inject.js');
+        document.body.innerHTML = '<div id="solid" style="background: rgb(20,20,20); color: #fff">y</div>';
+        const wire = run(buildCollectExpression({ selectors: ['#solid'] })) as {
+            elements: [string, { computed: { backgroundColor: string } }[]][];
+        };
+        expect(wire.elements[0][1][0].computed.backgroundColor).toBe('rgb(20, 20, 20)');
     });
 });

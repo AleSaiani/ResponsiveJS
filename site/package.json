@@ -1,0 +1,17 @@
+{
+    "name": "responsivejs-site",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "sync": "node scripts/sync-docs.mjs",
+        "dev": "pnpm sync && vitepress dev",
+        "build:site": "pnpm sync && vitepress build",
+        "preview": "vitepress preview"
+    },
+    "devDependencies": {
+        "vitepress": "^1.6.0"
+    },
+    "dependencies": {
+        "@responsivejs/runtime": "workspace:^"
+    }
+}

@@ -48,33 +48,69 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
     const width = args.width ?? view.innerWidth;
     const height = args.height ?? view.innerHeight;
 
-    // Effective (visible) background: transparent elements inherit whatever
-    // ancestor actually paints behind them — without this, contrast checks
-    // compare text against a color nobody sees. Semi-transparent backgrounds
-    // are returned as-is (no compositing). Memoized per ancestor.
-    const isTransparent = (bg: string): boolean =>
-        bg === 'transparent' || /^rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)$/.test(bg) || /\/\s*0\s*\)$/.test(bg);
+    // Effective (visible) background: what a user actually sees behind the
+    // text. Transparent elements inherit from ancestors, and SEMI-transparent
+    // ones are alpha-composited over what is behind them — an `rgba(…, .14)`
+    // chip read as if it were opaque produces a contrast ratio nobody
+    // experiences. Results are always opaque, so a cached ancestor value can
+    // serve as the base for its descendants.
+    const parseRgb = (css: string): [number, number, number, number] | null => {
+        const m = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+%?))?/.exec(css);
+        if (!m) return null;
+        const rawAlpha = m[4];
+        const alpha = rawAlpha === undefined ? 1 : rawAlpha.endsWith('%') ? parseFloat(rawAlpha) / 100 : parseFloat(rawAlpha);
+        return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3]), Number.isFinite(alpha) ? alpha : 1];
+    };
     const bgCache = new Map<Element, string>();
     const effectiveBackground = (start: Element): string => {
+        const layers: [number, number, number, number][] = [];
         const chain: Element[] = [];
         let node: Element | null = start;
-        let resolved = 'rgb(255, 255, 255)'; // default canvas
+        let base: [number, number, number] = [255, 255, 255]; // default canvas
         while (node) {
             const cached = bgCache.get(node);
             if (cached !== undefined) {
-                resolved = cached;
+                const parsedCache = parseRgb(cached);
+                if (parsedCache) base = [parsedCache[0], parsedCache[1], parsedCache[2]];
                 break;
             }
-            const bg = styleOf(node).backgroundColor;
-            if (bg && !isTransparent(bg)) {
-                resolved = bg;
-                break;
+            const parsed = parseRgb(styleOf(node).backgroundColor);
+            if (parsed) {
+                if (parsed[3] >= 0.999) {
+                    base = [parsed[0], parsed[1], parsed[2]];
+                    break;
+                }
+                if (parsed[3] > 0) layers.push(parsed);
             }
             chain.push(node);
             node = node.parentElement;
         }
+        // composite bottom-up: the outermost translucent layer paints first
+        let [r, g, b] = base;
+        for (let i = layers.length - 1; i >= 0; i--) {
+            const [lr, lg, lb, la] = layers[i];
+            r = la * lr + (1 - la) * r;
+            g = la * lg + (1 - la) * g;
+            b = la * lb + (1 - la) * b;
+        }
+        const resolved = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
         for (const n of chain) bgCache.set(n, resolved);
         return resolved;
+    };
+
+    // "Visually hidden but focusable" — skip links, screen-reader text, the
+    // anchor that appears on hover. They are in the DOM with a real box, but
+    // nobody sees them in the resting state, so they are neither touch
+    // targets nor contrast findings. This is the sr-only signature.
+    const isVisuallyHidden = (el: Element, cs: CSSStyleDeclaration): boolean => {
+        if (parseFloat(cs.opacity) === 0) return true;
+        const clip = cs.clipPath;
+        if (clip && clip !== 'none' && /inset\(\s*(?:5[0-9]|[6-9][0-9]|100)%/.test(clip)) return true;
+        if (cs.position === 'absolute' || cs.position === 'fixed') {
+            const r = el.getBoundingClientRect();
+            if (r.width <= 1 && r.height <= 1) return true;
+        }
+        return false;
     };
 
     // DOM-semantic interactivity — cursor alone misses native controls
@@ -169,6 +205,7 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
                     cursor: cs.cursor,
                     tagName: el.tagName.toLowerCase(),
                     interactive: isInteractive(el),
+                    visuallyHidden: isVisuallyHidden(el, cs) || undefined,
                     overflowContainment: overflowContainment(el) ?? undefined,
                 },
             });

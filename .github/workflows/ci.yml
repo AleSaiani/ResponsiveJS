@@ -46,3 +46,23 @@ jobs:
       - run: pnpm build
       - run: pnpm --filter @responsivejs/design exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+
+  site:
+    name: site (built with r$, verified by r$)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter responsivejs-site build:site
+      - run: pnpm --filter @responsivejs/design exec playwright install --with-deps chromium
+      # the badge in the footer is this step passing
+      - run: |
+          npx --yes http-server site/.vitepress/dist -p 4173 --silent &
+          npx wait-on http://127.0.0.1:4173 -t 30000
+          node packages/cli/dist/bin.js verify site/site.contract.json http://127.0.0.1:4173/ -d playwright
