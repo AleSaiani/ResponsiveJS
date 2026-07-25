@@ -19,6 +19,7 @@ const TOP_LEVEL_FIELDS = new Set([
     'name',
     'description',
     'viewport',
+    'container',
     'selectors',
     'designSystem',
     'rules',

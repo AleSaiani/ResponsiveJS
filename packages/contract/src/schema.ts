@@ -104,6 +104,19 @@ export function buildJsonSchema(): Record<string, unknown> {
                 },
                 additionalProperties: false,
             },
+            container: {
+                type: 'object',
+                properties: {
+                    harness: { type: 'string' },
+                    widths: { type: 'array', items: { type: 'number' } },
+                    from: { type: 'number' },
+                    to: { type: 'number' },
+                    step: { type: 'number' },
+                    height: { type: 'number' },
+                },
+                required: ['harness'],
+                additionalProperties: false,
+            },
             selectors: { type: 'object', additionalProperties: { type: 'string' } },
             designSystem: {
                 type: 'object',

@@ -93,6 +93,13 @@ export interface DesignContract {
     description?: string;
     /** Sweep spec used by verifyContract(page); recorded by the devtool later. */
     viewport?: { widths?: number[]; from?: number; to?: number; step?: number; height?: number };
+    /**
+     * COMPONENT mode: sweep a container's width instead of the viewport.
+     * `harness` is the wrapper that gets resized; measurements are taken
+     * inside it, relative to it. A contract carries either `viewport` or
+     * `container` — the widths mean different things.
+     */
+    container?: { harness: string; widths?: number[]; from?: number; to?: number; step?: number; height?: number };
     /** Named selector aliases; args matching "$name" exactly resolve here. */
     selectors?: Record<string, string>;
     /** Design-system expansion: bundled profile name or inline config. */

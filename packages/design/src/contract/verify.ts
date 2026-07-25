@@ -324,7 +324,8 @@ function collectSelectors(rules: ContractRule[], parsed: DesignContract): string
 }
 
 function deriveWidths(parsed: DesignContract, rules: ContractRule[]): number[] {
-    const vp = parsed.viewport;
+    // Component mode sweeps the harness width; the spec lives under `container`.
+    const vp = parsed.container ?? parsed.viewport;
     let widths: number[];
     if (vp?.widths) widths = [...vp.widths];
     else if (vp?.from !== undefined && vp?.to !== undefined) {
@@ -346,15 +347,20 @@ export interface ContractSweepPlan {
     selectors: string[];
     widths: number[];
     height?: number;
+    /** Component mode: resize THIS wrapper instead of the viewport, and
+     *  measure inside it (see HarnessSource). */
+    harness?: string;
 }
 
 /** Driver-neutral: feed the plan to any MeasurementSource, then verify the store. */
 export function contractSweepPlan(input: DesignContract | object): ContractSweepPlan {
     const { parsed, rules } = normalize(input);
+    const height = parsed.container?.height ?? parsed.viewport?.height;
     return {
         selectors: collectSelectors(rules, parsed),
         widths: deriveWidths(parsed, rules),
-        ...(parsed.viewport?.height !== undefined ? { height: parsed.viewport.height } : {}),
+        ...(height !== undefined ? { height } : {}),
+        ...(parsed.container ? { harness: parsed.container.harness } : {}),
     };
 }
 

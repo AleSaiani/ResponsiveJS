@@ -12,7 +12,7 @@
 
 import { analyzeStore, buildCollectExpression, fromWire, type UnifiedReport, type ViewportSnapshotWire } from '@responsivejs/design/browser';
 import type { SnapshotStore, Violation } from '@responsivejs/core/types';
-import { curveOf, type MeasureConfig } from './engine.js';
+import { curveOf, harnessSweep, type MeasureConfig } from './engine.js';
 import { evalInPage, measure, modeNote } from './devtools-io.js';
 import { curveCard, discreteCard, el, fmt } from './cards.js';
 import { buildRecordedContract, type RecordedBaseline } from './recorder.js';
@@ -247,12 +247,19 @@ async function inspectElement(selector: string): Promise<void> {
     status(`measuring ${selector} at ${ws.join(', ')}px…`);
     try {
         const cfg: MeasureConfig = { widths: ws, selectors: [selector], extraSelector: selector, extraProps };
-        const inspection = await measure(cfg, () =>
-            status('debugger blocked by another extension — iframe emulation (fresh same-origin load)…'),
-        );
+        // Component mode: resize THIS element instead of the window — needs
+        // only the eval seam, so it works where the debugger cannot attach.
+        const asComponent = $<HTMLInputElement>('el-harness').checked;
+        const inspection = asComponent
+            ? { ...(await harnessSweep(evalInPage, selector, cfg)), mode: 'cdp' as const }
+            : await measure(cfg, () => status('debugger blocked by another extension — iframe emulation (fresh same-origin load)…'));
         renderElementProps(selector, inspection.store, inspection.extra);
         showTab('element');
-        status(`${selector} measured at ${ws.length} widths — pin the curves worth keeping${modeNote(inspection.mode)}`);
+        status(
+            asComponent
+                ? `${selector} measured as a COMPONENT at ${ws.join(', ')}px of its own width`
+                : `${selector} measured at ${ws.length} widths — pin the curves worth keeping${modeNote(inspection.mode)}`,
+        );
     } catch (e) {
         status(`✗ ${explainCdpError(e instanceof Error ? e.message : String(e))}`);
     }

@@ -13,6 +13,13 @@ export interface CollectArgs {
     /** Override the reported viewport (defaults to window.innerWidth/Height). */
     width?: number;
     height?: number;
+    /** Scope the query to this selector's subtree — the injectable form of
+     *  the `root` parameter (a DOM node cannot cross an eval boundary). */
+    within?: string;
+    /** Report rects RELATIVE to the `within` root. Component mode: constraints
+     *  compare against the harness width, so absolute page coordinates would
+     *  make every child look like an overflow. */
+    relative?: boolean;
 }
 
 /**
@@ -21,7 +28,14 @@ export interface CollectArgs {
  * serialized source in isolation).
  */
 export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnapshotWire {
-    const scope: ParentNode = root ?? document;
+    const given: ParentNode = root ?? document;
+    const withinEl = args.within ? given.querySelector(args.within) : null;
+    const scope: ParentNode = withinEl ?? given;
+    // Component mode: the harness rect becomes the origin, so a child at page
+    // x=200 inside a 300px harness is measured at x=0, not flagged as overflow.
+    const originRect = args.relative && withinEl ? withinEl.getBoundingClientRect() : null;
+    const originX = originRect ? originRect.x : 0;
+    const originY = originRect ? originRect.y : 0;
     // Cross-document safe: when `root` is another (same-origin) document —
     // the iframe-emulation sweep — styles must come from THAT document's
     // view, and body/html boundaries must be that document's too.
@@ -109,7 +123,7 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
         scope.querySelectorAll(selector).forEach((el, index) => {
             const r = el.getBoundingClientRect();
             const cs = styleOf(el);
-            const rect: RawRect = { x: r.x, y: r.y, width: r.width, height: r.height };
+            const rect: RawRect = { x: r.x - originX, y: r.y - originY, width: r.width, height: r.height };
 
             snaps.push({
                 selector,
@@ -162,7 +176,7 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
             const childRects: RawRect[] = [];
             for (const c of Array.from(el.children)) {
                 const cr = c.getBoundingClientRect();
-                childRects.push({ x: cr.x, y: cr.y, width: cr.width, height: cr.height });
+                childRects.push({ x: cr.x - originX, y: cr.y - originY, width: cr.width, height: cr.height });
             }
             if (childRects.length > 0) {
                 relations.push({ parentSelector: selector, parentRect: rect, childRects });

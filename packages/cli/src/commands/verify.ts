@@ -10,6 +10,7 @@ import {
     sweepSource,
     verifyContract,
     parseContract,
+    HarnessSource,
     type ContractReport,
 } from '@responsivejs/design';
 import type { CliIo, SharedOptions } from '../main.js';
@@ -37,12 +38,32 @@ export async function runVerify(contractPath: string, url: string, opts: SharedO
     const driver = await io.resolveDriver(opts.driver, { headed: opts.headed });
     let report: ContractReport;
     try {
-        const store = await sweepSource(driver.source, {
-            url,
-            selectors: plan.selectors,
-            widths: opts.widths ?? plan.widths,
-            height: opts.height ?? plan.height,
-        });
+        const widths = opts.widths ?? plan.widths;
+        let store;
+        if (plan.harness) {
+            // Component contract: resize the harness, not the window.
+            if (!driver.source.open || !driver.source.evaluate) {
+                throw new Error(`driver '${driver.kind}' cannot open a page and evaluate — required for component contracts`);
+            }
+            await driver.source.open(url);
+            const evaluate = driver.source.evaluate.bind(driver.source);
+            const harness = new HarnessSource((expression) => evaluate(expression), {
+                harness: plan.harness,
+                height: opts.height ?? plan.height,
+            });
+            try {
+                store = await sweepSource(harness, { selectors: plan.selectors, widths });
+            } finally {
+                await harness.close().catch(() => {});
+            }
+        } else {
+            store = await sweepSource(driver.source, {
+                url,
+                selectors: plan.selectors,
+                widths,
+                height: opts.height ?? plan.height,
+            });
+        }
         report = verifyContract(contract, store);
     } finally {
         await driver.close();

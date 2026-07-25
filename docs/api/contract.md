@@ -33,6 +33,25 @@ JSON Schema: [`schema/design-contract.v1.json`](../../packages/contract/schema/d
 `version`; changed semantics do. Unknown fields and newer versions are rejected with an upgrade
 hint.
 
+## Component contracts
+
+A contract sweeps either the **viewport** or a **container**:
+
+```jsonc
+{
+    "name": "card", "version": 1,
+    "container": { "harness": ".story-harness", "widths": [240, 360, 480] },
+    "rules": [{ "assert": "noOverflow", "description": "the card never bleeds out of its container" }]
+}
+```
+
+In container mode the harness element is resized instead of the window, and everything is
+measured **inside it, relative to it** — so `noOverflow` compares against the component's
+width, not the page's. Container queries respond, because the harness is given
+`container-type: inline-size`. `contractSweepPlan()` reports `harness`, and `rjs verify`
+switches to a `HarnessSource` automatically: one component, one contract, verifiable in CI
+without a page around it.
+
 ## The registry
 
 `CONSTRAINT_REGISTRY` — 27 entries, one per Asserter constraint (see

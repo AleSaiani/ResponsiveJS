@@ -14,7 +14,15 @@ import {
     type IframeSweepResult,
     type IframeSweepState,
 } from './iframe-sweep.js';
-import { CdpSource, sweepSource, analyzeStore, LANDMARK_SELECTORS, type CdpClient, type UnifiedReport } from '@responsivejs/design';
+import {
+    CdpSource,
+    HarnessSource,
+    sweepSource,
+    analyzeStore,
+    LANDMARK_SELECTORS,
+    type CdpClient,
+    type UnifiedReport,
+} from '@responsivejs/design';
 
 /** panel → background transport (chrome.runtime.sendMessage in production). */
 export interface Messenger {
@@ -122,6 +130,37 @@ export async function cdpSweep(client: CdpClient, cfg: MeasureConfig): Promise<E
         store: { snapshots, widths: cfg.widths, selectors: cfg.selectors, ...(manifest ? { manifest } : {}) },
         extra,
     };
+}
+
+/**
+ * Component mode: sweep the SELECTED ELEMENT's width instead of the viewport.
+ * Needs nothing but the eval seam — so it works on pages where the debugger
+ * cannot attach, and it is how you inspect f(containerWidth).
+ */
+export async function harnessSweep(
+    evalFn: <T>(expression: string) => Promise<T>,
+    harness: string,
+    cfg: MeasureConfig,
+): Promise<ElementInspection> {
+    const source = new HarnessSource((expression) => evalFn(expression), { harness, height: cfg.height });
+    try {
+        const store = await sweepSource(source, { selectors: cfg.selectors, widths: cfg.widths });
+        const extra = new Map<string, Map<number, string>>();
+        for (const p of cfg.extraProps ?? []) extra.set(p, new Map());
+        if (extra.size > 0 && cfg.extraSelector) {
+            // one extra pass per width: the harness is already sized by the sweep
+            for (const w of cfg.widths) {
+                await source.setViewport(w);
+                const values = await evalFn<Record<string, string> | null>(
+                    buildPropsExpression(cfg.extraSelector, [...extra.keys()]),
+                );
+                if (values) for (const [p, v] of Object.entries(values)) extra.get(p)!.set(w, v);
+            }
+        }
+        return { store, extra };
+    } finally {
+        await source.close().catch(() => {});
+    }
 }
 
 /**
