@@ -25,12 +25,8 @@ export interface IframeSweepConfig {
     loadTimeoutMs?: number;
 }
 
-/**
- * Expression for inspectedWindow.eval: resolves to
- * { wires: ViewportSnapshotWire[], extra: { [prop]: { [width]: value } } }
- * or { error } when the page refuses to be framed.
- */
-export function buildIframeSweepExpression(cfg: IframeSweepConfig): string {
+/** The async sweep body (function source). */
+function sweepBody(cfg: IframeSweepConfig): string {
     const height = cfg.height ?? 900;
     const settle = cfg.settleMs ?? 150;
     const timeout = cfg.loadTimeoutMs ?? 15_000;
@@ -68,11 +64,46 @@ export function buildIframeSweepExpression(cfg: IframeSweepConfig): string {
     } finally {
         iframe.remove();
     }
+})`;
+}
+
+/**
+ * Start expression for inspectedWindow.eval — which does NOT await
+ * promises, so the async sweep runs detached and parks its result on
+ * window.__rjs_isweep for the panel to poll (same handshake as the picker).
+ */
+export function buildIframeSweepStartExpression(cfg: IframeSweepConfig): string {
+    return `(() => {
+    if (window.__rjs_isweep && window.__rjs_isweep.state === 'running') return 'already';
+    window.__rjs_isweep = { state: 'running' };
+    (${sweepBody(cfg)})().then(
+        (result) => { window.__rjs_isweep = { state: 'done', result }; },
+        (e) => { window.__rjs_isweep = { state: 'done', result: { error: e instanceof Error ? e.message : String(e) } }; },
+    );
+    return 'started';
 })()`;
+}
+
+/** Poll the handshake; the result is consumed once done. */
+export const IFRAME_SWEEP_POLL_EXPRESSION = `(() => {
+    const s = window.__rjs_isweep;
+    if (!s) return { state: 'done', result: { error: 'sweep state lost — did the page reload?' } };
+    if (s.state === 'done') delete window.__rjs_isweep;
+    return s;
+})()`;
+
+/** Direct-await form for environments whose eval DOES await (tests, CDP). */
+export function buildIframeSweepExpression(cfg: IframeSweepConfig): string {
+    return `(${sweepBody(cfg)})()`;
 }
 
 export interface IframeSweepResult {
     wires?: unknown[];
     extra?: Record<string, Record<string, string>>;
     error?: string;
+}
+
+export interface IframeSweepState {
+    state: 'running' | 'done';
+    result?: IframeSweepResult;
 }

@@ -8,7 +8,12 @@ import type { SnapshotStore, ViewportSnapshot } from '@responsivejs/core/types';
 import { StoreQuery } from '@responsivejs/core/snapshot';
 import { fromWire, type ViewportSnapshotWire } from '@responsivejs/design/browser';
 import { buildPropsExpression } from './props.js';
-import { buildIframeSweepExpression, type IframeSweepResult } from './iframe-sweep.js';
+import {
+    buildIframeSweepStartExpression,
+    IFRAME_SWEEP_POLL_EXPRESSION,
+    type IframeSweepResult,
+    type IframeSweepState,
+} from './iframe-sweep.js';
 import { CdpSource, sweepSource, analyzeStore, LANDMARK_SELECTORS, type CdpClient, type UnifiedReport } from '@responsivejs/design';
 
 /** panel → background transport (chrome.runtime.sendMessage in production). */
@@ -121,15 +126,28 @@ export async function cdpSweep(client: CdpClient, cfg: MeasureConfig): Promise<E
 
 /**
  * Debugger-free fallback: the same measurement through a hidden same-origin
- * iframe (see iframe-sweep.ts). evalFn is inspectedWindow.eval.
+ * iframe (see iframe-sweep.ts). evalFn is inspectedWindow.eval — which does
+ * NOT await promises, hence the start + poll handshake.
  */
 export async function iframeSweep(
     evalFn: <T>(expression: string) => Promise<T>,
     cfg: MeasureConfig,
 ): Promise<ElementInspection> {
-    const result = await evalFn<IframeSweepResult>(buildIframeSweepExpression(cfg));
-    if (result.error || !result.wires) {
-        throw new Error(result.error ?? 'iframe sweep returned nothing');
+    await evalFn<string>(buildIframeSweepStartExpression(cfg));
+    // generous ceiling: page load + settle per width + slack
+    const deadline = Date.now() + 15_000 + cfg.widths.length * 700 + 10_000;
+    let result: IframeSweepResult | undefined;
+    for (;;) {
+        await new Promise((r) => setTimeout(r, 250));
+        const s = await evalFn<IframeSweepState>(IFRAME_SWEEP_POLL_EXPRESSION);
+        if (s.state === 'done') {
+            result = s.result;
+            break;
+        }
+        if (Date.now() > deadline) throw new Error('iframe sweep timed out');
+    }
+    if (!result || result.error || !result.wires) {
+        throw new Error(result?.error ?? 'iframe sweep produced no measurements');
     }
     const snapshots = new Map<number, ViewportSnapshot>();
     let manifest: SnapshotStore['manifest'];

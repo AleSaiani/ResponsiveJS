@@ -396,5 +396,17 @@ $('copy').addEventListener('click', () => {
     const text = $('contract-out').textContent ?? '';
     if (text) void navigator.clipboard.writeText(text).then(() => status('contract JSON copied'));
 });
+// A navigation/reload invalidates every measurement: clear the panel so it
+// never shows verdicts about a page that no longer exists. Pins survive —
+// they are the user's work (and record-worthy across reloads).
+chrome.devtools.network.onNavigated.addListener((url) => {
+    pageStore = null;
+    report = null;
+    $('hud').innerHTML = '';
+    $('violations').innerHTML = '';
+    $('el-cards').innerHTML = '';
+    status(`page navigated (${url}) — previous measurements cleared, sweep again`);
+});
+
 renderRecorder();
 status('ready — Sweep page for the report, or select an element and open the Element tab');

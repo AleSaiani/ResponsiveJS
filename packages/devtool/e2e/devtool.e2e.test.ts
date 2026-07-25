@@ -9,8 +9,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { chromium, type Browser, type Page, type CDPSession } from '@playwright/test';
 import { verifyContract } from '@responsivejs/design';
-import { makeCdpClient, fullSweep, curveOf, cdpSweep, type Messenger } from '../src/engine.js';
-import { buildIframeSweepExpression, type IframeSweepResult } from '../src/iframe-sweep.js';
+import { makeCdpClient, fullSweep, curveOf, cdpSweep, iframeSweep, type Messenger } from '../src/engine.js';
 import { toTrack } from '../src/props.js';
 import { curveToSvg } from '../src/curve-svg.js';
 import { buildRecordedContract } from '../src/recorder.js';
@@ -116,29 +115,26 @@ describe('the devtool engine over real CDP', () => {
     }, 120_000);
 
     it('iframe emulation measures widths with NO debugger at all', async () => {
-        // The fallback when a foreign extension blocks chrome.debugger:
-        // evaluate the sweep expression exactly like inspectedWindow.eval would.
-        const result = (await page.evaluate(
-            buildIframeSweepExpression({
-                widths: [400, 1400],
-                selectors: ['.hero h1', '.cards'],
-                extraSelector: '.cards',
-                extraProps: ['grid-template-columns'],
-            }),
-        )) as IframeSweepResult;
+        // The fallback when a foreign extension blocks chrome.debugger — run
+        // through the SAME start+poll handshake the panel uses, since
+        // inspectedWindow.eval never awaits promises.
+        const evalFn = <T>(expression: string): Promise<T> => page.evaluate(expression) as Promise<T>;
+        const { store, extra } = await iframeSweep(evalFn, {
+            widths: [400, 1400],
+            selectors: ['.hero h1', '.cards'],
+            extraSelector: '.cards',
+            extraProps: ['grid-template-columns'],
+        });
 
-        expect(result.error).toBeUndefined();
-        expect(result.wires).toHaveLength(2);
-        const [narrow, wide] = result.wires as { width: number; elements: [string, { styles: { fontSize: number } }[]][] }[];
-        expect(narrow.width).toBe(400);
-        expect(wide.width).toBe(1400);
+        expect(store.widths).toEqual([400, 1400]);
 
         // the hero's fluid type responds to the IFRAME's width, not the window's
-        const fontAt = (w: typeof narrow): number => w.elements.find(([sel]) => sel === '.hero h1')![1][0].styles.fontSize;
-        expect(fontAt(wide)).toBeGreaterThan(fontAt(narrow));
+        const curve = curveOf(store, '.hero h1', 'fontSize');
+        expect(curve.get(1400)!).toBeGreaterThan(curve.get(400)!);
 
         // the adaptive grid switches regime between the two iframe widths
-        expect(result.extra!['grid-template-columns']['400']).not.toBe(result.extra!['grid-template-columns']['1400']);
+        const grid = extra.get('grid-template-columns')!;
+        expect(grid.get(400)).not.toBe(grid.get(1400));
 
         // the iframe is gone
         expect(await page.evaluate(`document.querySelectorAll('iframe').length`)).toBe(0);
