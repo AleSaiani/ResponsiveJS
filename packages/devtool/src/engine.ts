@@ -4,8 +4,9 @@
  * is the SAME oracle the CLI runs: CdpSource + sweepSource + analyzeStore.
  */
 
-import type { SnapshotStore } from '@responsivejs/core/types';
+import type { SnapshotStore, ViewportSnapshot } from '@responsivejs/core/types';
 import { StoreQuery } from '@responsivejs/core/snapshot';
+import { buildPropsExpression } from './props.js';
 import { CdpSource, sweepSource, analyzeStore, LANDMARK_SELECTORS, type CdpClient, type UnifiedReport } from '@responsivejs/design';
 
 /** panel → background transport (chrome.runtime.sendMessage in production). */
@@ -67,4 +68,39 @@ export function curveOf(
     prop: 'width' | 'height' | 'x' | 'y' | 'fontSize',
 ): Map<number, number> {
     return new StoreQuery(store).curve(selector, prop);
+}
+
+export interface ElementInspection {
+    store: SnapshotStore;
+    /** Raw computed values per extra property, per width. */
+    extra: Map<string, Map<number, string>>;
+}
+
+/**
+ * The element inspector's sweep: ONE emulation pass per width measuring
+ * both the collector snapshot (default props/rects) and any extra CSS
+ * properties via getComputedStyle — custom properties included.
+ */
+export async function inspectElementSweep(
+    client: CdpClient,
+    selector: string,
+    cfg: { widths: number[]; extraProps?: string[]; height?: number },
+): Promise<ElementInspection> {
+    const source = new CdpSource(client, { height: cfg.height });
+    const snapshots = new Map<number, ViewportSnapshot>();
+    const extra = new Map<string, Map<number, string>>();
+    for (const p of cfg.extraProps ?? []) extra.set(p, new Map());
+
+    for (const w of cfg.widths) {
+        await source.setViewport(w, cfg.height ?? 900);
+        snapshots.set(w, await source.measure([selector]));
+        if (extra.size > 0) {
+            const values = await source.evaluate<Record<string, string> | null>(
+                buildPropsExpression(selector, [...extra.keys()]),
+            );
+            if (values) for (const [p, v] of Object.entries(values)) extra.get(p)!.set(w, v);
+        }
+    }
+    await client.send('Emulation.clearDeviceMetricsOverride').catch(() => {});
+    return { store: { snapshots, widths: cfg.widths, selectors: [selector] }, extra };
 }

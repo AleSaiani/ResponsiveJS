@@ -9,7 +9,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { chromium, type Browser, type Page, type CDPSession } from '@playwright/test';
 import { verifyContract } from '@responsivejs/design';
-import { makeCdpClient, fullSweep, curveOf, type Messenger } from '../src/engine.js';
+import { makeCdpClient, fullSweep, curveOf, inspectElementSweep, type Messenger } from '../src/engine.js';
+import { toTrack } from '../src/props.js';
 import { curveToSvg } from '../src/curve-svg.js';
 import { buildRecordedContract } from '../src/recorder.js';
 import { buildLandingFixture, type LandingFixture } from '../../runtime/e2e/fixture.js';
@@ -90,5 +91,24 @@ describe('the devtool engine over real CDP', () => {
         expect(verdict.baselines?.[0].pass).toBe(true);
 
         await client.detach();
+    }, 120_000);
+
+    it('the element inspector measures arbitrary extra properties per width', async () => {
+        const client = makeCdpClient(cdpMessenger(), 1);
+        const { store, extra } = await inspectElementSweep(client, '.cards', {
+            widths: [400, 1400],
+            extraProps: ['grid-template-columns', 'padding-left'],
+        });
+        expect(store.widths).toEqual([400, 1400]);
+
+        // adaptive: 1 column below tablet, 3 above → a DISCRETE track
+        const grid = toTrack(extra.get('grid-template-columns')!);
+        expect(grid.kind).toBe('discrete');
+        if (grid.kind === 'discrete') {
+            expect(new Set(grid.values.values()).size).toBe(2); // the regime switch, measured
+        }
+
+        // numeric extra property → a plottable curve
+        expect(toTrack(extra.get('padding-left')!).kind).toBe('curve');
     }, 120_000);
 });

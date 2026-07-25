@@ -49,6 +49,9 @@ details { margin: .4em 0; } summary { cursor: pointer; font-weight: 600; }
 .prop-card circle { fill: #3b82f6; }
 .prop-card .pin { float: right; }
 .vals { display: flex; gap: 10px; flex-wrap: wrap; opacity: .75; font-size: 11px; margin-top: 2px; }
+.discrete { font-family: ui-monospace, monospace; font-size: 11px; }
+.discrete div { padding: 1px 0; }
+.discrete .w { opacity: .6; display: inline-block; min-width: 4.5em; }
 
 /* contract tab */
 .bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
@@ -79,13 +82,19 @@ a.del { cursor: pointer; opacity: .6; margin-left: .5em; }
 </section>
 
 <section id="tab-element">
-    <div class="hint">Select an element in the <b>Elements</b> panel, then Inspect: every measurable property plotted as the <b>measured f(width)</b>.</div>
+    <div class="hint">Pick an element with the mouse (or use the Elements-panel selection, or type a selector): every measurable property plotted as the <b>measured f(width)</b>.</div>
     <div class="el-head">
-        <button id="el-use">⤓ Inspect selected element ($0)</button>
+        <button id="el-pick">🖱 Pick on page</button>
+        <button id="el-use" title="Use the element currently selected in the Elements panel">⤓ $0</button>
         <input id="el-selector" placeholder="…or type a selector, e.g. .hero h1" />
-        <button id="el-go">Inspect selector</button>
+        <button id="el-go">Measure</button>
     </div>
-    <div id="el-props" class="props"></div>
+    <div class="el-head">
+        <label>extra properties
+            <input id="el-props" placeholder="letter-spacing, padding-left, --space-m, grid-template-columns…" style="width: 26em" />
+        </label>
+    </div>
+    <div id="el-cards" class="props"></div>
 </section>
 
 <section id="tab-contract">

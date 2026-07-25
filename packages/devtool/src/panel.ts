@@ -10,10 +10,12 @@
 
 import { analyzeStore, buildCollectExpression, fromWire, type UnifiedReport, type ViewportSnapshotWire } from '@responsivejs/design/browser';
 import type { SnapshotStore, Violation } from '@responsivejs/core/types';
-import { makeCdpClient, fullSweep, curveOf, type TabCdp } from './engine.js';
+import { makeCdpClient, fullSweep, curveOf, inspectElementSweep, type TabCdp } from './engine.js';
+import { parsePropList, toTrack } from './props.js';
 import { curveToSvg } from './curve-svg.js';
 import { buildRecordedContract, type RecordedBaseline } from './recorder.js';
 import { SELECTED_ELEMENT_EXPRESSION } from './select-element.js';
+import { PICKER_INSTALL_EXPRESSION, PICKER_POLL_EXPRESSION, type PickState } from './picker.js';
 
 const MEASURABLE = ['fontSize', 'width', 'height', 'x', 'y'] as const;
 
@@ -157,6 +159,30 @@ function openInElements(element: string | undefined): void {
 
 // ─── element f(width) — the inspector ───────────────────────────────────
 
+/** Mouse picker: highlight-on-hover in the page, click picks, Esc cancels. */
+async function pickOnPage(): Promise<void> {
+    await evalInPage(PICKER_INSTALL_EXPRESSION);
+    status('🖱 click an element ON THE PAGE to measure it (Esc cancels)…');
+    const deadline = Date.now() + 60_000;
+    for (;;) {
+        await new Promise((r) => setTimeout(r, 250));
+        const pick = await evalInPage<PickState>(PICKER_POLL_EXPRESSION);
+        if (pick.state === 'picked' && pick.selector) {
+            $<HTMLInputElement>('el-selector').value = pick.selector;
+            await inspectElement(pick.selector);
+            return;
+        }
+        if (pick.state === 'cancelled') {
+            status('pick cancelled');
+            return;
+        }
+        if (Date.now() > deadline) {
+            status('pick timed out');
+            return;
+        }
+    }
+}
+
 async function inspectSelected(): Promise<void> {
     status('reading the selection from the Elements panel…');
     const selector = await evalInPage<string | null>(SELECTED_ELEMENT_EXPRESSION);
@@ -174,10 +200,13 @@ async function inspectElement(selector: string): Promise<void> {
         return;
     }
     const ws = widths();
+    const extraProps = parsePropList($<HTMLInputElement>('el-props').value);
     status(`measuring ${selector} at ${ws.join(', ')}px…`);
     try {
-        const { store } = await withCdp((client) => fullSweep(client, { widths: ws, selectors: [selector] }));
-        renderElementProps(selector, store);
+        const inspection = await withCdp((client) =>
+            inspectElementSweep(client, selector, { widths: ws, extraProps }),
+        );
+        renderElementProps(selector, inspection.store, inspection.extra);
         showTab('element');
         status(`${selector} measured at ${ws.length} widths — pin the curves worth keeping`);
     } catch (e) {
@@ -185,49 +214,81 @@ async function inspectElement(selector: string): Promise<void> {
     }
 }
 
-function renderElementProps(selector: string, store: SnapshotStore): void {
-    const grid = $('el-props');
+function renderElementProps(selector: string, store: SnapshotStore, extra: Map<string, Map<number, string>>): void {
+    const grid = $('el-cards');
     grid.innerHTML = '';
-    let plotted = 0;
+    let rendered = 0;
+
+    // the default measurable set — pinnable as contract baselines
     for (const prop of MEASURABLE) {
         const curve = curveOf(store, selector, prop);
         if (curve.size === 0) continue;
-        plotted++;
-        const svg = curveToSvg(curve, 300, 110);
-        const flat = svg.minValue === svg.maxValue;
+        rendered++;
+        grid.append(curveCard(prop, curve, () => {
+            baselines.push({ selector, prop, curve: [...curve.entries()] });
+            renderRecorder();
+            status(`pinned ${selector} · ${prop} — see the Contract tab`);
+        }));
+    }
 
-        const card = el('div', 'prop-card');
-        const h = document.createElement('h3');
-        h.append(
-            el('span', '', prop),
-            el('span', 'range', flat ? `${fmt(svg.minValue)} (constant)` : `${fmt(svg.minValue)} → ${fmt(svg.maxValue)}`),
-        );
+    // user-requested extra properties: numeric → curve; anything else → discrete
+    for (const [prop, values] of extra) {
+        if (values.size === 0) continue;
+        rendered++;
+        const track = toTrack(values);
+        if (track.kind === 'curve') {
+            grid.append(curveCard(prop, track.curve)); // not a baseline prop — no pin
+        } else {
+            const card = el('div', 'prop-card');
+            const h = document.createElement('h3');
+            const distinct = new Set(track.values.values()).size;
+            h.append(el('span', '', prop), el('span', 'range', distinct === 1 ? 'constant' : `${distinct} distinct values`));
+            const list = el('div', 'discrete');
+            for (const [w, v] of track.values) {
+                const row = el('div', '');
+                row.append(el('span', 'w', `${w}px`), document.createTextNode(v || '—'));
+                list.append(row);
+            }
+            card.append(h, list);
+            grid.append(card);
+        }
+    }
+
+    if (rendered === 0) {
+        grid.append(el('div', 'hint', `nothing measured for "${selector}" — does it match an element?`));
+    }
+}
+
+function curveCard(prop: string, curve: Map<number, number>, onPin?: () => void): HTMLElement {
+    const svg = curveToSvg(curve, 300, 110);
+    const flat = svg.minValue === svg.maxValue;
+
+    const card = el('div', 'prop-card');
+    const h = document.createElement('h3');
+    h.append(
+        el('span', '', prop),
+        el('span', 'range', flat ? `${fmt(svg.minValue)} (constant)` : `${fmt(svg.minValue)} → ${fmt(svg.maxValue)}`),
+    );
+    if (onPin) {
         const pin = document.createElement('button');
         pin.className = 'pin';
         pin.textContent = '📌 pin';
         pin.title = 'Pin this measured curve as a contract baseline';
-        pin.addEventListener('click', () => {
-            baselines.push({ selector, prop, curve: [...curve.entries()] });
-            renderRecorder();
-            status(`pinned ${selector} · ${prop} — see the Contract tab`);
-        });
+        pin.addEventListener('click', onPin);
         h.append(pin);
-
-        const dots = svg.points
-            .map((p) => `<circle cx="${p.x}" cy="${p.y}" r="3"><title>${fmt(p.value)} @ ${p.width}px</title></circle>`)
-            .join('');
-        const plot = document.createElement('div');
-        plot.innerHTML = `<svg viewBox="0 0 ${svg.width} ${svg.height}" class="${flat ? 'flat' : ''}"><path d="${svg.path}"/>${dots}</svg>`;
-
-        const vals = el('div', 'vals');
-        for (const [w, v] of curve) vals.append(el('span', '', `${w}px → ${fmt(v)}`));
-
-        card.append(h, plot, vals);
-        grid.append(card);
     }
-    if (plotted === 0) {
-        grid.append(el('div', 'hint', `nothing measured for "${selector}" — does it match an element?`));
-    }
+
+    const dots = svg.points
+        .map((p) => `<circle cx="${p.x}" cy="${p.y}" r="3"><title>${fmt(p.value)} @ ${p.width}px</title></circle>`)
+        .join('');
+    const plot = document.createElement('div');
+    plot.innerHTML = `<svg viewBox="0 0 ${svg.width} ${svg.height}" class="${flat ? 'flat' : ''}"><path d="${svg.path}"/>${dots}</svg>`;
+
+    const vals = el('div', 'vals');
+    for (const [w, v] of curve) vals.append(el('span', '', `${w}px → ${fmt(v)}`));
+
+    card.append(h, plot, vals);
+    return card;
 }
 
 function fmt(n: number): string {
@@ -287,6 +348,7 @@ for (const b of document.querySelectorAll<HTMLButtonElement>('.tabs button')) {
 $('quick').addEventListener('click', () => void quickCheck().catch((e) => status(`✗ ${e.message}`)));
 $('sweep').addEventListener('click', () => void sweepPage());
 $('overlay').addEventListener('click', () => void mountOverlay().catch((e) => status(`✗ ${e.message}`)));
+$('el-pick').addEventListener('click', () => void pickOnPage().catch((e) => status(`✗ ${e.message}`)));
 $('el-use').addEventListener('click', () => void inspectSelected().catch((e) => status(`✗ ${e.message}`)));
 $('el-go').addEventListener('click', () => void inspectElement($<HTMLInputElement>('el-selector').value));
 $<HTMLInputElement>('el-selector').addEventListener('keydown', (e) => {
