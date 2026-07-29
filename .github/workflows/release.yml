@@ -23,6 +23,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # Node 22 ships npm 10, which has no OIDC support: trusted publishing
+      # needs npm >= 11.5. Upgrading here keeps the Node version stable while
+      # making the tokenless path available.
+      - run: npm install -g npm@latest
+
       - run: pnpm install --frozen-lockfile
 
       # Who is publishing, and what may they publish? An EOTP failure looks the
