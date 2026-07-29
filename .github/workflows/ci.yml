@@ -29,7 +29,20 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      - run: pnpm -r exec publint
+      # Only the packages that are actually published. `pnpm -r exec publint`
+      # also ran inside the root, the example and the site — all private, none
+      # with a `version` — where the packer fails with "Invalid package, must
+      # have name and version", surfacing as an unhelpful "Failed to find packed
+      # tarball file in /tmp/publint-pack-…".
+      - name: publint (publishable packages only)
+        shell: bash
+        run: |
+          for dir in packages/*/; do
+            if node -e "process.exit(require('./${dir}package.json').private ? 1 : 0)"; then
+              echo "── $dir"
+              npx publint "$dir" --pack npm
+            fi
+          done
 
   e2e:
     name: e2e (chromium)
