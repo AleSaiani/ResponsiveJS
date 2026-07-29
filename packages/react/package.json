@@ -1,6 +1,6 @@
 {
     "name": "@responsivejs/react",
-    "version": "0.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "React bindings for r$ — hooks that own the construct lifecycle: apply on mount, update on change, dispose on unmount.",
     "license": "MPL-2.0",
     "type": "module",

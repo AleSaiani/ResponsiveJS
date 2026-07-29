@@ -1,6 +1,6 @@
 {
     "name": "@responsivejs/vue",
-    "version": "0.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "Vue bindings for r$ — composables and a directive that own the construct lifecycle: apply on mount, update on change, dispose on unmount.",
     "license": "MPL-2.0",
     "type": "module",

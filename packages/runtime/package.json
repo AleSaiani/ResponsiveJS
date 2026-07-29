@@ -1,6 +1,6 @@
 {
     "name": "@responsivejs/runtime",
-    "version": "0.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "The authoring runtime of r$ — reactive value = f(width), viewport and container aware, CSS-first: emits clamp() where CSS suffices, JS only where it doesn't.",
     "license": "MPL-2.0",
     "type": "module",

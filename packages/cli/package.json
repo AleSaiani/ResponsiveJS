@@ -1,6 +1,6 @@
 {
     "name": "@responsivejs/cli",
-    "version": "0.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "rjs — the r$ command line: analyze, verify and record responsive design on any URL, driver-pluggable (Playwright, agent-browser).",
     "license": "MPL-2.0",
     "type": "module",
