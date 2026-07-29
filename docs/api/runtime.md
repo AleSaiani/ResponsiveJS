@@ -73,9 +73,15 @@ fluid('scale(0.8)', 'scale(1.2)')       // strings → structural interpolation 
 ```
 
 `FluidOpts`: `curve` (`'linear' | 'exponential' | 'logarithmic' | EasingName | Bezier`), `unit`,
-`container: true` (bind to nearest container; static output uses `cqi`), `from`/`to` (domain
-override — defaults to the configured breakpoint range), `domain: fromElement('.sidebar')`
+`container: true` (bind to nearest container; static output uses `cqi` — **requires `from`/`to`**,
+see below), `from`/`to` (domain override — defaults to the configured breakpoint range),
+`domain: fromElement('.sidebar')`
 (cross-element: the value follows that element's width — always JS-driven).
+
+`container: true` **must** come with `from`/`to` (or a `domain` source): it changes what is
+measured, not the range it is measured over, so without them the value would interpolate across
+your viewport breakpoints and a 240–820px card would walk a fifth of its curve. That failure is
+silent and reads as "the library does nothing", so it is a construction-time error instead.
 
 String interpolation requires **structural congruence** (same tokens, literals, units — bare `0`
 inherits the other side's unit) and throws a descriptive error otherwise. No fuzzy matching.

@@ -41,8 +41,8 @@ function PriceCard() {
     const tags = useRef(null);
 
     useResponsive(card, {
-        padding:      fluid(12, 28, { container: true }),
-        borderRadius: fluid(8, 18,  { container: true }),
+        padding:      fluid(12, 28, { container: true, from: 240, to: 720 }),
+        borderRadius: fluid(8, 18,  { container: true, from: 240, to: 720 }),
     });
     useGeometry(tags, { stacked: whenWraps });
 
@@ -56,8 +56,8 @@ const card = ref(null);
 const tags = ref(null);
 
 useResponsive(card, {
-    padding:      fluid(12, 28, { container: true }),
-    borderRadius: fluid(8, 18,  { container: true }),
+    padding:      fluid(12, 28, { container: true, from: 240, to: 720 }),
+    borderRadius: fluid(8, 18,  { container: true, from: 240, to: 720 }),
 });
 useGeometry(tags, { stacked: whenWraps });
 <\/script>
@@ -74,8 +74,8 @@ export class PriceCard {
 
     constructor() {
         injectResponsive(this.card, {
-            padding:      fluid(12, 28, { container: true }),
-            borderRadius: fluid(8, 18,  { container: true }),
+            padding:      fluid(12, 28, { container: true, from: 240, to: 720 }),
+            borderRadius: fluid(8, 18,  { container: true, from: 240, to: 720 }),
         });
         injectGeometry(this.tags, { stacked: whenWraps });
     }
@@ -83,8 +83,8 @@ export class PriceCard {
     vanilla: `import { r$ } from '@responsivejs/runtime';
 
 const handle = r$('.price-card', {
-    padding:      r$.fluid(12, 28, { container: true }),
-    borderRadius: r$.fluid(8, 18,  { container: true }),
+    padding:      r$.fluid(12, 28, { container: true, from: 240, to: 720 }),
+    borderRadius: r$.fluid(8, 18,  { container: true, from: 240, to: 720 }),
 });
 const tags = r$.geometry('.price-card .tags', { stacked: r$.whenWraps });
 

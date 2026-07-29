@@ -82,7 +82,7 @@ Where CSS can express the function, the runtime **emits CSS and gets out of the 
 | `fluid(16, 32)` (linear)           | `clamp(16px, calc(12.8px + 1vw), 32px)`       |
 | `fluid([8, 16, 24])`               | per-segment clamps in `@media` blocks         |
 | `breakpoint.below/above/match`     | `@media (min-width: …)` blocks                |
-| `fluid(16, 32, { container: true })` | `clamp(…, … cqi, …)`                        |
+| `fluid(16, 32, { container: true, from: 240, to: 820 })` | `clamp(…, … cqi, …)`                        |
 | non-linear, colors, strings, lambdas | JavaScript (signals + one rAF write/frame)  |
 
 JavaScript is the fallback, never the default.

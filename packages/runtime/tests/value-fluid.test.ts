@@ -56,9 +56,19 @@ describe('fluid(number, number)', () => {
     });
 
     it('emits cqi for container-bound values', () => {
-        const v = fluid(16, 32, { container: true });
+        const v = fluid(16, 32, { container: true, from: 240, to: 820 });
         expect(v.toStatic(CTX)?.declaration).toContain('cqi');
         expect(v.container).toBe(true);
+    });
+
+    it('refuses a container-bound value with no range, and says what to write', () => {
+        // the silent version of this bug reads as "the library does nothing":
+        // the value would walk the viewport's domain, not the container's
+        expect(() => fluid(16, 32, { container: true })).toThrow(/how wide that container gets/);
+        expect(() => fluid(16, 32, { container: true })).toThrow(/from: <narrowest px>/);
+        expect(() => fluid([8, 16, 24], { container: true })).toThrow(/fluid\(\[…\]\)/);
+        // an element-driven domain is a range too — that one is allowed
+        expect(() => fluid(16, 32, { container: true, from: 240, to: 820 })).not.toThrow();
     });
 
     it('non-linear curves refuse static emission', () => {

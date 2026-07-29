@@ -67,7 +67,8 @@ r$('.cards', { gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)') 
 r$ is CSS-first: everything expressible as `clamp()`/`@media` becomes one injected stylesheet;
 JS drives only what CSS cannot — non-linear curves, **geometry state** (wrap, overflow,
 sticky, truncation), **cross-element dependencies** (`fromElement`, `sync`, `ratio`). Add
-`{ container: true }` to bind a value to the nearest container instead of the viewport.
+`{ container: true, from, to }` to bind a value to the nearest container instead of the
+viewport — `from`/`to` are the container's own range, and are required.
 
 → **[the runtime guide](guides/runtime.md)** (purposes, gradual examples, the mental
 model) · [case studies](guides/case-studies.md) · [API: runtime](api/runtime.md) ·

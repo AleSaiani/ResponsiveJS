@@ -20,6 +20,10 @@ export async function runAnalyze(url: string, opts: SharedOptions, io: CliIo): P
             height: opts.height,
             scroll: opts.scroll,
             ...(opts.a11y ? {} : { a11y: false as const }),
+            // Opt-in. The aesthetic score is a heuristic, and printing
+            // "overall 0.44" under a report where every check passed teaches
+            // people not to trust the numbers that ARE measurements.
+            ...(opts.score ? {} : { score: false as const }),
             ...(opts.touchMin !== undefined ? { constraints: { touchTarget: { min: opts.touchMin } } } : {}),
         });
     } finally {

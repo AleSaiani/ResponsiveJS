@@ -40,8 +40,8 @@ const HELP = `r$ · rjs — the responsive design tool
 Usage: rjs <command> [args] [options]
 
 Commands:
-  analyze <url>              Sweep the page and run the full oracle
-                             (constraints + aesthetic score + a11y)
+  analyze <url>              Sweep the page and run the oracle
+                             (constraints + a11y; --score adds the heuristic)
   audit <url>                One-shot HTML report with screenshots
                              (--crawl same-origin pages, --vs competitor)
   verify <contract> <url>    Execute a design contract against a live page
@@ -61,6 +61,7 @@ Options:
       --touch-min <px>       Touch-target minimum (analyze)        [24 = WCAG AA; 44/48 = platform]
       --scroll               Scroll-sweep below-the-fold content
       --no-a11y              Skip axe (analyze)
+      --score                Also compute the aesthetic score (analyze; heuristic, off by default)
       --strict               Fail on warnings too (analyze)
       --headed               Show the browser window (playwright)
       --vs <url>             Audit a second site side by side (audit)
@@ -86,6 +87,7 @@ const OPTIONS = {
     'touch-min': { type: 'string' },
     scroll: { type: 'boolean', default: false },
     'no-a11y': { type: 'boolean', default: false },
+    score: { type: 'boolean', default: false },
     strict: { type: 'boolean', default: false },
     headed: { type: 'boolean', default: false },
     vs: { type: 'string' },
@@ -107,6 +109,8 @@ export interface SharedOptions {
     touchMin?: number;
     scroll: boolean;
     a11y: boolean;
+    /** The aesthetic score is a heuristic: opt-in, never mixed into a pass by default. */
+    score: boolean;
     strict: boolean;
     headed: boolean;
     vs?: string;
@@ -203,6 +207,7 @@ function normalizeOptions(values: Record<string, unknown>): SharedOptions {
         touchMin: values['touch-min'] ? parseNumber(values['touch-min'] as string, 'touch-min') : undefined,
         scroll: values.scroll as boolean,
         a11y: !(values['no-a11y'] as boolean),
+        score: values.score as boolean,
         strict: values.strict as boolean,
         headed: values.headed as boolean,
         vs: values.vs as string | undefined,

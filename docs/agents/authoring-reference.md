@@ -72,7 +72,7 @@ viewportWidth() · containerWidth(el) · elementSize(el) · mediaQuery(q) · scr
 | Need | Use | NOT |
 | --- | --- | --- |
 | Value scales with viewport | `r$.fluid(min, max)` in `tokens()` | resize listeners |
-| Value scales with own container | `r$.fluid(…, { container: true })` | ancestor queries in JS |
+| Value scales with own container | `r$.fluid(…, { container: true, from, to })` | ancestor queries in JS |
 | Value follows ANOTHER element | `r$.fluid(…, { domain: r$.fromElement(sel) })` | polling rects |
 | Nav collapses when it stops fitting | `r$.geometry` + `r$.whenWraps` | a magic `@media` px |
 | Style while sticky is pinned | `r$.geometry` + `r$.whenStuck` | IO sentinel hack |

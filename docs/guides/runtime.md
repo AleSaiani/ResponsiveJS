@@ -82,7 +82,9 @@ The third argument is either a unit string or an options object:
 ```typescript
 r$.fluid(1.5, 3, 'rem');                          // unit
 r$.fluid(16, 40, { curve: 'exponential' });       // growth shape — see “Curves”
-r$.fluid(16, 24, { container: true });            // driven by the nearest container, not the viewport
+r$.fluid(16, 24, { container: true, from: 240, to: 820 });   // driven by the nearest container
+// from/to are REQUIRED here: they are the container's range, and without them the
+// value would interpolate over the viewport breakpoints instead. r$ refuses to build it.
 ```
 
 `fluid` is polymorphic beyond numbers: `r$.fluid('#666', '#111')` interpolates colors

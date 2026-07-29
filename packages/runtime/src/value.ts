@@ -91,6 +91,23 @@ export interface FluidOpts {
     to?: number;
 }
 
+/**
+ * `container: true` changes WHAT is measured, not the range it is measured
+ * over. Left implicit, the value interpolates across the project's *viewport*
+ * breakpoints: a card that lives between 240px and 820px inside a [320, 1440]
+ * project walks a fifth of its own curve, and the symptom is "the library does
+ * nothing". That is a bug worth refusing to compile rather than documenting.
+ */
+function assertContainerDomain(opts: FluidOpts | undefined, call: string): void {
+    if (!opts?.container) return;
+    if (opts.from !== undefined || opts.to !== undefined || opts.domain !== undefined) return;
+    throw new Error(
+        `r$: ${call} is bound to its container but never says how wide that container gets, ` +
+            `so it would interpolate over the viewport breakpoints instead. Declare the range: ` +
+            `{ container: true, from: <narrowest px>, to: <widest px> }`,
+    );
+}
+
 export function domainOf(opts?: FluidOpts): Domain {
     const d = configDomain();
     if (opts?.from === undefined && opts?.to === undefined) return d;
@@ -131,10 +148,12 @@ export function fluid(
 ): ResponsiveValue {
     // fluid([8, 16, 24, 32], opts?)
     if (Array.isArray(a)) {
+        assertContainerDomain(b as FluidOpts | undefined, 'fluid([…])');
         return arrayFluid(a, b as FluidOpts | undefined);
     }
 
     const opts: FluidOpts = typeof c === 'string' ? { unit: c } : (c ?? {});
+    assertContainerDomain(opts, 'fluid()');
 
     // fluid('#f00', '#00f') — color or structural string track
     if (typeof a === 'string' || typeof b === 'string') {

@@ -93,7 +93,7 @@ describe('container-type ownership', () => {
         el('inner', parent);
         // linear + container → fully static CSS (cqi), but the parent still
         // needs container-type: the handle sets it.
-        const h = r$('.inner', { fontSize: fluid(14, 18, { container: true }) });
+        const h = r$('.inner', { fontSize: fluid(14, 18, { container: true, from: 200, to: 900 }) });
         expect(parent.style.containerType).toBe('inline-size');
         h.dispose();
         expect(parent.style.containerType).toBe('');
@@ -102,8 +102,8 @@ describe('container-type ownership', () => {
     it('is refcounted across handles and never steals a user declaration', () => {
         const parent = el('wrap');
         const inner = el('inner', parent);
-        const a = r$.dynamic(inner, { width: fluid(10, 20, { container: true, curve: 'exponential' }) });
-        const b = r$.dynamic(inner, { height: fluid(10, 20, { container: true, curve: 'exponential' }) });
+        const a = r$.dynamic(inner, { width: fluid(10, 20, { container: true, from: 200, to: 900, curve: 'exponential' }) });
+        const b = r$.dynamic(inner, { height: fluid(10, 20, { container: true, from: 200, to: 900, curve: 'exponential' }) });
         expect(parent.style.containerType).toBe('inline-size');
         a.dispose();
         expect(parent.style.containerType).toBe('inline-size'); // b still needs it
@@ -112,7 +112,7 @@ describe('container-type ownership', () => {
 
         // user-owned declaration is never removed
         parent.style.containerType = 'size';
-        const c = r$.dynamic(inner, { width: fluid(10, 20, { container: true, curve: 'exponential' }) });
+        const c = r$.dynamic(inner, { width: fluid(10, 20, { container: true, from: 200, to: 900, curve: 'exponential' }) });
         c.dispose();
         expect(parent.style.containerType).toBe('size');
     });

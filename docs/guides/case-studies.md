@@ -147,14 +147,15 @@ SSR stylesheet.
 
 ### Container-aware components — `{ container: true }`
 
-`r$.fluid(14, 18, { container: true })` binds to the nearest container instead of the
+`r$.fluid(14, 18, { container: true, from: 240, to: 820 })` binds to the nearest container instead of the
 viewport (static output uses `cqi`; the handle configures `container-type` on the parent,
 refcounted). The same card component sizes correctly in a sidebar and in the main column.
 
-**Give it the container's range.** `container: true` changes *what is measured*, not the
-domain the value is interpolated over — that still defaults to your configured breakpoints.
-A card that lives between 240px and 820px inside a `[320, 1440]` project therefore only ever
-walks a fifth of its own curve, and the result looks like nothing is happening:
+**`from`/`to` are required here, and that is deliberate.** `container: true` changes *what is
+measured*, not the domain the value is interpolated over. Left implicit it would use your
+viewport breakpoints, so a card that lives between 240px and 820px inside a `[320, 1440]`
+project would walk a fifth of its own curve — and the symptom is "the library does nothing".
+r$ refuses to build such a value and tells you what to write:
 
 ```ts
 const panel = { container: true, from: 240, to: 820 };   // the container's real range
@@ -165,8 +166,8 @@ r$('.card', {
 });
 ```
 
-Rule of thumb: if a value is bound to a container, `from`/`to` are not optional polish — they
-are the other half of the declaration.
+There is no rule of thumb to remember: if a value is bound to a container, `from`/`to` are the
+other half of the declaration, and leaving them out is a construction-time error.
 
 ## Styling any property
 

@@ -7,6 +7,9 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import DemoFrame from './DemoFrame.vue';
 
+/** The panel's range — a container-bound value is required to declare one. */
+const PANEL = { container: true, from: 220, to: 820 } as const;
+
 const nav = ref<HTMLElement | null>(null);
 const card = ref<HTMLElement | null>(null);
 const wrapped = ref(false);
@@ -22,9 +25,9 @@ onMounted(async () => {
     // container-bound fluid: this reacts to the FRAME, not the window
     s.add(
         r$(card.value!, {
-            padding: r$.fluid(10, 22, { container: true }),
-            borderRadius: r$.fluid(6, 14, { container: true }),
-            boxShadow: r$.fluid('0 1px 3px rgba(0,0,0,0.28)', '0 14px 40px rgba(0,0,0,0.16)', { container: true }),
+            padding: r$.fluid(10, 22, PANEL),
+            borderRadius: r$.fluid(6, 14, PANEL),
+            boxShadow: r$.fluid('0 1px 3px rgba(0,0,0,0.28)', '0 14px 40px rgba(0,0,0,0.16)', PANEL),
         }),
     );
     scope.value = s;

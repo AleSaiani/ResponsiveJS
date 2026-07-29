@@ -51,10 +51,12 @@ r$(card, {
 Colours interpolate in **OKLab**, so a ramp never passes through the muddy grey that plain sRGB
 mixing produces. Shadows interpolate structurally — numbers *and* the colour inside them.
 
-::: tip Give a container fluid its own range
-`from`/`to` are doing real work above. Without them a `{ container: true }` value spans the
-**viewport** breakpoints — so a 240–820px panel walks barely a fifth of the curve and the whole
-thing looks broken. Your container is not the viewport: say how wide it gets.
+::: tip A container fluid must declare its range
+`from`/`to` are not decoration above — they are required. A `{ container: true }` value with no
+range would interpolate over the **viewport** breakpoints, so a 240–820px panel would walk
+barely a fifth of the curve and look broken. Rather than let that happen quietly, r$ refuses to
+build the value and prints the line to write. Your container is not the viewport: say how wide
+it gets.
 :::
 
 ## "Read more" only when something was cut

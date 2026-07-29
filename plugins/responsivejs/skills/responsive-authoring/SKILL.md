@@ -43,10 +43,10 @@ changes that element's size, the measurement flips back and the layout oscillate
 Measure a *probe* that keeps the natural dimensions and is never restyled, or collapse in a way
 that preserves layout (`visibility: hidden; height: 0`, never `display: none`).
 
-**A container fluid still needs its range.** `{ container: true }` changes *what is measured*,
-not the domain: without `from`/`to` the value interpolates over the project's viewport
-breakpoints, so a card that lives between 240px and 820px walks a fifth of its own curve and
-looks broken.
+**A container fluid must declare its range.** `{ container: true }` changes *what is measured*,
+not the domain. Without `from`/`to` the value would interpolate over the project's viewport
+breakpoints — a card living between 240px and 820px would walk a fifth of its own curve — so
+r$ refuses to build it and tells you what to write.
 
 ```ts
 const panel = { container: true, from: 240, to: 820 };
