@@ -1,128 +1,145 @@
 # ResponsiveJS (`r$`)
 
 [![CI](https://github.com/AleSaiani/ResponsiveJS/actions/workflows/ci.yml/badge.svg)](https://github.com/AleSaiani/ResponsiveJS/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@responsivejs/runtime?color=cb3837&label=npm)](https://www.npmjs.com/package/@responsivejs/runtime)
 [![License: MPL-2.0](https://img.shields.io/badge/License-MPL--2.0-blue.svg)](LICENSE)
 
-> The screen is a parametric Cartesian plane. Every layout property is a function of width:
-> **`value = f(width)`** — viewport _and_ container.
+**Your layout is a function of width. Treat it like one — then measure whether the browser
+agreed.**
 
-**The responsive design tool**: _author_ responsive behavior, _validate_ that it is correct,
-accessible and well composed, and _fix_ it — with machine-readable reports built for both humans
-and AI agents. One lineage (`r$`), one model, three uses:
+Two halves of one model, `value = f(width)`: *author* the responsive behavior CSS cannot
+express, and *verify* the rendered result at every width with an exit code your CI can fail on.
 
-- **measure** a real page → validate it, score it;
-- **author** the function you want (breakpoints/curves) → apply it, reactively;
-- **tune** the function visually (devtool) → see problems and fixes while you resize.
+📖 **[responsivejs.com](https://responsivejs.com)** — docs, live demos and the API reference.
+Everything is also in [`docs/`](docs/README.md), which is where the site reads it from.
+
+> ### 🚧 Alpha — `1.0.0-alpha.0`
+>
+> The version number says where the API is heading; **alpha** says it has not met real users
+> yet. The **verification half is the mature one** — it runs in this repository's own CI against
+> [this site's contract](site/site.contract.json), 1500+ checks at 8 widths, every build. The
+> **authoring surface may still move**: breaking changes go in the changelog with the reason,
+> and there has already been one (a container-bound value must now declare its range).
+>
+> Note for semver: prereleases are excluded from `^1.0.0` ranges. `npm i` installs it because
+> `latest` points here; a hand-written `^1.0.0` will not.
+
+---
+
+## 30 seconds, nothing installed
+
+Point it at a site you already have. No import, no config, no decision:
+
+```bash
+npx @responsivejs/cli analyze https://your-site.com -w 320,375,768,1024,1280,1920
+```
+
+Real output, on a small page with three ordinary mistakes:
+
+```
+r$ ✗ fail — 13 errors, 0 warnings, 0 info (74 checks)
+
+  noOverflow (3 across 1 element)
+    document @320,375,768px — the page scrolls horizontally: content reaches 789px
+    in a 320px viewport (+469px). Something wider than the viewport is not inside
+    a scroll container.
+  contrastRatio (4 across 1 element)
+    p[1] @320,375,768,1280px — contrast=2.32:1 < 4.5:1 (AA)
+  touchTarget (6 across 2 elements)
+    a[href][0] @320,375,768px — 55x16px < 24x24px
+    button[0] @320,375,768px — 72x16px < 24x24px
+
+  fixes available: 2
+```
+
+Exit `0` pass, `1` violations. Every finding carries the element, the width, the measured
+numbers and — where an honest one exists — a fix labelled `exact`, `heuristic` or
+`runtime-patch`. `-f json` or `-f sarif` for machines.
+
+Liked what it found? [Pin it as a contract](docs/adopting.md) and gate it in CI — still without
+writing a line of r$.
+
+## What it does that CSS cannot
+
+**A breakpoint that cannot rot.** The number in `@media (max-width: 843px)` is a guess about
+content: add a link, translate to German, change the font, and it is wrong. Measure instead:
+
+```typescript
+r$.geometry('.site-nav', { wrapped: r$.whenWraps });
+```
+```css
+.site-nav[data-wrapped]           { visibility: hidden; height: 0; overflow: hidden; }
+.site-nav[data-wrapped] ~ .burger { display: block; }
+```
+
+**JS states the fact, CSS decides what it means.** Same shape for the things CSS has no selector
+for: `whenTruncated` (text really got clipped), `whenStuck` (a sticky element is pinned right
+now), `whenOverflows`, `whenCollides`, `linesOf`.
+
+**A value that scales, compiled to CSS.** Linear fluid values ship as a static `clamp()` — zero
+JavaScript at runtime — and the JS half runs only for what CSS can't do: curves, colour ramps in
+OKLab, cross-element relations.
+
+```typescript
+r$('.card', { padding: r$.fluid(12, 36) });   // → clamp(12px, calc(…vw), 36px)
+```
+
+**A layout rule your CI can fail on.** What the page promises about itself, as reviewable JSON:
+
+```bash
+npx @responsivejs/cli init   https://your-site.com -o site.contract.json   # works on ANY page
+npx @responsivejs/cli record site.contract.json https://your-site.com      # pin today's curves
+npx @responsivejs/cli verify site.contract.json http://localhost:4173/     # the gate
+```
+
+## It found real bugs in the site you are reading about
+
+This documentation site is built with r$ and verified by r$ in CI, against its own contract.
+Doing that caught, in our own code: a semi-transparent code chip failing AA once composited
+over what was actually painted behind it; a nav title measuring 17×64 against the WCAG 24px
+floor; `grid-template-columns: 1fr` silently meaning `minmax(auto, 1fr)` and pushing a code
+block past the viewport — twice, in two different components.
+
+None of those are visible in a screenshot review. All of them are one exit code away.
 
 ## Packages
 
-| Package                                    | What it is                                                                                                            | Status      |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ----------- |
-| [`@responsivejs/core`](packages/core)      | The shared math: geometry, curves, stats, color, typography, aesthetics, snapshot model. Pure, zero-dep, browser-safe. | **alpha**   |
-| [`@responsivejs/design`](packages/design)  | The validation oracle: constraints, reports with fix suggestions, aesthetic score (experimental), Playwright driver + zero-driver browser core. | **alpha**   |
-| [`@responsivejs/runtime`](packages/runtime) | Authoring: reactive `value = f(width)`, container-aware, `clamp()` where CSS suffices.                                | **alpha**   |
-| [`@responsivejs/cli`](packages/cli)        | The `rjs` command line: analyze / verify / record any URL, driver-pluggable (Playwright, agent-browser).               | **alpha**   |
-| `@responsivejs/devtool`                    | The DevTools extension: page report, element `f(width)` inspector, contract recorder, in-page overlay. Loaded unpacked (not an npm module). | **alpha**   |
-| [`@responsivejs/contract`](packages/contract) | The design-contract DSL: declarative, serializable expectations for CI regression and AI agents.                     | **alpha**   |
-| [`@responsivejs/react`](packages/react)    | React bindings: hooks that own the construct lifecycle (mount → update → unmount).                                     | **alpha**   |
-| [`@responsivejs/vue`](packages/vue)        | Vue bindings: the same composables, plus a `v-responsive` directive.                                                   | **alpha**   |
-| [`@responsivejs/angular`](packages/angular) | Angular bindings: decorator-free `inject*` helpers and signals — no compilation step.                                | **alpha**   |
+| Package | What it is |
+| --- | --- |
+| [`@responsivejs/cli`](packages/cli) | The `rjs` command: `analyze` · `audit` · `init` · `record` · `verify` · `doctor`. Start here. |
+| [`@responsivejs/runtime`](packages/runtime) | Authoring: `value = f(width)`, viewport and container, CSS-first. ~15.5 kB gzip standalone. |
+| [`@responsivejs/design`](packages/design) | The oracle: constraints, WCAG checks, provenance, reports with fixes. Driver-pluggable. |
+| [`@responsivejs/contract`](packages/contract) | The contract DSL: declarative, serializable, JSON-Schema'd. |
+| [`@responsivejs/core`](packages/core) | The shared math: geometry, curves, stats, colour, typography. Pure, zero-dep. |
+| [`@responsivejs/react`](packages/react) · [`/vue`](packages/vue) · [`/angular`](packages/angular) | Lifecycle bindings. The declaration is identical in all three. |
+| [`devtool`](packages/devtool) | Chrome extension: width sweep, per-property `f(width)` inspector, element picker, contract recorder. Loaded unpacked. |
 
-## Quick start — audit any URL (CLI)
-
-```bash
-rjs analyze https://example.com -w 320,768,1280
-# r$ ✗ fail — 3 errors … noOverflow @320px .card[0] — right=496 > viewport=320
-# exit 1 → CI- and agent-loop-ready; -f json | sarif for machines
-
-rjs record home.contract.json https://staging.example.com   # pin today's geometry
-rjs verify home.contract.json https://pr-42.example.com     # regressions fail the build
-```
-
-Driver-pluggable: Playwright when installed, [agent-browser](https://github.com/vercel-labs/agent-browser)
-for zero-setup audits of any live URL. See the [CLI reference](docs/api/cli.md).
-
-## Quick start — author fluid behavior (runtime)
-
-```typescript
-import { r$ } from '@responsivejs/runtime';
-
-const bp = r$.breakpoints({ mobile: 320, tablet: 768, desktop: 1280 } as const);
-r$.tokens({ '--space-m': r$.fluid(16, 24), '--font-hero': r$.fluid(28, 64) }); // clamp() on :root
-r$.geometry('.site-nav', { wrapped: r$.whenWraps });  // CSS: .site-nav[data-wrapped] { … }
-r$('.cards', { gridTemplateColumns: bp.below('tablet', '1fr', 'repeat(3, 1fr)') });
-```
-
-CSS-first: linear math ships as static CSS; JS drives only what CSS cannot (curves, geometry
-state, cross-element). See [the runtime guide](docs/guides/runtime.md).
-
-## Quick start — validate a layout (Playwright)
-
-```typescript
-import { test, expect } from '@playwright/test';
-import { r$ } from '@responsivejs/design';
-
-test('layout is correct at all viewports', async ({ page }) => {
-    const r = r$(page);
-
-    await r.sweep({
-        url: 'http://localhost:3000',
-        widths: [320, 768, 1280, 1920],
-        selectors: ['h1', '.btn', '.card', '.sidebar'],
-    });
-
-    r.assert
-        .noOverflow() // nothing outside the viewport
-        .sameHeight('.btn', '.input') // aligned heights
-        .minSize('.btn', { height: 44 }) // WCAG touch target
-        .monotonic('h1', 'fontSize', 'up') // font never shrinks
-        .proportion('.sidebar', '.main', { min: 0.15, max: 0.35 });
-
-    expect(r.report().pass).toBe(true);
-});
-```
-
-## Quick start — score a live DOM (no driver)
-
-```typescript
-import { scoreDOM } from '@responsivejs/design/browser';
-
-const result = scoreDOM(['main', '.card', 'nav a']);
-// → { perWidth, average, suggestions } — 17 aesthetic metrics (Ngo/Birkhoff)
-```
-
-The browser entry is Playwright-free: inject it into any page (devtools, agents, CI drivers) via
-`eval` — or import it directly in a browser app.
-
-## The model
-
-- **Every element is a rectangle**: `{ x, y, width, height, right, bottom, centerX, centerY, area }`.
-- **Every property is a curve**: `fontSize = f(width)`, sampled at N widths.
-- **Constraints are equations** that must hold at every width — `child.right <= parent.right`,
-  `dFontSize/dWidth >= 0`, `stddev(gaps)/mean(gaps) < 0.1`.
-- **Reports are machine-readable**: `{ violations, fixes, scores }` — an agent can act on them.
+ESM-only · zero runtime dependencies · Node ≥ 20.19 · Playwright and axe-core are optional peers
+of `design`.
 
 ## Documentation
 
-Start with **[the tutorial](docs/tutorial.md)** — empty page to fluid, contract-pinned
-landing in ~30 minutes. Full docs live in [docs/](docs/README.md):
-[getting started](docs/getting-started.md) · [concepts](docs/concepts.md) · API reference for
-[core](docs/api/core.md) / [runtime](docs/api/runtime.md) / [design](docs/api/design.md) /
-[contract](docs/api/contract.md) · guides for [CI regression](docs/guides/ci.md) and
-[AI agents](docs/guides/agents.md).
+| | |
+| --- | --- |
+| [Getting started](docs/getting-started.md) | one command, nothing installed |
+| [Adopting r$ in an existing site](docs/adopting.md) | measure → contract → CI gate → *then* constructs |
+| [The tutorial](docs/tutorial.md) | the other direction: empty page → verified landing, ~30 min |
+| [Why r$ (and when not to)](docs/why.md) | "I can write `clamp()` myself", Percy, axe, container queries |
+| [Troubleshooting](docs/troubleshooting.md) | by symptom |
+| [The pattern catalog](docs/guides/case-studies.md) | every construct on a real problem |
+| [API reference](docs/README.md) | runtime · design · contract · cli · core · adapters |
 
-## Works with your tools
+## For AI agents
 
-The validation oracle is **driver-pluggable**: Playwright for CI, any CDP client for agent
-loops — including [Vercel's agent-browser](https://github.com/vercel-labs/agent-browser) or a
-raw `eval` primitive. The browser tool is the arm, `r$` is the judgment: they compose, no
-lock-in. See the [agents guide](docs/guides/agents.md).
+Reports are machine-readable by design: `{ violations, fixes, provenance }`, SARIF for
+code-scanning, exit codes for loops. A violation on an element a construct owns names **which
+construct and at which line** — so the fix goes to the declaration, not to the cascade.
 
-For agents specifically, the docs site publishes source markdown rather than HTML to scrape —
+The docs site publishes source markdown rather than HTML to scrape:
 [`llms.txt`](https://responsivejs.com/llms.txt) as the index,
-[`llms-full.txt`](https://responsivejs.com/llms-full.txt) for one fetch, and a `.md` twin of
-every page. And in Claude Code, [`plugins/responsivejs`](plugins/responsivejs/README.md) adds
-two skills — authoring and verification — plus an `/rjs-audit` command:
+[`llms-full.txt`](https://responsivejs.com/llms-full.txt) for a single fetch, and a `.md` twin of
+every page. In Claude Code, [`plugins/responsivejs`](plugins/responsivejs/README.md) adds two
+skills and an `/rjs-audit` command:
 
 ```
 /plugin marketplace add AleSaiani/ResponsiveJS
@@ -131,22 +148,22 @@ two skills — authoring and verification — plus an `/rjs-audit` command:
 
 ## Roadmap
 
-**Available now (alpha)**: the shared math (`core`); the authoring runtime (`runtime`) with
-geometry predicates (`whenWraps`, `whenStuck`, …), fluid design tokens, cross-element
-dependencies and typed breakpoints; the validation oracle with a11y and aesthetic scoring
-(`design`); the contract DSL (`contract`); and the `rjs` CLI. See the
-[fluid landing example](examples/landing) for every runtime construct on one page.
+**Shipped**: the math (`core`), the authoring runtime with geometry predicates, fluid tokens,
+container-aware values and typed breakpoints; the oracle with WCAG checks, provenance and
+contracts; the `rjs` CLI; React / Vue / Angular bindings; the DevTools extension.
 
-**Next**:
+**Next**, in order:
 
-- **Devtool** — the in-page visual overlay: width-sweep with live problem highlighting, a curve
-  inspector (`f(width)` per property), an aesthetic-score HUD, and a recorder that exports your
-  adjustments as `clamp()` / runtime config / design tokens.
-- **Framework adapters** — thin React/Vue bindings over the runtime's TC39-shaped signals.
+- **The library talks while you code** — an oscillation detector for the measure-what-you-restyle
+  trap, an in-page dev overlay, and `rjs dev` watching your dev server and printing only the
+  delta since your last save.
+- **It fixes instead of only reporting** — `rjs fix` for the `exact` fixes, with contrast solved
+  mathematically rather than suggested.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Development needs Node ≥ 20.19 and pnpm.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Node ≥ 20.19 and pnpm. `pnpm test` runs 669 unit tests;
+`pnpm test:e2e` runs 32 against real Chromium.
 
 ## License
 
