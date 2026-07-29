@@ -144,3 +144,20 @@ Bundled profiles (`@responsivejs/design/design-systems/*.json`): `apple-hig`, `f
 `material-design-3`. `applyDesignSystem(asserter, ds, selectors?)` applies a
 profile's constraints; `designSystemRules(ds, selectors?)` returns the same checks as contract
 rules (the two are parity-tested).
+
+## Also exported
+
+Pieces of the pipeline, exported because an agent loop or a custom harness may need them
+without going through `analyze()`:
+
+| | |
+| --- | --- |
+| `contractFromPage(store, { name? })` | the contract ANY page can be held to, from what the sweep found — plus construct-derived rules when the page runs r$ |
+| `contractFromManifest(manifest, { name? })` | only the construct-derived half |
+| `INIT_SELECTORS` | the candidate selectors `rjs init` sweeps to decide which rules are worth writing |
+| `resolveWidths(opts)` | the width list a sweep will actually use (contract → options → defaults) |
+| `applicableFixes(report)` | the `exact` fixes only, deduplicated — what a fixer may apply unattended |
+| `attachOwnership(report, manifest)` | adds `owner` / `owners` / `via` to violations from the provenance manifest |
+| `runAxe(source, opts)` / `normalizeAxeResults(results)` | the a11y pass on its own, and its mapping to r$ severities |
+| `compileRule(rule)` | one contract rule → the asserter call it becomes |
+| `calibrate(store)` | derives sensible constraint thresholds from a page you consider correct |

@@ -12,13 +12,15 @@ titleTemplate: 'ResponsiveJS'
 You design at three widths. Users arrive at a thousand. r$ lets you **declare** what happens
 in between — and then **measures** whether the browser agreed.
 
+Start with the measuring. One command, nothing installed, on a site you already have:
+
 ```bash
-npm i @responsivejs/runtime      # author it
-npx @responsivejs/cli analyze .  # verify it
+npx @responsivejs/cli analyze https://your-site.com
+# every width judged · exit 0 pass, 1 violations
 ```
 
 <div class="actions">
-    <a class="btn primary" href="/docs/getting-started">Get started</a>
+    <a class="btn primary" href="/docs/getting-started">Measure your site</a>
     <a class="btn" href="/demos">Play with it →</a>
 </div>
 

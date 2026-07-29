@@ -145,8 +145,11 @@ export default defineConfig({
                     text: 'Start',
                     items: [
                         { text: 'Getting started', link: '/docs/getting-started' },
+                        { text: 'Adopting r$ in an existing site', link: '/docs/adopting' },
                         { text: 'Tutorial — build a page', link: '/docs/tutorial' },
+                        { text: 'Why r$ (and when not to)', link: '/docs/why' },
                         { text: 'Concepts', link: '/docs/concepts' },
+                        { text: 'Troubleshooting', link: '/docs/troubleshooting' },
                         { text: 'All docs by question', link: '/docs/' },
                     ],
                 },

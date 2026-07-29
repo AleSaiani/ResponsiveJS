@@ -25,7 +25,7 @@ const SITE = 'https://responsivejs.com';
 /** Order and grouping mirror the sidebar: an index is only useful if it is
  *  opinionated about what to read first. */
 const SECTIONS = [
-    { title: 'Start here', pages: ['getting-started', 'tutorial', 'concepts', 'index'] },
+    { title: 'Start here', pages: ['getting-started', 'adopting', 'tutorial', 'why', 'concepts', 'troubleshooting', 'index'] },
     { title: 'Guides', pages: ['guides/runtime', 'guides/case-studies', 'guides/validation', 'guides/testing', 'guides/ci', 'guides/agents'] },
     { title: 'Reference', pages: ['api/runtime', 'api/design', 'api/contract', 'api/cli', 'api/adapters', 'api/core'] },
     { title: 'Machine-readable I/O', pages: ['agents/authoring-reference', 'agents/validation-reference'] },
@@ -43,15 +43,21 @@ async function* walk(dir) {
 function describe(source) {
     const body = source.replace(/^---\n[\s\S]*?\n---\n/, '');
     const title = body.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? 'Untitled';
-    const summary = body
-        .split(/\n#{1,6}\s/)[1]
-        ?.split('\n\n')
-        .slice(1)
-        .find((block) => block.trim() && !block.startsWith('```') && !block.startsWith('|'))
-        ?.replace(/\s+/g, ' ')
-        .replace(/[*`[\]]/g, '')
-        .trim();
-    return { title, summary: summary ? summary.slice(0, 180) : '' };
+    // The page's own first real paragraph: headings, quotes, tables and code
+    // fences skipped. Reading the block after the first sub-heading, as this
+    // used to, summarised "Getting started" as "Pick your entry:".
+    for (const block of body.split(/\n\s*\n/)) {
+        const text = block.trim();
+        if (!text || /^[#>|:`<-]/.test(text) || text.startsWith('```')) continue;
+        const plain = text
+            .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+            .replace(/[*`]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (plain.length < 40) continue;
+        return { title, summary: plain.length > 180 ? `${plain.slice(0, 177)}…` : plain };
+    }
+    return { title, summary: '' };
 }
 
 async function main() {

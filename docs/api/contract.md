@@ -130,3 +130,10 @@ surface.
    violation's `fix` (`{ selector, property, value, reason, kind }` — `kind: 'exact'` is
    apply-verbatim; `'heuristic'` is a direction that needs judgment).
 3. Patch, re-verify. `recordBaseline` after an approved visual change re-pins the curves.
+
+## Also exported
+
+| | |
+| --- | --- |
+| `buildJsonSchema()` | the JSON Schema generated from the registry — the same file committed under `schema/`, so tooling can regenerate instead of vendoring |
+| `inRange(width, when)` / `describeRange(when)` | the `when: { min, max }` scoping logic and its human-readable form, for tools that report which rules applied where |

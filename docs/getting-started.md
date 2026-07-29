@@ -3,6 +3,29 @@
 ResponsiveJS (`r$`) is one model — **`value = f(width)`** — with two halves: *author*
 responsive behavior CSS can't express, *verify* the rendered result with measurements.
 
+**Start with the second half.** It costs one command, changes nothing in your codebase, and
+tells you something true about a site you already have:
+
+```bash
+npx @responsivejs/cli analyze https://your-site.com -w 320,375,768,1024,1280,1920
+```
+
+Every width judged: what overflows, which targets miss the WCAG 24px floor, where contrast
+fails against the background actually painted, whether the page scrolls sideways on a phone.
+Exit `0` pass, `1` violations — so it is a CI gate the moment you want one. Nothing installed,
+nothing imported, no decision made.
+
+Liked what it found? [Pin it as a contract](adopting.md) — still without writing r$ code. Only
+then is the authoring half worth its install: it is for the cases CSS genuinely cannot express,
+not for replacing CSS you already have.
+
+- [**Adopting r$ in a site you already have**](adopting.md) — the five-step path, each step
+  useful on its own
+- [**The tutorial**](tutorial.md) — the other direction: build a page from nothing, ~30 minutes
+- [**Why r$**](why.md) — "I can write `clamp()` myself", "we have visual regression testing",
+  and when *not* to use it
+- [**Troubleshooting**](troubleshooting.md) — by symptom
+
 ## What it replaces
 
 | The hack you write today | The r$ construct | What you gain |
@@ -15,8 +38,7 @@ responsive behavior CSS can't express, *verify* the rendered result with measure
 | Squinting at three screen sizes | `rjs analyze <url>` | Measured verdict at every width, exit-code gated |
 | Screenshot diffing for regressions | `rjs record` / `verify` contracts | The layout's rules as reviewable JSON |
 
-**Fastest way in: [the tutorial](tutorial.md)** — build a page with all of it in ~30 minutes.
-Or pick your entry:
+Pick your entry:
 
 | I want to…                                             | Install                                | Start here |
 | ------------------------------------------------------ | -------------------------------------- | ---------- |
@@ -39,7 +61,7 @@ peers of `design`), Node ≥ 20.19, MPL-2.0.
 
 ```bash
 npx @responsivejs/cli analyze https://example.com -w 320,768,1280
-# constraints + aesthetic score + a11y · exit 0 pass / 1 violations · -f json|sarif
+# constraints + a11y · exit 0 pass / 1 violations · -f json|sarif · --score adds the heuristic
 
 npx @responsivejs/cli audit https://example.com --vs https://competitor.com
 # → one self-contained HTML report: screenshots with violation overlays, side-by-side

@@ -4,7 +4,10 @@ One page per question — start from what you're trying to do.
 
 | Your question | The page |
 | --- | --- |
-| What is this, where do I start? | [Getting started](getting-started.md) |
+| **I have a site — is it right?** | **[Getting started](getting-started.md)** — one command, nothing installed, every width judged |
+| **I have a site and want to keep it right** | **[Adopting r$](adopting.md)** — measure → pin a contract → gate it in CI → only then write constructs |
+| Why this and not `clamp()` / Percy / axe? | [Why r$](why.md) — the honest comparison, and when not to use it |
+| Something does not behave | [Troubleshooting](troubleshooting.md) — by symptom |
 | **Teach me — I'll build along** | **[The tutorial](tutorial.md)** — empty page → fluid, measured, contract-pinned landing in 7 steps (~30 min) |
 | How does the model work? | [Concepts](concepts.md) — `value = f(width)`, snapshots, the oracle, CSS-first |
 | **How do I author responsive behavior in JS/TS?** | **[The runtime guide](guides/runtime.md)** — `r$.`: every construct's purpose, gradual examples, customizing & debugging |

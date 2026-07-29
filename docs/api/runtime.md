@@ -104,7 +104,7 @@ that needs its own media blocks (a per-breakpoint array) cannot nest and stays J
 
 - `custom(fn, opts?)` — wrap `(width) => value`; always JS.
 - `combine([...])` — space-join parts (transform lists). Static when every part is.
-- `scale(v)`, `rotate(v)`, `translate(x, y)`, `translateX/Y(v)`, `skew(x, y?)` — transform
+- `scale(v)`, `rotate(v)`, `translate(x, y)`, `translateX(v)`, `translateY(v)`, `skew(x, y?)` — transform
   templates with conventional default units. They compile to static CSS whenever their
   arguments do: `transform: translateX(clamp(…)) scale(clamp(…))` is ordinary CSS.
 - `isResponsiveValue(v)` — brand check.
@@ -223,6 +223,41 @@ Width sources (all SSR-safe, all disposable):
 
 Every signal the hub hands out is **read-only** (`Computed`): the entries are shared, so a
 consumer writing to one would desynchronize every other consumer of the same element.
+
+## Named imports ↔ the namespace
+
+`r$.x` and the named import are the same function — the namespace is a convenience, not a
+wrapper. Import names differ in a few places where the bare word would be too generic:
+
+| Named import | Namespace | |
+| --- | --- | --- |
+| `applyResponsive` | `r$()` | apply a style map |
+| `applyDynamic` | `r$.dynamic` | skip the static split, drive everything from JS |
+| `staticCSS` | `r$.static` | emit + inject the stylesheet, returns `{ css, dispose }` |
+| `applyUtilities` | `r$.apply` | the utility grammar below |
+| `parseUtilities` | — | the same grammar, returning a `StyleMap` you can extend |
+| `batchWrites` | `r$.batch` | coalesce signal updates *and* style writes into one flush |
+| `defineBreakpoints` | `r$.breakpoints` | typed breakpoints |
+| `bpWidth(name)` | — | the px of a named breakpoint; throws with the valid names |
+| `emittedStyles()` | — | every stylesheet key r$ has injected (tests, SSR audits) |
+| `releaseViewportHub()` | `r$.releaseViewportHub` | drop the shared listeners (tests) |
+
+Everything else is spelled the same in both forms.
+
+### The utility grammar — `r$.apply`
+
+`r$.apply(target, spec)` parses a Tailwind-shaped string into a style map, for when a fluid
+value is easier to write inline than to declare:
+
+```typescript
+r$.apply('.card', 'text-fluid-sm-2xl p-fluid-12-32 bg-fluid-slate50-slate200');
+```
+
+Grammar: `{alias}-fluid-{from}-{to}`, where `alias` is `text` · `p` · `m` · `gap` · `bg` ·
+`color`. Sizes accept the named scale (`xs sm base lg xl 2xl 3xl`) or raw numbers; colours
+accept hex or the named set. Anything it cannot parse throws naming the grammar — no silent
+partial application. `parseUtilities(spec)` returns the map instead of applying it, so you can
+merge it with hand-written declarations.
 
 ## Emission
 
