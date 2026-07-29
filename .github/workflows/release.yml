@@ -38,9 +38,14 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          # No token is the GOOD case once trusted publishing is configured:
+          # npm exchanges the workflow's OIDC identity instead. Writing a token
+          # into .npmrc would make npm prefer it and keep failing on 2FA, so we
+          # deliberately leave the file alone when the secret is absent.
           if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::error::NPM_TOKEN secret is empty or missing"
-            exit 1
+            echo "no NPM_TOKEN — expecting trusted publishing (OIDC)"
+            echo "npm version: $(npm --version)   (OIDC needs >= 11.5)"
+            exit 0
           fi
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
           echo "npm version: $(npm --version)"
