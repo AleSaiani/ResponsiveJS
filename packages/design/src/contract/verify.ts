@@ -292,6 +292,10 @@ export const GLOBAL_RULE_SELECTORS = [
     'main', 'header', 'footer', 'nav', 'aside', 'section', 'article',
     'h1', 'h2', 'h3', 'p', 'ul', 'table', 'form', 'img',
     'a[href]', 'button', 'input', 'select', 'textarea',
+    // the usual suspects for a page that bleeds on a phone: a wide code block,
+    // an embed, a video. Leaving them out made noOverflow blind to the most
+    // common real-world overflow there is.
+    'pre', 'code', 'iframe', 'video',
 ];
 
 function collectSelectors(rules: ContractRule[], parsed: DesignContract): string[] {

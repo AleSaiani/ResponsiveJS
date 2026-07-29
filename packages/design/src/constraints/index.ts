@@ -27,6 +27,27 @@ export class Asserter {
      *  least not breaking the page, but worth a look. */
     noOverflow(): this {
         for (const [w, snapshot] of this.store.snapshots) {
+            // The page's own reach, first. An element whose BOX fits can still
+            // push the document wider — a nowrap block, a fixed-width table, an
+            // absolutely positioned decoration — and "the page scrolls sideways
+            // on my phone" is the overflow users actually report. Checking rects
+            // alone cannot see it.
+            const reach = snapshot.pageScrollWidth;
+            if (reach !== undefined) this.totalChecks++;
+            if (reach !== undefined && reach > snapshot.width + 1) {
+                this.violations.push({
+                    rule: 'noOverflow',
+                    element: 'document',
+                    width: w,
+                    detail:
+                        `the page scrolls horizontally: content reaches ${reach}px in a ${snapshot.width}px viewport ` +
+                        `(+${reach - snapshot.width}px). Something wider than the viewport is not inside a scroll container.`,
+                    expected: snapshot.width,
+                    actual: reach,
+                    severity: 'error',
+                });
+            }
+
             for (const [selector, elements] of snapshot.elements) {
                 for (const el of elements) {
                     this.totalChecks++;

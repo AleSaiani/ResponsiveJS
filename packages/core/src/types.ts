@@ -104,6 +104,9 @@ export interface ViewportSnapshot {
     childRelations: Map<string, ChildRelation[]>;
     timestamp: number;
     scrollY?: number;
+    /** documentElement.scrollWidth — the page's horizontal reach, which an
+     *  element-rect check cannot see (content can overflow inside a box). */
+    pageScrollWidth?: number;
     /** Runtime provenance manifest, when the page runs @responsivejs/runtime. */
     manifest?: ProvenanceEntry[];
 }

@@ -35,6 +35,10 @@ export interface ViewportSnapshotWire {
     width: number;
     height: number;
     scrollY?: number;
+    /** documentElement.scrollWidth: the page's own horizontal reach. An element
+     *  whose BOX fits can still push the document wider (a nowrap block, a
+     *  fixed-width table), and that is the overflow users actually notice. */
+    pageScrollWidth?: number;
     timestamp: number;
     elements: [selector: string, snapshots: ElementSnapshotWire[]][];
     childRelations: [selector: string, relations: ChildRelationWire[]][];
@@ -85,6 +89,7 @@ export function fromWire(wire: ViewportSnapshotWire): ViewportSnapshot {
         width: wire.width,
         height: wire.height,
         ...(wire.scrollY !== undefined ? { scrollY: wire.scrollY } : {}),
+        ...(wire.pageScrollWidth !== undefined ? { pageScrollWidth: wire.pageScrollWidth } : {}),
         ...(wire.manifest ? { manifest: wire.manifest } : {}),
         elements,
         childRelations,
@@ -99,6 +104,7 @@ export function toWire(snapshot: ViewportSnapshot): ViewportSnapshotWire {
         width: snapshot.width,
         height: snapshot.height,
         ...(snapshot.scrollY !== undefined ? { scrollY: snapshot.scrollY } : {}),
+        ...(snapshot.pageScrollWidth !== undefined ? { pageScrollWidth: snapshot.pageScrollWidth } : {}),
         timestamp: snapshot.timestamp,
         elements: [...snapshot.elements].map(([sel, snaps]) => [
             sel,

@@ -52,7 +52,8 @@ describe('rjs against a real page (playwright driver)', () => {
         expect(report.widths).toEqual([400, 1400]);
         expect(report.sources.measurement).toBe('playwright');
         expect(report.summary).toBeDefined();
-        expect(report.scores?.average?.overall).toBeGreaterThan(0);
+        // the aesthetic score is a heuristic: absent unless asked for
+        expect(report.scores).toBeUndefined();
 
         // Provenance, end to end: the landing page runs @responsivejs/runtime,
         // whose constructs publish window.__rjs_manifest; the collector ships
@@ -93,9 +94,14 @@ describe('rjs against a real page (playwright driver)', () => {
         const asserts = contract.rules.map((r: { assert: string }) => r.assert);
         expect(asserts).toContain('noOverflow');
         expect(asserts).toContain('monotonic'); // from the .cta fluid fontSize
-        expect(contract.baselines).toEqual([{ selector: '.cta', prop: 'fontSize' }]);
-        // honest coverage: geometry/sync/tokens and the element-driven fluid are reported
-        expect(gen.err.join('\n')).toContain('not expressible');
+        // both halves: what any page can be held to, and what THIS page declares
+        const ids = contract.rules.map((r: { id?: string }) => r.id);
+        expect(ids).toContain('tappable-links');
+        expect(contract.baselines).toContainEqual({ selector: '.cta', prop: 'fontSize' });
+        expect(contract.baselines).toContainEqual({ selector: 'h1', prop: 'fontSize' });
+        // honest coverage: geometry/sync/tokens and the element-driven fluid are reported,
+        // and so is every page rule left out because the page has no such element
+        expect(gen.err.join('\n')).toContain('not yet expressible');
 
         const rec = makeIo({ 'gen.json': gen.written['gen.json'] });
         expect(await main(['record', 'gen.json', url, '-d', 'playwright'], rec.io)).toBe(0);

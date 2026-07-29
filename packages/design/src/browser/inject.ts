@@ -229,12 +229,17 @@ export function collectPage(args: CollectArgs, root?: ParentNode): ViewportSnaps
     // window: an iframe-emulated sweep wants the MEASURED page's manifest.
     const manifest = (view as unknown as { __rjs_manifest?: unknown }).__rjs_manifest;
 
+    // Page-level reach. Only meaningful for a full-page sweep: in component
+    // mode the document belongs to the harness, not to what we measure.
+    const pageScrollWidth = withinEl ? undefined : doc.documentElement?.scrollWidth;
+
     return {
         width,
         height,
         elements,
         childRelations,
         timestamp: Date.now(),
+        ...(pageScrollWidth !== undefined ? { pageScrollWidth } : {}),
         ...(Array.isArray(manifest) ? { manifest: manifest as ViewportSnapshotWire['manifest'] } : {}),
     };
 }

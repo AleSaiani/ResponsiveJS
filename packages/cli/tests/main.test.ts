@@ -131,15 +131,33 @@ describe('rjs main', () => {
         expect(await main(['init', 'http://x', '-o', 'gen.json'], io)).toBe(0);
         const contract = JSON.parse(written['gen.json']);
         expect(contract.viewport.widths).toEqual([320, 1280]);
-        expect(contract.rules.map((r: { assert: string }) => r.assert)).toEqual(['noOverflow', 'monotonic', 'continuous']);
-        expect(contract.baselines).toEqual([{ selector: 'h1', prop: 'fontSize' }]);
+        // the page-wide rules first, then what the constructs declare
+        const asserts = contract.rules.map((r: { assert: string }) => r.assert);
+        expect(asserts[0]).toBe('noOverflow');
+        expect(asserts).toContain('monotonic');
+        expect(asserts).toContain('continuous');
+        expect(contract.baselines).toContainEqual({ selector: 'h1', prop: 'fontSize' });
         expect(out.join('\n')).toContain('rjs record gen.json'); // points to the next step
+        expect(out.join('\n')).toContain('r$ constructs read from the page');
     });
 
-    it('init without a manifest fails loudly with exit 2', async () => {
-        const { io, err } = makeIo();
-        expect(await main(['init', 'http://x'], io)).toBe(2);
-        expect(err.join('\n')).toContain('no provenance manifest');
+    it('init works on a page that has never heard of r$ — the on-ramp', async () => {
+        const { io, written, out } = makeIo();
+        // no manifest anywhere: a plain page with a heading, prose and a link
+        const source = new FakeSource((width, selectors) =>
+            makeSnapshot(width, new Map(selectors.map((s) => [s, [makeEl(s)]]))),
+        );
+        (io.resolveDriver as ReturnType<typeof vi.fn>).mockResolvedValue({ kind: 'fake', source, close: async () => {} });
+
+        expect(await main(['init', 'http://x', '-o', 'gen.json'], io)).toBe(0);
+        const contract = JSON.parse(written['gen.json']);
+        const ids = contract.rules.map((r: { id: string }) => r.id);
+        // the rules that need neither a construct nor an invented selector
+        expect(ids).toContain('no-bleed');
+        expect(ids).toContain('tappable-links');
+        expect(ids).toContain('readable-prose');
+        expect(contract.baselines.length).toBeGreaterThan(0);
+        expect(out.join('\n')).toContain('does not run @responsivejs/runtime');
     });
 
     it('record measures baselines and writes the contract back', async () => {
