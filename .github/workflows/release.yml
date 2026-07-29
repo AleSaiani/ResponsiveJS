@@ -24,6 +24,27 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      # Who is publishing, and what may they publish? An EOTP failure looks the
+      # same whether the token is stale, scoped elsewhere, or blocked by a 2FA
+      # policy — this separates those cases before the publish burns a run.
+      # It prints a username and package names; never the token.
+      - name: Identify the publishing token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::NPM_TOKEN secret is empty or missing"
+            exit 1
+          fi
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          echo "npm version: $(npm --version)"
+          echo "authenticated as: $(npm whoami)"
+          echo "--- what this token can write in the scope ---"
+          npm access list packages @responsivejs || echo "(no packages in the scope yet — expected before the first publish)"
+          echo "--- 2FA mode reported for the account ---"
+          npm profile get 2>&1 | grep -i "two-factor" || echo "(not reported)"
+
       - uses: changesets/action@v1
         id: changesets
         with:
