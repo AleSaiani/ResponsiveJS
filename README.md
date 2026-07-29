@@ -150,4 +150,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Development needs Node ≥ 20.19 and pnp
 
 ## License
 
-[MPL-2.0](LICENSE).
+[MPL-2.0](LICENSE). **Every file in this repository is subject to the Mozilla Public License,
+v. 2.0** unless that file says otherwise — the notice lives here rather than at the top of each
+file, which is the placement the license itself contemplates (Exhibit A). A copy ships inside
+every published package.
+
+What that means in practice: MPL is copyleft **per file**, not per project. You can use these
+packages in a closed-source product with no obligation on your own code. If you modify a file
+that came from here and distribute it, that file's source has to stay available under the same
+license. Linking, importing and bundling are not modifications.

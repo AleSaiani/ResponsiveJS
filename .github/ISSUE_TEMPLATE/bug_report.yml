@@ -6,7 +6,7 @@ body:
     id: package
     attributes:
       label: Package and version
-      placeholder: '@responsivejs/design 0.1.0-alpha.0'
+      placeholder: '@responsivejs/design 1.0.0-alpha.0'
     validations:
       required: true
   - type: textarea
