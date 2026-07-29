@@ -1,12 +1,12 @@
 ---
-'@responsivejs/core': minor
-'@responsivejs/runtime': minor
-'@responsivejs/contract': minor
-'@responsivejs/design': minor
-'@responsivejs/cli': minor
-'@responsivejs/react': minor
-'@responsivejs/vue': minor
-'@responsivejs/angular': minor
+'@responsivejs/core': major
+'@responsivejs/runtime': major
+'@responsivejs/contract': major
+'@responsivejs/design': major
+'@responsivejs/cli': major
+'@responsivejs/react': major
+'@responsivejs/vue': major
+'@responsivejs/angular': major
 ---
 
 First public alpha of ResponsiveJS (`r$`).

@@ -25,6 +25,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - uses: changesets/action@v1
+        id: changesets
         with:
           version: pnpm changeset version
           publish: pnpm release
@@ -35,3 +36,25 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           # Provenance only in CI (needs OIDC); local/Verdaccio publishes stay clean.
           NPM_CONFIG_PROVENANCE: 'true'
+
+      # In prerelease mode changesets publishes under the `alpha` dist-tag, and a
+      # package that has never been published has no `latest` at all — so a plain
+      # `npm i @responsivejs/runtime` would resolve to nothing. We ship
+      # 1.0.0-alpha.0 as the version people get by default, so point `latest` at
+      # what was just published. (`changeset publish --tag latest` is refused in
+      # pre mode, hence doing it here.) Idempotent: re-pointing is a no-op.
+      - name: Point latest at the published prerelease
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PUBLISHED: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          node -e '
+            for (const { name, version } of JSON.parse(process.env.PUBLISHED)) {
+                console.log(`${name}@${version}`);
+            }
+          ' | while read -r spec; do
+            echo "dist-tag add $spec latest"
+            npm dist-tag add "$spec" latest
+          done
