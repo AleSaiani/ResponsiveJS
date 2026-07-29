@@ -1,6 +1,6 @@
 {
     "name": "@responsivejs/angular",
-    "version": "0.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "Angular bindings for r$ — inject-style helpers that own the construct lifecycle: apply on create, update on change, dispose on destroy.",
     "license": "MPL-2.0",
     "type": "module",

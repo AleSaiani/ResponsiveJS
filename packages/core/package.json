@@ -1,6 +1,6 @@
 {
     "name": "@responsivejs/core",
-    "version": "0.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "The shared math of r$ — geometry, curves, stats, color, typography, aesthetics. value = f(width).",
     "license": "MPL-2.0",
     "type": "module",

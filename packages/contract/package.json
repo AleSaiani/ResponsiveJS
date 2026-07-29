@@ -1,6 +1,6 @@
 {
     "name": "@responsivejs/contract",
-    "version": "0.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "The design-contract DSL of r$ — declarative, serializable responsive/layout/a11y/aesthetic expectations for authoring, CI regression, and AI agents.",
     "license": "MPL-2.0",
     "type": "module",

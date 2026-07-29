@@ -1,6 +1,6 @@
 {
     "name": "@responsivejs/design",
-    "version": "0.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "The layout & design oracle of r$ — measure, validate and score responsive design: constraints, aesthetic score, machine-readable reports with fix suggestions.",
     "license": "MPL-2.0",
     "type": "module",
