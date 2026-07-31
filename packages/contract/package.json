@@ -28,7 +28,7 @@
         "@responsivejs/core": "workspace:^"
     },
     "devDependencies": {
-        "typescript": "^5.7.0"
+        "typescript": "^6.0.3"
     },
     "publishConfig": {
         "access": "public"
