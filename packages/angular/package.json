@@ -28,7 +28,7 @@
         "@angular/core": ">=16"
     },
     "devDependencies": {
-        "@angular/core": "^20.0.0",
+        "@angular/core": "^22.0.8",
         "typescript": "^5.7.0"
     },
     "publishConfig": {
