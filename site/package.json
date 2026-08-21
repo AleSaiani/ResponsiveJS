@@ -11,7 +11,7 @@
     },
     "devDependencies": {
         "vitepress": "^1.6.0",
-        "@playwright/test": "^1.49.0"
+        "@playwright/test": "^1.62.1"
     },
     "dependencies": {
         "@responsivejs/runtime": "workspace:^",
