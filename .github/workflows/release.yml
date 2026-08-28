@@ -55,7 +55,7 @@ jobs:
           echo "--- 2FA mode reported for the account ---"
           npm profile get 2>&1 | grep -i "two-factor" || echo "(not reported)"
 
-      - uses: changesets/action@v1
+      - uses: changesets/action@v2
         id: changesets
         with:
           version: pnpm changeset version
